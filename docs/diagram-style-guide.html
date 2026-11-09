@@ -1,0 +1,121 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>블록다이어그램 디자인 시스템 · 표준 템플릿 & 구조도 세트</title><style>:root{--page:#f4f7fb;--frame:#fafcff;--card:#fff;--line:#dbe4ee;--ink:#172032;--muted:#5c6c83;--blue:#e8f0ff;--blue-line:#d2e3ff;--navy:#274c88;--good:#16724b;--warn:#966000;--radius:18px}*{box-sizing:border-box}body{font-family:system-ui,"Noto Sans KR","Malgun Gothic",sans-serif;background:var(--page);color:var(--ink);margin:0;line-height:1.65}main{max-width:1180px;margin:auto;padding:36px 24px 90px}h1{font-size:32px;line-height:1.25;letter-spacing:-.04em;margin:9px 0 14px}h2{font-size:24px;margin:52px 0 12px;border-bottom:1px solid var(--line);padding-bottom:10px}h3{font-size:18px;margin:26px 0 9px}.overline{color:var(--navy);font-size:12px;font-weight:800;letter-spacing:.13em}.lead,.muted{color:var(--muted)}.lead{font-size:17px}.intro{padding:30px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(115deg,#eaf2fe,white 70%)}.pill{display:inline-block;border:1px solid #d4dfe9;border-radius:99px;background:white;color:#445a73;padding:4px 11px;font-size:12px;margin:2px}.jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:23px}.jump a{border:1px solid #ccd8e8;background:white;padding:8px 12px;border-radius:10px;text-decoration:none;color:#26548d;font-weight:600;font-size:13px}.diagram{background:var(--frame);border:1px solid var(--line);border-radius:28px;padding:24px 26px;text-align:center;margin:22px 0;overflow:hidden}.node{background:var(--card);border:1px solid var(--line);border-radius:19px;padding:19px 18px;min-width:0;box-shadow:0 1px 1px rgba(28,54,91,.03)}.node.primary{background:var(--blue);border-color:var(--blue-line)}.node.soft{background:#f2f5fa}.node.good{background:#eff9f3;border-color:#cce8d8}.node strong{display:block;font-size:18px;font-weight:760;letter-spacing:-.012em;line-height:1.4}.node p{font-size:13px;color:var(--muted);margin:5px 0 0}.node .detail{font-size:12px;border-top:1px solid #e3eaf2;padding-top:10px;margin-top:12px;color:#41546c}.arrow{font-size:25px;line-height:1.5;min-height:36px;color:#253e65;user-select:none}.arrow small{display:block;font-size:11px;line-height:1.1;color:var(--muted);font-weight:500}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.lane{border:1px solid var(--line);border-radius:20px;padding:17px;background:#fff}.lane h3{margin:1px 0 14px;font-size:15px}.nodes-row{display:flex;align-items:stretch;justify-content:center;gap:9px;flex-wrap:wrap}.nodes-row .node{flex:1;min-width:135px}.nodes-row .arrow{align-self:center;font-size:19px;min-height:auto}.decision{background:#fff5df;border:1px solid #ead7a1;border-radius:14px;padding:13px;font-weight:700}.legend{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}.key{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted)}.square{width:17px;height:17px;border:1px solid var(--line);border-radius:5px;background:white}.square.primary{background:var(--blue);border-color:var(--blue-line)}.square.good{background:#eff9f3;border-color:#cce8d8}.square.warning{background:#fff5df;border-color:#ead7a1}table{border-collapse:collapse;width:100%;background:#fff;border:1px solid var(--line);font-size:14px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:12px 14px}th{background:#edf3fb}tr:last-child td{border-bottom:none}code,pre{font-family:ui-monospace,Consolas,monospace}code{background:#e9eef6;color:#345a8f;padding:2px 4px;border-radius:4px}pre{background:#111b2b;color:#e8f1ff;overflow-x:auto;border-radius:13px;padding:16px;font-size:13px;line-height:1.6}.caption{font-size:13px;color:var(--muted);margin:10px 0 0;text-align:left}.panel{border:1px solid var(--line);padding:22px;background:white;border-radius:17px}.buttons{display:flex;gap:8px;flex-wrap:wrap}.buttons button{border:1px solid #bfd1ec;background:#e9f2ff;color:#244e84;padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700}.buttons button:hover{background:#dbeaff}.note{padding:14px 16px;border-left:4px solid #5e8bce;background:#edf4ff;border-radius:0 12px 12px 0;margin:20px 0}.warning-note{border-left-color:#d5a74e;background:#fff8ea}.footer{border-top:1px solid var(--line);padding-top:20px;font-size:12px;color:var(--muted);margin-top:60px}a{color:#25568e}@media(max-width:740px){main{padding:20px 12px 60px}.diagram{padding:14px}.grid2,.grid3{grid-template-columns:1fr}.nodes-row{display:grid;grid-template-columns:1fr}.nodes-row .arrow{transform:rotate(90deg);justify-self:center}.node strong{font-size:16px}h1{font-size:26px}}@media print{body{background:white}main{padding:0;max-width:none}.diagram,.panel,.intro{break-inside:avoid}.buttons,.jump{display:none}h2{break-before:page}}</style></head><body><main>
+<section class="intro"><div class="overline">STANDARD UI SYSTEM · VERSION 1.0</div><h1>학습용 HTML 블록다이어그램<br>표준 템플릿 & 구조도 세트</h1>
+<p class="lead">로컬 AI/RAG 구축 교재의 디자인을 표준화한 재사용 가능한 HTML/CSS 기반 구조도 모음. Mermaid나 SVG 없이 의미 있는 HTML 박스를 사용하며, 브라우저 확대·인쇄·화면 크기에 대응한다.</p>
+<span class="pill">둥근 사각형</span><span class="pill">옅은 회색·파랑</span><span class="pill">제목 + 역할 설명</span><span class="pill">최소 화살표</span><span class="pill">2열 병렬 구조</span>
+<nav class="jump"><a href="#principles">디자인 규칙</a><a href="#system">① 시스템</a><a href="#rag">② RAG</a><a href="#vector">③ 벡터 검색</a><a href="#startup">④ 자동 시작</a><a href="#debug">⑤ 오류 진단</a><a href="#ingestion">⑥ 문서 등록</a><a href="#reuse">재사용 방법</a></nav>
+</section>
+<h2 id="principles">01. 표준 스타일 규칙</h2>
+<div class="legend"><span class="key"><i class="square"></i> 기본 기능</span><span class="key"><i class="square primary"></i> 핵심 처리</span><span class="key"><i class="square good"></i> 확인된 결과</span><span class="key"><i class="square warning"></i> 조건·판단</span></div>
+<table><thead><tr><th>속성</th><th>기본값</th><th>적용 원칙</th></tr></thead><tbody>
+<tr><td>다이어그램 외곽</td><td>28px 모서리 · 24px 여백</td><td>배경은 밝은 회색, 여러 개를 한 문서에 반복 배치</td></tr>
+<tr><td>박스</td><td>19px 모서리 · 19px 세로 여백</td><td>제목 굵게, 설명은 한두 줄·작은 회색 글씨</td></tr>
+<tr><td>색상</td><td>기본 흰색 / 핵심 연파랑</td><td>동일 그림에서 핵심 상자 한두 개만 강조</td></tr>
+<tr><td>화살표</td><td>↓ / ↑↓ / →</td><td>데이터 방향을 명확하게 표시하고 장식성 화살표 제거</td></tr>
+<tr><td>병렬 배치</td><td>2열, 동일 높이 권장</td><td>모바일에서는 세로 배치</td></tr>
+<tr><td>실제 코드 대응</td><td><code>app.py</code> / <code>rag_search.py</code></td><td>소스의 모듈·신호·파일 이름과 구조도 명칭 일치</td></tr>
+<tr><td>상태 표기</td><td>구현됨 / 검증됨 / 설계 목표</td><td>미구현 기능을 완료로 표현하지 않는다</td></tr></tbody></table>
+<h3>공통 색상 토큰</h3><pre><code>:root {
+  --page: #f4f7fb;
+  --frame: #fafcff;
+  --card: #ffffff;
+  --line: #dbe4ee;
+  --ink: #172032;
+  --muted: #5c6c83;
+  --blue: #e8f0ff;
+  --blue-line: #d2e3ff;
+  --radius: 18px;
+}</code></pre>
+<h2 id="system">02. 구조도 ① — 시스템 전체 아키텍처</h2>
+<p>기준 이미지의 계층 구조를 유지하면서, 모델 실행·검색·운영 환경을 구분한다.</p>
+<div class="diagram">
+<div class="node"><strong>HTML + JavaScript — 사용자 화면</strong><p>채팅 · 검색 결과 · 응답 모드 선택</p></div><div class="arrow">↕</div>
+<div class="node"><strong>FastAPI — 웹 서버</strong><p>요청 수신 · 응답 전달 · 로컬 API</p></div><div class="arrow">↕</div>
+<div class="node primary"><strong>LangChain — AI 처리 연결</strong><p>프롬프트 구성 · DeepSeek 호출 · RAG 결과 전달</p></div>
+<div class="grid2"><div><div class="arrow">↕</div><div class="node"><strong>LM Studio</strong><p>로컬 모델 실행 엔진</p><div class="detail"><b>DeepSeek 14B</b> — 답변 생성<br><b>Qwen3-Embedding-4B</b> — 벡터 생성</div></div></div>
+<div><div class="arrow">↕</div><div class="node"><strong>Elasticsearch 9.5.6</strong><p>문서·벡터 저장 및 검색</p><div class="detail">벡터 검색 검증 완료<br>키워드·하이브리드 검색은 확장 과제</div></div></div></div>
+<div class="arrow">↓</div><div class="node soft"><strong>Ubuntu + systemd + GitHub</strong><p>실행 환경 · 서비스 자동 시작 · 소스 관리</p></div>
+</div>
+<p class="caption">운영 계층은 위쪽 구성요소를 관리하는 기반이지, RAG 데이터가 아래 방향으로 순차 처리되는 별도 단계가 아니다.</p>
+
+<h2 id="rag">03. 구조도 ② — RAG 질의응답 흐름</h2>
+<p>문서 검색과 답변 생성을 분리한다. 검색 결과가 잘못되면 생성 모델을 변경해도 근거가 부족할 수 있다.</p>
+<div class="diagram">
+<div class="node"><strong>사용자 질문</strong><p>“모터가 과열될 때 점검할 사항은?”</p></div><div class="arrow">↓</div>
+<div class="grid2">
+<div class="lane"><h3>검색 처리</h3>
+<div class="node primary"><strong>Qwen3-Embedding-4B</strong><p>질문 → 2,560차원 벡터</p></div><div class="arrow">↓</div>
+<div class="node"><strong>Elasticsearch</strong><p>기존 인덱스에서 kNN 검색</p></div><div class="arrow">↓</div>
+<div class="node good"><strong>상위 참고 문서</strong><p>문장 · 검색 점수 · 문서 ID</p></div></div>
+<div class="lane"><h3>답변 생성</h3>
+<div class="node"><strong>FastAPI / LangChain</strong><p>질문과 참고 문서를 프롬프트로 구성</p></div><div class="arrow">↓</div>
+<div class="node primary"><strong>LM Studio / DeepSeek</strong><p>참고 근거를 바탕으로 답변 생성</p></div><div class="arrow">↓</div>
+<div class="node good"><strong>웹 화면</strong><p>한국어 답변 + 검색 출처 표시</p></div></div>
+</div><div class="arrow">검색 결과 → 답변 생성</div>
+<div class="node soft"><strong>구현 파일</strong><p>rag_search.py → app.py → static/index.html</p></div>
+</div>
+<p class="caption">현재 RAG 코드의 검색 경로를 나타낸다. 문서 업로드·페이지 단위 출처 표시는 아직 추가 개발이 필요하다.</p>
+
+<h2 id="vector">04. 구조도 ③ — 임베딩·벡터 저장·유사도 검색</h2>
+<div class="diagram">
+<div class="grid2">
+<div class="lane"><h3>① 문서 저장 과정</h3>
+<div class="node"><strong>기술 문장 3개</strong><p>모터 과열 문장 2개 · 날씨 문장 1개</p></div><div class="arrow">↓</div>
+<div class="node primary"><strong>Qwen3 임베딩</strong><p>문장별 2,560차원 숫자 벡터</p></div><div class="arrow">↓</div>
+<div class="node good"><strong>Elasticsearch 인덱스</strong><p>langchain_embedding_lab</p></div></div>
+<div class="lane"><h3>② 질의 검색 과정</h3>
+<div class="node"><strong>질문</strong><p>“모터 과열 시 확인할 사항은?”</p></div><div class="arrow">↓</div>
+<div class="node primary"><strong>동일한 Qwen3 모델</strong><p>질문 → 2,560차원 벡터</p></div><div class="arrow">↓</div>
+<div class="node good"><strong>kNN 검색</strong><p>벡터를 비교하여 유사한 문장 선별</p></div></div></div>
+<div class="arrow">↓</div>
+<div class="node"><strong>실제 검색 순위</strong><p>전동기 과열 0.8531 → 모터 보호회로 0.8146 → 날씨 0.6654</p></div>
+</div>
+<p class="caption">검증된 검색 점수이며 정답률이나 확률이 아니다. 임베딩 모델이 바뀌면 기존 인덱스 벡터도 재생성해야 일관성을 확보할 수 있다.</p>
+
+<h2 id="startup">05. 구조도 ④ — 부팅·서버 자동 실행</h2>
+<div class="diagram"><div class="node"><strong>Ubuntu 시작 · 사용자 로그인</strong><p>사용자 systemd 서비스가 활성화되는 조건</p></div><div class="arrow">↓</div>
+<div class="grid3">
+<div class="node"><strong>Elasticsearch</strong><p>systemd 시스템 서비스<br>포트 9200 · HTTPS</p></div>
+<div class="node primary"><strong>FastAPI / LangChain</strong><p>langchain-lab.service<br>포트 8000 · 로컬</p></div>
+<div class="node"><strong>LM Studio</strong><p>로그인 후 서버 시작 설정<br>포트 1234 · 로컬</p></div></div>
+<div class="arrow">↓</div><div class="node good"><strong>로컬 통합 웹 화면</strong><p>http://127.0.0.1:8000</p></div></div>
+<p class="caption">systemd 설정 코드와 실행 절차는 작성되었지만, 재부팅 후 서비스와 모델 자동 복원까지 완전 검증된 상태는 아니다.</p>
+
+<h2 id="debug">06. 구조도 ⑤ — 연결 오류 진단 절차</h2>
+<div class="diagram">
+<div class="node"><strong>웹에서 “연결되지 않음” 표시</strong><p>서버·모델·검색 엔진 문제를 분리한다</p></div><div class="arrow">↓</div>
+<div class="decision">① /api/models 응답 가능한가?</div><div class="arrow">↓</div>
+<div class="grid2"><div class="node"><strong>아니요</strong><p>FastAPI 상태·8000 포트 → LM Studio 1234 포트 확인</p></div>
+<div class="node good"><strong>예</strong><p>② /api/rag/status 점검으로 이동</p></div></div>
+<div class="arrow">↓</div><div class="decision">② Elasticsearch 연결·인증 가능한가?</div><div class="arrow">↓</div>
+<div class="grid2"><div class="node"><strong>아니요</strong><p>9200 포트 · CA 인증서 · .env 비밀번호 확인</p></div>
+<div class="node good"><strong>예</strong><p>③ RAG 인덱스·임베딩 모델 확인</p></div></div>
+<div class="arrow">↓</div><div class="node primary"><strong>최종 검증</strong><p>문서 검색 → 답변 생성 → 출처 표시 → 오류 로그 확인</p></div></div>
+<p class="caption">실제 발생한 오류: <code>curl (77)</code>, <code>401</code>, <code>ResolutionImpossible</code>, <code>UnicodeEncodeError</code>, 포트 중복, <code>Failed to fetch</code>.</p>
+
+<h2 id="ingestion">07. 구조도 ⑥ — 후속 PDF 인제스트(설계 목표)</h2>
+<div class="diagram"><div class="node"><strong>PDF · 데이터시트 · 기술 문서</strong><p>파일명 · 개정 버전 · 원문 페이지 포함</p></div><div class="arrow">↓</div>
+<div class="node"><strong>문서 추출 · 분할</strong><p>페이지 추출 → 의미 단위 Chunk 생성</p></div><div class="arrow">↓</div>
+<div class="grid2"><div><div class="node primary"><strong>임베딩 변환</strong><p>Qwen3 → 2,560차원</p></div></div><div><div class="node"><strong>메타데이터 부여</strong><p>문서명 · 페이지 · 부품명 · 출처</p></div></div></div>
+<div class="arrow">↓</div><div class="node good"><strong>Elasticsearch 등록</strong><p>키워드 · 본문 · 벡터 · 근거 정보 함께 저장</p></div></div>
+<p class="caption">이 도식은 다음 개발 단계의 목표 아키텍처이며, 현재 구현 완료된 업로드 기능을 뜻하지 않는다.</p>
+
+<h2 id="reuse">08. 다른 HTML 교재에 재사용하는 방법</h2>
+<div class="panel"><h3>최소 HTML 블록 예시</h3>
+<pre><code>&lt;div class="diagram"&gt;
+  &lt;div class="node"&gt;
+    &lt;strong&gt;입력 모듈&lt;/strong&gt;
+    &lt;p&gt;센서 데이터 수신&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class="arrow"&gt;↓&lt;/div&gt;
+  &lt;div class="node primary"&gt;
+    &lt;strong&gt;controller&lt;/strong&gt;
+    &lt;p&gt;제어 상태 처리&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<p>디자인의 핵심은 <code>.diagram</code> · <code>.node</code> · <code>.node.primary</code> · <code>.arrow</code> · <code>.grid2</code>입니다. 다른 HTML 자료에서도 공통 CSS만 복사해 재사용할 수 있습니다.</p>
+<div class="buttons"><button type="button" onclick="copyStyle()">공통 CSS 복사</button><button type="button" onclick="window.print()">인쇄 / PDF 저장</button></div>
+<p id="copyStatus" class="caption" role="status"></p></div>
+<div class="note warning"><b>표현 기준:</b> 화살표는 흐름의 방향을 뜻한다. 운영환경은 실행 기반이므로 데이터 흐름 박스처럼 오해되지 않도록 설명을 병기한다. FPGA/RTL 자료의 구조도는 실제 모듈명과 신호명을 우선 사용한다.</div>
+<footer class="footer">표준 디자인 시스템 v1.0 · 2026-11-09 · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 소스 저장소</a> · 기존 학습 교재 <a href="learning-guide.html">learning-guide.html</a></footer>
+</main><script>async function copyStyle(){const t=document.querySelector("style").textContent;try{await navigator.clipboard.writeText(t);document.getElementById("copyStatus").textContent="공통 CSS를 복사했습니다."}catch(e){document.getElementById("copyStatus").textContent="복사가 제한된 경우 브라우저 소스에서 style 내용을 복사하세요."}}</script></body></html>
