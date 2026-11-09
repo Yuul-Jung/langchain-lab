@@ -1,0 +1,135 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>제2장 · 로컬 문서 업로드 및 지식 구조화</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--paper:#f1f2ee;--card:#fff;--ink:#15171c;--ink2:#4a4f5a;--ink3:#858b96;--line:#dddFD8;--accent:#4635b1;--soft:#edeafa;--maxw:1240px;--blue:#eaf1fc}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans KR",system-ui,sans-serif;line-height:1.75;font-size:17px}code,pre{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+.hero{background:#15171c;color:#f1f2ee;position:relative;overflow:hidden}.hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(to right,#ffffff0e 1px,transparent 1px),linear-gradient(to bottom,#ffffff0e 1px,transparent 1px);background-size:28px 28px;pointer-events:none}.hero-inner{position:relative;max-width:var(--maxw);padding:76px 30px 62px;margin:auto}.kick{color:#ffd24a;border-bottom:2px solid #ffd24a;display:inline-block;padding-bottom:7px;font-weight:700;font-size:19px}.hero h1{font-size:clamp(35px,5vw,57px);line-height:1.2;letter-spacing:-.04em;max-width:19ch;margin:22px 0}.hero p{color:#bfc4ce;font-size:19px;max-width:850px}.meta{display:flex;flex-wrap:wrap;gap:10px;margin:32px 0}.meta span{font-size:14px;border:1px solid #ffffff44;padding:5px 12px}.meta b,.hero strong{color:#ffd24a}.hero-terms{border-top:1px solid #ffffff30;display:grid;grid-template-columns:repeat(3,1fr);gap:22px;padding-top:30px;margin-top:35px}.hero-terms h3{font-size:19px;margin:0 0 5px}.hero-terms p{font-size:16px;line-height:1.65;margin:0}
+.layout{max-width:var(--maxw);margin:auto;padding:0 25px 90px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:44px;align-items:start}nav.toc{position:sticky;top:0;max-height:100vh;overflow:auto;padding:40px 0}nav.toc h2{font-size:14px;letter-spacing:.12em;color:var(--ink3)}nav.toc a{display:block;text-decoration:none;color:#515766;border-left:2px solid transparent;padding:7px 10px;font-size:15px;line-height:1.45}nav.toc a:hover{color:var(--accent);border-color:var(--accent)}main{padding-top:38px}section.chapter{background:var(--card);border:1px solid var(--line);padding:32px 35px 36px;margin-bottom:18px;scroll-margin-top:20px}section.chapter h2{margin:0 0 18px;font-size:25px;line-height:1.35}section.chapter h2 .n{display:inline-block;background:var(--soft);color:var(--accent);padding:3px 9px;margin-right:12px;font-size:17px}h3{font-size:20px;margin:25px 0 10px}p{color:var(--ink2);margin:12px 0}ul{padding-left:23px;color:var(--ink2)}li{margin:7px 0}table{border-collapse:collapse;width:100%;font-size:15px;margin:18px 0}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f4f4f1}code{background:#f4f4f1;padding:1px 4px;font-size:.9em}pre code{background:none;padding:0;color:inherit}.codecard{border:1px solid var(--line);margin:20px 0 0}.codecard .bar{background:#f3f3ef;padding:9px 15px;font-size:14px;color:#6b7180;border-bottom:1px solid var(--line)}.codecard .bar strong{color:var(--accent)}.codecard pre{background:#fbfbf9;white-space:pre;overflow-x:auto;padding:20px;margin:0;font-size:14px;line-height:1.75;color:#242a33}.output{border:1px solid var(--line);border-top:0;background:#f7f7f4;margin:0}.output .bar{padding:8px 15px;background:#efefeb;border-bottom:1px solid var(--line);color:#176540;font-size:14px;font-weight:700}.output pre{padding:17px 20px;overflow:auto;margin:0;font-size:14px;white-space:pre-wrap}.explain{border:1px solid var(--line);border-top:0;margin:0 0 24px;padding:20px 22px}.explain h3{color:var(--accent);font-size:18px;margin:0 0 10px}.explain p{font-size:16px}.explain dl{display:grid;grid-template-columns:180px 1fr;gap:10px;margin:15px 0}.explain dt{font-weight:700;font-size:15px}.explain dd{margin:0;color:var(--ink2);font-size:15px}.note{background:var(--soft);border:1px solid #ded8fa;padding:15px 19px;margin:22px 0;color:#362d84}.warn{background:#fff5e8;border-color:#efdbba;color:#70470d}.diagram{background:#fafbfd;border:1px solid #dbe4ef;border-radius:22px;padding:21px 23px;margin:22px 0;text-align:center}.node{background:#fff;border:1px solid #d8e1ec;border-radius:16px;padding:17px;margin:auto;min-width:0}.node.primary{background:#eaf1fe;border-color:#d4e2f8}.node strong{display:block;font-size:20px}.node small{font-size:16px;display:block;color:#5f7087}.arr{font-size:27px;line-height:1.55;color:#263d63}.split{display:grid;grid-template-columns:1fr 1fr;gap:15px}.split .arr{font-size:24px}.mini{padding:18px;border:1px solid var(--line);background:#fcfcfa}.mini h3{margin-top:0}.status{display:inline-block;padding:3px 9px;border-radius:3px;background:#eaf7ef;color:#176540;font-size:13px;font-weight:700}.status.pending{background:#fff5e8;color:#87560a}.summary{background:#15171c!important;color:#fff}.summary h2{color:#fff}.summary p,.summary li{color:#d0d3da}.summary code{background:#ffffff22;color:#fff}.quick{position:fixed;bottom:20px;right:20px;display:flex;gap:6px;z-index:40}.quick a{padding:10px 12px;background:#fff;border:1px solid #cbd3e0;color:#243e62;text-decoration:none;border-radius:9px;font-size:14px;box-shadow:0 2px 12px #0001}
+@media(max-width:950px){.layout{grid-template-columns:1fr;gap:0}nav.toc{position:static;max-height:none;padding:18px 0;display:flex;flex-wrap:wrap;gap:4px}nav.toc h2{width:100%}nav.toc a{font-size:13px}main{padding-top:15px}.hero-terms{grid-template-columns:1fr}}@media(max-width:650px){.layout{padding:0 11px 60px}section.chapter{padding:24px 17px}.hero-inner{padding:47px 18px}.split{grid-template-columns:1fr}.explain dl{grid-template-columns:1fr;gap:1px}.explain dd{margin-bottom:10px}.quick{right:6px;bottom:5px}.quick a{font-size:12px;padding:8px}}@media print{.hero{background:#fff;color:#000}.hero p{color:#555}.layout{display:block}.toc,.quick{display:none!important}.chapter{break-inside:avoid}.hero:before{display:none}}
+</style></head><body>
+<header class="hero"><div class="hero-inner"><div class="kick">LANGCHAIN LAB · 제2장</div><h1>문서 업로드부터 지식 구조화까지</h1><p>원본 PDF·HTML·DOCX·Markdown을 구조화하고 주제 분류, 선수학습, 관계 생성, Elasticsearch 벡터 검색까지 연결하는 단계형 실습 교재.</p>
+<div class="meta"><span>장 <b>02</b></span><span>프로젝트 <b>langchain-lab</b></span><span>처리 단계 <b>5개</b></span><span>구조도·실습 <b>다수</b></span></div>
+<div class="hero-terms"><div><h3>원본 구조</h3><p>장·절·페이지·문서 순서는 추출 결과로 기록하고 임의 변경하지 않는다.</p></div><div><h3>지식 분석</h3><p>AI 분류와 관계 추천은 별도 상태로 보관하고 검토 후 승인한다.</p></div><div><h3>검색 등록</h3><p>신규 전용 인덱스에 원문과 임베딩을 저장하며 기존 실습 데이터는 보존한다.</p></div></div></div></header>
+<div class="layout"><nav class="toc" aria-label="제2장 학습 목차"><h2>학습 목차</h2><a href="#s0">00 · 과제 개요와 설계 원칙</a><a href="#s1">01 · 실습 준비와 개발 환경</a><a href="#s2">02 · 원본 업로드와 보안 검사</a><a href="#s3">03 · 파일 형식별 원본 구조 추출</a><a href="#s4">04 · 텍스트 분할과 벡터 처리</a><a href="#s5">05 · 주제별 자동 분류와 AI 분석</a><a href="#s6">06 · 선수학습 관계와 지식 그래프 생성</a><a href="#s7">07 · 학습 순서 제안과 원본 순서 보존</a><a href="#s8">08 · Elasticsearch 검색 등록과 기존 인덱스 보호</a><a href="#s9">09 · 웹 관리자: 파일 업로드와 검토 승인</a><a href="#s10">10 · 실습 검증: 단위 테스트와 실제 서버 테스트</a><a href="#s11">11 · 오류 해결과 제한 사항</a><a href="#s12">12 · 핵심 정리 · 다음 단계</a><a href="learning-guide-detailed.html">← 제1장으로</a></nav><main><section class="chapter" id="s0"><h2><span class="n">00</span>과제 개요와 설계 원칙</h2><p>제1장에서 LM Studio·LangChain·Elasticsearch 연동과 기본 벡터 검색을 구성했다. 제2장에서는 로컬 자료를 업로드하여 <strong>원본 구조 보존 → 내용 분류 → 선수학습 제안 → 지식 관계 생성 → Elasticsearch 등록</strong> 과정을 구현한다.</p>
+<figure class="diagram"><div class="node"><strong>① 업로드 원본</strong><small>PDF · DOCX · HTML · Markdown · TXT</small></div><div class="arr">↓</div><div class="node"><strong>② 구조 추출</strong><small>장·절·페이지·순서·원문 보존</small></div><div class="arr">↓</div><div class="node primary"><strong>③ 분류 및 개념 추론</strong><small>로컬 DeepSeek 또는 키워드 기반 분류</small></div><div class="arr">↓</div><div class="split"><div><div class="node"><strong>④ 관계 제안</strong><small>선수학습 · 포함 · 순서 · 유사 개념</small></div></div><div><div class="node"><strong>⑤ 검색 등록</strong><small>Qwen3 2,560차원 → Elasticsearch</small></div></div></div></figure>
+<div class="note"><b>기본 원칙</b> — 원본 사실과 AI 추론은 별도 필드로 저장하고, AI가 제안한 분류·학습 경로는 승인 전까지 <code>proposed</code>(검토 대기)로 표시한다. 제1장 벡터 실습 인덱스는 수정하지 않는다.</div>
+<table><tr><th>구분</th><th>주요 필드</th><th>보존·검증 기준</th></tr><tr><td>원본</td><td><code>source_order</code>, <code>page</code>, <code>title</code></td><td>파일 추출 결과, 임의 재정렬 금지</td></tr><tr><td>분류</td><td><code>topic</code>, <code>difficulty</code>, <code>concepts</code></td><td>분석 방식·승인 상태 기록</td></tr><tr><td>관계</td><td><code>from</code>, <code>to</code>, <code>type</code></td><td>원본 관계와 추론 관계 구분</td></tr><tr><td>검색</td><td><code>text</code>, <code>embedding</code>, <code>document_id</code></td><td>별도 전용 인덱스에 저장</td></tr></table></section>
+<section class="chapter" id="s1"><h2><span class="n">01</span>실습 준비와 개발 환경</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · Ubuntu Terminal</div><pre><code>cd ~/langchain_web
+git pull origin main
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+systemctl --user restart langchain-lab
+systemctl --user status langchain-lab --no-pager</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[확인 기준]
+- pip 설치 시 의존성 오류가 발생하지 않음
+- Active: active (running)
+- 문서 관리 URL: http://127.0.0.1:8000/documents</pre></div><div class="explain"><h3>코드 풀이 — 기존 채팅을 유지하며 새 업로드 기능만 활성화한다</h3><p><code>git pull</code>로 GitHub에서 제2장 소스 파일을 가져오고, <code>pip install</code>로 PDF·DOCX·HTML 처리를 위한 라이브러리를 추가한다. <code>restart</code>는 기존 FastAPI 서비스를 새 소스코드로 재실행한다. 사용자 환경에서 실제 실행하여 결과를 확인해야 한다.</p></div>
+<table><tr><th>파일</th><th>역할</th></tr><tr><td><code>document_pipeline.py</code></td><td>원본 추출, 분류, 순서·관계 제안, 임베딩·저장</td></tr><tr><td><code>document_api.py</code></td><td>파일 업로드·목록·상세 조회·검색·검토 API</td></tr><tr><td><code>static/documents.html</code></td><td>파일 선택, 문서 목록·관계 승인 웹 UI</td></tr><tr><td><code>tests/test_document_pipeline.py</code></td><td>외부 서버 없이 실행되는 자동 테스트</td></tr><tr><td><code>app.py</code></td><td>기존 채팅에 문서 API를 추가로 연결</td></tr></table></section>
+<section class="chapter" id="s2"><h2><span class="n">02</span>원본 업로드와 보안 검사</h2><figure class="diagram"><div class="node"><strong>브라우저에서 파일 선택</strong><small>PDF · HTML · MD · DOCX · TXT</small></div><div class="arr">↓</div><div class="node"><strong>FastAPI /api/documents/upload</strong><small>파일당 8MB 제한 · 형식 검사</small></div><div class="arr">↓</div><div class="node"><strong>SHA-256 해시</strong><small>중복 파일 탐지</small></div><div class="arr">↓</div><div class="node primary"><strong>uploads/documents/</strong><small>파일 원본 로컬 보관 (Git 추적 제외)</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · document_api.py: 업로드 요청 일부</div><pre><code>@router.post("/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    use_ai: bool = Form(True),
+    index: bool = Form(True),
+):
+    body = await file.read(MAX_BYTES + 1)
+    if len(body) &gt; MAX_BYTES:
+        raise HTTPException(status_code=413, detail="파일은 최대 8MB")
+    return ingest_file(file.filename or "", body,
+                       use_ai=use_ai, index=index)</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[예시 응답]
+{"duplicate": false,
+ "document": {"document_id": "…",
+              "index_status": "indexed"}}</pre></div><div class="explain"><h3>코드 풀이 — 업로드 API는 파일을 제한 크기 안에서 읽는다</h3><p>서버는 파일명을 경로로 사용하지 않고 UUID 기반 로컬 이름으로 저장한다. 중복 검사는 SHA-256 해시를 사용한다. 실제 코드는 예외 처리와 상태 복구가 추가되어 있으므로 <code>document_api.py</code> 전체를 참고한다.</p></div>
+<div class="note warn">업로드 화면은 <code>127.0.0.1</code> 로컬 개발 환경에서만 운영한다. 외부 네트워크에 노출하려면 인증·요청 제한·파일 검사·접근제어를 반드시 추가한다. 또한 8MB 크기 제한은 PDF 내부 압축 해제 후 메모리 사용량의 안전성을 보장하지 않는다.</div></section>
+<section class="chapter" id="s3"><h2><span class="n">03</span>파일 형식별 원본 구조 추출</h2><figure class="diagram"><div class="split"><div><div class="node"><strong>Markdown / HTML</strong><small>제목 H1~H6 · 본문 순서</small></div></div><div><div class="node"><strong>PDF / DOCX</strong><small>페이지별 텍스트 · Word 제목 스타일</small></div></div></div><div class="arr">↓</div><div class="node primary"><strong>sections 배열</strong><small>section_id · title · level · parent_id · page · source_order</small></div><div class="arr">↓</div><div class="node"><strong>원본 계층 보존</strong><small>페이지/장절 정보는 AI 제안과 구분</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · document_pipeline.py: 구조 추출</div><pre><code>sections = extract_sections(stored)
+for section in sections:
+    print(section["source_order"],
+          section["title"],
+          section["parent_id"],
+          section["provenance"])</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[예시 출력 — Markdown 문서]
+1 GPIO None source_extracted
+2 Register Map s0001 source_extracted
+3 AXI4-Lite s0001 source_extracted</pre></div><div class="explain"><h3>코드 풀이 — 원본 순서와 장·절의 상위 관계를 저장한다</h3><p><code>source_order</code>는 실제 추출 순서이며, <code>parent_id</code>는 H1/H2 등 제목 계층에서 계산한다. PDF는 우선 페이지 단위로 구조를 추출하므로 복잡한 목차나 그림은 별도 개선이 필요하다.</p></div></section>
+<section class="chapter" id="s4"><h2><span class="n">04</span>텍스트 분할과 벡터 처리</h2><figure class="diagram"><div class="node"><strong>원본 section</strong><small>제목·페이지·순서</small></div><div class="arr">↓</div><div class="node primary"><strong>텍스트 분할</strong><small>약 1,150문자 단위 · 130문자 중첩</small></div><div class="arr">↓</div><div class="node"><strong>Qwen3-Embedding-4B</strong><small>분할 청크마다 2,560차원 벡터</small></div><div class="arr">↓</div><div class="node"><strong>Elasticsearch 문서</strong><small>원문 청크 + 출처 메타데이터 + 벡터</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · document_pipeline.py: 청크 생성</div><pre><code>sections = extract_sections(stored)
+chunks = make_chunks(sections)
+for item in chunks[:3]:
+    print(item["chunk_id"], item["section_id"],
+          len(item["text"]), item["page"])</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[예시 출력]
+s0001_c001 s0001 1150 None
+s0001_c002 s0001 1150 None
+s0002_c001 s0002 420 None</pre></div><div class="explain"><h3>코드 풀이 — 길이가 긴 절을 검색에 적절한 단위로 나눈다</h3><p>청크마다 <code>section_id</code>와 원본 <code>page</code>를 보존한다. 중첩 길이는 서로 인접한 문장 사이의 검색 맥락을 유지하기 위한 것이다. 청크 개수는 최대 160개로 제한해 과도한 임베딩 요청을 막는다.</p></div></section>
+<section class="chapter" id="s5"><h2><span class="n">05</span>주제별 자동 분류와 AI 분석</h2><figure class="diagram"><div class="node"><strong>문서 제목 · 대표 문단</strong><small>최대 32절에서 일부 내용 선택</small></div><div class="arr">↓</div><div class="node primary"><strong>DeepSeek JSON 분류 제안</strong><small>주제 · 핵심 개념 · 난이도</small></div><div class="arr">↓</div><div class="split"><div><div class="node"><strong>모델 성공</strong><small>method: llm</small></div></div><div><div class="node"><strong>모델 실패</strong><small>method: heuristic (키워드)</small></div></div></div><div class="arr">↓</div><div class="node"><strong>review_status: proposed</strong><small>승인되기 전까지 확정 사실로 취급하지 않음</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · document_pipeline.py: 분류 실행</div><pre><code>classification = analyze_document(
+    sections, "soc_study.md", use_ai=True
+)
+print(classification["topic"])
+print(classification["method"])
+print(classification["review_status"])</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[예시 출력]
+FPGA / SoC
+heuristic
+proposed</pre></div><div class="explain"><h3>코드 풀이 — 원문에서 찾은 사실과 분류 모델의 판단을 구분한다</h3><p>로컬 LLM을 호출하지만 추론 결과가 JSON 규칙을 따르지 않거나 서버 연결에 실패하면 키워드 기반 분류로 전환한다. 모델은 임의의 외부 URL에 전송하지 않고 지정된 로컬 LM Studio 주소를 사용한다. 주제·난이도는 원본에 명시된 사실이 아니라 검토가 필요한 분석 결과다.</p></div></section>
+<section class="chapter" id="s6"><h2><span class="n">06</span>선수학습 관계와 지식 그래프 생성</h2><figure class="diagram"><div class="node"><strong>원본 장·절 계층</strong><small>precedes · contains</small></div><div class="arr">↓</div><div class="node primary"><strong>개념 간 의존성 규칙</strong><small>GPIO → Register Map → AXI4-Lite</small></div><div class="arr">↓</div><div class="node"><strong>관계 데이터</strong><small>from / to / type / provenance / review_status</small></div></figure>
+<table><tr><th>관계</th><th>의미</th><th>근거</th></tr><tr><td><code>precedes</code></td><td>원문에서 먼저 나타남</td><td>원본 순서</td></tr><tr><td><code>contains</code></td><td>상위 장이 하위 절을 포함</td><td>원본 제목 계층</td></tr><tr><td><code>prerequisite</code></td><td>선수학습 필요 제안</td><td>사전 정의 규칙</td></tr><tr><td><code>related</code></td><td>공통 개념 존재 제안</td><td>제목 내 공통 기술 용어</td></tr></table>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · document_pipeline.py: 관계 생성</div><pre><code>edges = propose_relations(sections, classification["concepts"])
+for edge in edges:
+    print(edge["from"], "-&gt;", edge["to"],
+          edge["type"], edge["provenance"])</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[예시 출력]
+s0001 -> s0002 precedes source_extracted
+s0002 -> s0003 precedes source_extracted
+s0001 -> s0002 prerequisite rule_inferred
+s0002 -> s0003 prerequisite rule_inferred</pre></div><div class="explain"><h3>코드 풀이 — 원본 관계와 추론 관계를 한 데이터에 섞지 않는다</h3><p>원문 순서는 추출한 사실이지만, 교육상 어떤 개념이 먼저 필요한지는 도메인 규칙에서 제안한 관계다. <code>rule_inferred</code>는 반드시 검토 상태로 보존한다. 초기 버전은 제목 키워드에 의존하므로 의미가 다른 동형 용어와 동일 개념의 다른 표현을 놓칠 수 있다.</p></div></section>
+<section class="chapter" id="s7"><h2><span class="n">07</span>학습 순서 제안과 원본 순서 보존</h2><figure class="diagram"><div class="split"><div><div class="node"><strong>원본 학습 순서</strong><small>AXI4-Lite → Register Map → GPIO</small></div></div><div><div class="node primary"><strong>추천 학습 순서</strong><small>GPIO → Register Map → AXI4-Lite</small></div></div></div><div class="arr">↓</div><div class="node"><strong>두 순서를 별도로 유지</strong><small>source_order 변경 없음 · learning_sequence 저장</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · document_pipeline.py: 순서 계산</div><pre><code>order = learning_sequence(sections, edges)
+print(order["section_ids"])
+print(order["method"])
+print(order["review_status"])</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[예시 출력]
+['s0003', 's0002', 's0001']
+topological_sort
+proposed</pre></div><div class="explain"><h3>코드 풀이 — 선수학습 조건으로 위상 정렬을 수행한다</h3><p>위상 정렬은 먼저 배워야 하는 항목을 앞에 배치한다. 우선순위가 같은 경우 원본 순서를 유지한다. 순환 관계가 감지되면 원본 순서를 유지하며 경고를 표시한다. 승인 전에는 제안으로만 취급한다.</p></div></section>
+<section class="chapter" id="s8"><h2><span class="n">08</span>Elasticsearch 검색 등록과 기존 인덱스 보호</h2><figure class="diagram"><div class="split"><div><div class="node"><strong>제1장 실습 인덱스</strong><small>langchain_embedding_lab (기존) </small></div></div><div><div class="node primary"><strong>제2장 문서 인덱스</strong><small>langchain_documents_v1 (신규)</small></div></div></div><div class="arr">↓</div><div class="node"><strong>벡터·원문·출처 저장</strong><small>document_id · chunk_id · page · source_order</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · document_pipeline.py: 등록 핵심</div><pre><code>es = es_client()
+_ensure_index(es)  # 신규 문서 인덱스의 매핑 확인
+for chunk in chunks:
+    vector = embed_query(chunk["text"])
+    es.index(
+        index=DOCUMENT_INDEX,
+        id=meta["document_id"] + "_" + chunk["chunk_id"],
+        document={**chunk, "embedding": vector,
+                  "document_id": meta["document_id"]}
+    )</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[확인 기준]
+- 인덱스명: langchain_documents_v1
+- embedding 매핑: dense_vector, 2560 dims
+- 등록 후 index_status: indexed</pre></div><div class="explain"><h3>코드 풀이 — 기존 실습 인덱스를 변경하지 않고 문서별 고유 ID로 등록한다</h3><p>실제 구현은 <code>_index_chunks()</code>에 있으며 문서 제목·파일명·주제·등록일도 함께 저장한다. 등록 실패 시 가능한 범위에서 해당 문서의 청크만 정리하고, 카탈로그에는 실패 상태를 남겨 재시도할 수 있게 한다.</p></div>
+<div class="note warn">현재 버전의 롤백은 Elasticsearch 요청이 장기간 실패하거나 일부 응답이 유실되는 상황에서 완전한 트랜잭션을 보장하지는 않는다. 실무 운영에는 작업 큐·재시도·배치 처리·복구 검증이 추가로 필요하다.</div></section>
+<section class="chapter" id="s9"><h2><span class="n">09</span>웹 관리자: 파일 업로드와 검토 승인</h2><figure class="diagram"><div class="node"><strong>http://127.0.0.1:8000/documents</strong><small>문서 관리자 웹 화면</small></div><div class="arr">↓</div><div class="split"><div><div class="node"><strong>파일 선택 + 업로드</strong><small>PDF / HTML / MD / TXT / DOCX</small></div></div><div><div class="node"><strong>문서 목록과 상세</strong><small>원본 순서 · 분류 · 관계</small></div></div></div><div class="arr">↓</div><div class="node primary"><strong>관리자 검토</strong><small>분류·학습 순서·선택 관계 승인</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · FastAPI 주요 API 경로</div><pre><code>GET  /api/documents
+GET  /api/documents/{document_id}
+POST /api/documents/upload
+POST /api/documents/search
+POST /api/documents/{document_id}/review
+POST /api/documents/{document_id}/reindex</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[확인 기준]
+GET /api/documents → {"documents": [...]}
+POST /api/documents/upload → {"duplicate": false, "document": {...}}
+POST /api/documents/search → {"results": [...]}</pre></div><div class="explain"><h3>코드 풀이 — 원본 구조를 조회하면서 추론 결과만 승인한다</h3><p>브라우저는 문서를 업로드하고 저장된 원본 구조·분류·학습 순서·관계 정보를 표시한다. 검토 버튼은 <code>review_status</code>만 변경한다. 원본 문서의 텍스트나 <code>source_order</code>를 변경하지 않는다.</p></div>
+</section>
+<section class="chapter" id="s10"><h2><span class="n">10</span>실습 검증: 단위 테스트와 실제 서버 테스트</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · Ubuntu Terminal</div><pre><code>cd ~/langchain_web
+source .venv/bin/activate
+python -m unittest discover -s tests   -p 'test_document_pipeline.py' -v
+
+python -m compileall -q app.py rag_search.py   document_pipeline.py document_api.py
+curl http://127.0.0.1:8000/api/documents</code></pre></div><div class="output"><div class="bar">OUTPUT · 예시 / 확인 기준</div><pre>[확인 기준 — 사용자 PC 실행 필요]
+- 단위 테스트: 모든 항목 ... ok
+- 구문 검사: 오류 없음
+- 문서 API: {"documents": []} 또는 등록된 목록</pre></div><div class="explain"><h3>코드 풀이 — 외부 서버 없이 구조·순서·보안 동작을 우선 검증한다</h3><p>단위 테스트는 제목 계층 복원, 원본 순서 보존, 선수관계 재정렬, 중복 파일 검사, 파일 확장자 제한, HTML 스크립트 제거 등을 다룬다. 실제 Elasticsearch 색인과 LM Studio 모델 응답은 사용자 PC에서 종단 간 테스트해야 한다.</p></div>
+<table><tr><th>검증 항목</th><th>기준</th><th>현황</th></tr><tr><td>기존 채팅 API 보존</td><td>기존 <code>/api/chat</code> 동작</td><td>코드 보존, 현장 재검증 필요</td></tr><tr><td>구조·관계·순서</td><td>오프라인 단위 테스트 통과</td><td>CI 실행 결과 별도 확인</td></tr><tr><td>임베딩 · 실제 색인</td><td>LM Studio + ES 정상 연결</td><td>사용자 PC 검증 필요</td></tr><tr><td>문서 원본 비공개</td><td><code>uploads/</code>, <code>data/</code> Git 제외</td><td>.gitignore 설정됨</td></tr></table></section>
+<section class="chapter" id="s11"><h2><span class="n">11</span>오류 해결과 제한 사항</h2><table><tr><th>문제</th><th>원인</th><th>조치</th></tr>
+<tr><td>업로드 처리 실패</td><td>형식·용량·텍스트 추출 오류</td><td>8MB 제한과 지원 확장자 확인</td></tr>
+<tr><td>스캔 PDF 빈 텍스트</td><td>이미지 PDF</td><td>OCR(광학 문자 인식) 별도 단계 추가</td></tr>
+<tr><td>벡터 등록 실패</td><td>LM Studio·ES 접속 불가</td><td>서버 상태·CA 인증서·비밀번호 확인</td></tr>
+<tr><td>분류가 미분류</td><td>모델 실패·키워드 부족</td><td>분류 제안을 확인하고 규칙 확장</td></tr>
+<tr><td>학습 순서 부정확</td><td>제한된 선수학습 규칙</td><td>관계 근거 확인·규칙 검토</td></tr>
+<tr><td>검색 점수 높지만 오답</td><td>의미 유사도 ≠ 사실 정확성</td><td>정확 일치 검색·출처 검증 확장</td></tr></table>
+<div class="note warn">로컬 PC 전용 개발 기능이다. 보안을 위한 전체 사용자 인증, 바이러스 검사, 대용량 파일 작업 큐, PDF OCR, 문서별 접근 권한은 후속 버전에서 다룬다.</div></section>
+<section class="chapter summary" id="s12"><h2><span class="n">12</span>핵심 정리 · 다음 단계</h2><p><strong>제2장 실습에서 새롭게 얻는 결과</strong>는 문서 원본·분류 제안·학습 순서·지식 관계·검색 청크를 서로 분리한 구조화 자료다. 원문과 분석 결과가 독립되어 있어 자동 교재 재편성에 활용할 수 있다.</p>
+<figure class="diagram"><div class="node"><strong>원본 파일</strong><small>변경하지 않고 보존</small></div><div class="arr">↓</div><div class="node primary"><strong>구조화 지식</strong><small>원문 계층 + 주제/관계 제안</small></div><div class="arr">↓</div><div class="node"><strong>선수학습·검색 검증</strong><small>검토된 정보만 교육자료로 채택</small></div><div class="arr">↓</div><div class="node"><strong>다음 단계: 기술 데이터시트 RAG</strong><small>핀맵·규칙 검증·출처 페이지 연결</small></div></figure>
+<ul><li>원본 순서와 학습 순서를 구분하여 저장한다.</li><li>LLM 분석은 원본 사실이 아니라 검토 대기 제안으로 취급한다.</li><li>기존 제1장 실습 인덱스를 덮어쓰지 않는다.</li><li>문서 등록 오류가 발생하면 상태를 남기고 원인을 점검한다.</li><li>실제 기술문서 기반 RAG는 검증 자료와 정확도 평가를 추가해 완성한다.</li></ul></section>
+<p style="font-size:14px;color:#6b7585">제2장 문서 처리 실습 교재 · 2026-11-09 · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 원본 소스</a> · <a href="learning-guide-detailed.html">제1장</a></p></main></div>
+<div class="quick"><a href="../index.html">⌂ 목차</a><a href="learning-guide-detailed.html">← 제1장</a><a href="#s0">↑ 처음</a></div></body></html>
