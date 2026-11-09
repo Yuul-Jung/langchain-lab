@@ -49,7 +49,7 @@ GUI를 이미 설치해 사용 중이므로 LM Studio의 설정(`Ctrl+,`)에서 
 
 브라우저에서 http://127.0.0.1:8000 접속 → `일반 채팅` 또는 `RAG 문서 검색` 선택.
 
-RAG는 **기존** `langchain_embedding_lab` 인덱스를 읽기 전용으로 검색합니다. 새 문서 업로드/인덱스 수정 기능은 아직 없습니다. RAG 검색 결과의 출처와 점수는 화면에 표시됩니다.
+일반 RAG 채팅은 **기존** `langchain_embedding_lab` 인덱스를 읽기 전용으로 검색합니다. 제2장 문서 업로드 기능은 별도 인덱스 `langchain_documents_v1`에 등록하며, 두 검색 경로는 아직 분리되어 있습니다. RAG 채팅에서 새 업로드 문서를 자동 검색하도록 전환하는 기능은 후속 통합 과제입니다.
 
 ## 주의
 
@@ -75,3 +75,41 @@ RAG는 **기존** `langchain_embedding_lab` 인덱스를 읽기 전용으로 검
 GitHub Pages: https://yuul-jung.github.io/langchain-lab/docs/diagram-style-guide.html
 
 구조도는 HTML/CSS로 작성되어 텍스트와 박스를 수정할 수 있으며, 인쇄/PDF 저장도 지원합니다.
+
+
+## 제2장 — 로컬 문서 업로드·구조화 (v2.0 학습 과정)
+
+- [제2장 HTML 학습안내서](docs/ch02-document-ingestion.html)
+- [제1장 HTML 학습안내서](docs/learning-guide-detailed.html)
+- 로컬 웹 문서 관리자: http://127.0.0.1:8000/documents
+- API: `/api/documents`, `/api/documents/upload`, `/api/documents/search`, `/api/documents/{document_id}/review`
+- 처리 기능: PDF/DOCX/TXT/Markdown/HTML 구조 추출, 분류 제안, 원본·선수관계 분리, 추천 학습 순서, Elasticsearch 2,560차원 벡터 등록
+- 문서 원본: `uploads/documents/` (Git 추적 제외), 카탈로그: `data/document_catalog/` (Git 추적 제외)
+- 파일당 제한: 8MB, 최다 150개 절 및 160개 청크. 스캔 PDF OCR 미지원
+- AI 분류 실패 시 키워드 기반 임시 분류. 제안은 `review_status=proposed`로 저장하며 원본 순서를 덮어쓰지 않음
+
+### 제2장 코드 반영
+
+```bash
+# GitHub에서 최신 소스 받기
+cd ~/langchain_web
+git pull origin main
+
+# Python 패키지 설치
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+
+# 외부 서버 없이 구문·구조·원본 순서·중복 검사 수행
+python -m compileall -q app.py document_api.py document_pipeline.py
+python -m unittest discover -s tests -p 'test_document_pipeline.py' -v
+
+# 사용자 FastAPI 서비스 재시작
+systemctl --user restart langchain-lab
+
+# 브라우저로 문서 관리자 접속
+# http://127.0.0.1:8000/documents
+```
+
+**검증 상태:** GitHub 소스와 오프라인 자동 테스트 코드를 추가했습니다. 실제 사용자의 LM Studio, Elasticsearch, 파일별 추출 및 브라우저 업로드 동작은 로컬 PC에서 실행·검증해야 합니다. CI 설정은 `.github/workflows/document-pipeline-tests.yml`에 있습니다.
+
+**보안:** 로컬 개발 환경 전용입니다. `.env`와 업로드 원본은 Git에 추가하지 마세요. 외부 네트워크에 노출하지 마세요. 업로드를 통한 스크립트 실행을 허용하지 않지만, 불신 파일에 대한 완전한 악성 파일 검사나 멀티유저 인증은 구현되지 않았습니다.
