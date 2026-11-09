@@ -151,6 +151,19 @@ def _parse_docx(path):
     return sections
 
 
+def _attach_hierarchy(sections):
+    """Reconstruct heading ancestry without changing the physical source order."""
+    stack = []
+    for section in sections:
+        level = section["level"]
+        while stack and stack[-1]["level"] >= level:
+            stack.pop()
+        if stack:
+            section["parent_id"] = stack[-1]["id"]
+        stack.append(section)
+    return sections
+
+
 def extract_sections(path):
     ext = path.suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
@@ -170,7 +183,7 @@ def extract_sections(path):
         raise ValueError("문서에서 검색 가능한 텍스트를 추출하지 못했습니다. 스캔 PDF는 별도 OCR이 필요합니다.")
     if len(sections) > MAX_SECTIONS:
         raise ValueError("추출된 절이 최대 개수를 초과했습니다.")
-    return sections
+    return _attach_hierarchy(sections)
 
 
 def _split_text(text, max_chars=1150, overlap=130):
@@ -287,6 +300,14 @@ def propose_relations(sections, concepts):
          "provenance": "source_extracted", "review_status": "not_required"}
         for a, b in zip(sections, sections[1:])
     ]
+    # Heading hierarchy is taken from the original, not proposed by the LLM.
+    for section in sections:
+        if section["parent_id"]:
+            edges.append({
+                "from": section["parent_id"], "to": section["id"],
+                "type": "contains", "provenance": "source_extracted",
+                "review_status": "not_required",
+            })
     # Find concepts in section titles only to reduce spurious associations.
     title_map = defaultdict(list)
     for section in sections:
@@ -308,6 +329,17 @@ def propose_relations(sections, concepts):
                             "provenance": "rule_inferred", "review_status": "proposed",
                             "reason": f"학습 규칙: {parent} → {concept}",
                         })
+    # Sections sharing an explicit title concept are related, but the relationship is a proposal.
+    for concept, section_ids in title_map.items():
+        if len(section_ids) < 2:
+            continue
+        for earlier, later in zip(section_ids, section_ids[1:]):
+            if earlier != later:
+                edges.append({
+                    "from": earlier, "to": later, "type": "related",
+                    "provenance": "rule_inferred", "review_status": "proposed",
+                    "reason": f"제목에서 공통 개념 발견: {concept}",
+                })
     return edges
 
 
