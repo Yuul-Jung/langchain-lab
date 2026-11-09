@@ -58,3 +58,10 @@ RAG는 **기존** `langchain_embedding_lab` 인덱스를 읽기 전용으로 검
 - `.env`, 비밀번호, 가상환경, 기술 문서나 대화 로그를 공개 저장소에 넣지 마세요.
 - 모델이 메모리에 실제 로드되거나 JIT 로딩 가능한 상태여야 RAG 동작이 가능합니다.
 - 현재 저장된 대화는 새로고침하면 사라집니다.
+
+## 학습용 HTML 교재
+
+- [전체 구축 과정·블록다이어그램·검증 및 문제 해결](docs/learning-guide.html)
+- GitHub Pages 배포 링크: https://yuul-jung.github.io/langchain-lab/docs/learning-guide.html
+
+교재는 실제 성공 단계와 검증 대기 단계를 구별하여 정리했습니다.
