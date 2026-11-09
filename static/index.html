@@ -1,135 +1,65 @@
 <!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LangChain Local AI</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #111827; color: #f9fafb;
-      font-family: system-ui, "Noto Sans KR", sans-serif; }
-    .app { max-width: 960px; height: 100dvh; margin: auto;
-      display: flex; flex-direction: column; }
-    header { padding: 16px 20px; border-bottom: 1px solid #374151;
-      display: flex; justify-content: space-between; gap: 10px; align-items: center; }
-    h1 { margin: 0; font-size: 19px; }
-    #status { color: #a5b4fc; font-size: 12px; overflow-wrap: anywhere; }
-    #chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-      gap: 14px; padding: 20px; }
-    .message { padding: 13px 16px; max-width: 86%; line-height: 1.65;
-      border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .user { align-self: flex-end; background: #2563eb; }
-    .assistant { align-self: flex-start; background: #1f2937; }
-    footer { padding: 16px 20px; border-top: 1px solid #374151; }
-    form { display: flex; gap: 10px; }
-    textarea { flex: 1; min-width: 0; border: 1px solid #4b5563;
-      border-radius: 10px; padding: 12px; font: inherit; resize: none;
-      background: #1f2937; color: #f9fafb; }
-    button { border: 0; border-radius: 10px; padding: 11px 17px;
-      background: #2563eb; color: #fff; cursor: pointer; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    .toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-    .toolbar button { background: #374151; }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <header>
-      <h1>LangChain Local AI</h1>
-      <span id="status">모델 연결 확인 중...</span>
-    </header>
-    <main id="chat" aria-live="polite">
-      <div class="message assistant">안녕하세요. 로컬 AI 채팅입니다.</div>
-    </main>
-    <footer>
-      <div class="toolbar"><button id="clear" type="button">새 대화</button></div>
-      <form id="form">
-        <textarea id="question" rows="2" required
-          placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈"></textarea>
-        <button id="send" type="submit">전송</button>
-      </form>
-    </footer>
-  </div>
-  <script>
-    const chat = document.getElementById("chat");
-    const form = document.getElementById("form");
-    const question = document.getElementById("question");
-    const send = document.getElementById("send");
-    const clear = document.getElementById("clear");
-    const status = document.getElementById("status");
-    let history = [];
-    let busy = false;
-
-    // Use textContent rather than HTML to display model output safely.
-    function addMessage(role, text) {
-      const node = document.createElement("div");
-      node.className = "message " + role;
-      node.textContent = text;
-      chat.appendChild(node);
-      chat.scrollTop = chat.scrollHeight;
-      return node;
-    }
-
-    async function checkModels() {
-      try {
-        const response = await fetch("/api/models");
-        if (!response.ok) throw new Error("연결 실패");
-        const data = await response.json();
-        status.textContent = data.models.length
-          ? "모델: " + data.models[0] : "로드된 모델 없음";
-      } catch {
-        status.textContent = "LM Studio 연결 실패";
-      }
-    }
-
-    form.addEventListener("submit", async event => {
-      event.preventDefault();
-      if (busy || !question.value.trim()) return;
-      const text = question.value.trim();
-      const messages = [...history, {role: "user", content: text}];
-      addMessage("user", text);
-      question.value = "";
-      busy = true;
-      send.disabled = true;
-      clear.disabled = true;
-      const pending = addMessage("assistant", "답변 생성 중...");
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({messages})
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.detail || "응답 오류");
-        const answer = typeof data.answer === "string"
-          ? data.answer : JSON.stringify(data.answer);
-        pending.textContent = answer;
-        history = [...messages, {role: "assistant", content: answer}];
-      } catch (error) {
-        pending.textContent = "오류: " + error.message;
-      } finally {
-        busy = false;
-        send.disabled = false;
-        clear.disabled = false;
-        chat.scrollTop = chat.scrollHeight;
-        question.focus();
-      }
-    });
-
-    question.addEventListener("keydown", event => {
-      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
-        event.preventDefault();
-        form.requestSubmit();
-      }
-    });
-
-    clear.addEventListener("click", () => {
-      if (busy) return;
-      history = [];
-      chat.replaceChildren();
-      addMessage("assistant", "새 대화를 시작합니다.");
-    });
-    checkModels();
-  </script>
-</body>
-</html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LangChain Lab · Local RAG</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf2fa;font-family:system-ui,"Noto Sans KR",sans-serif}
+main{max-width:1050px;margin:auto;height:100dvh;display:flex;flex-direction:column}
+header,footer{padding:16px 22px;border-bottom:1px solid #31415a}footer{border-bottom:0;border-top:1px solid #31415a}
+h1{margin:0;font-size:21px}small{color:#9cafc8}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button,select,textarea{font:inherit;border-radius:9px}
+button{background:#2563eb;color:white;padding:10px 15px;border:0;cursor:pointer}
+button.secondary{background:#34445d}button:disabled{opacity:.55}
+select,textarea{border:1px solid #475569;background:#1f2937;color:white;padding:10px}
+#status{font-size:12px;color:#a5d0ff;margin-top:10px}
+#chat{flex:1;overflow:auto;display:flex;flex-direction:column;gap:13px;padding:20px}
+.msg{max-width:88%;padding:13px 16px;border-radius:14px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.user{background:#1d4ed8;align-self:flex-end}.assistant{background:#26364e;align-self:flex-start}
+.sources{font-size:12px;color:#bac8dd;border-left:2px solid #64748b;padding:8px 12px;white-space:pre-wrap;align-self:flex-start;max-width:88%}
+form{display:flex;gap:9px}textarea{flex:1;min-width:0;resize:none}footer small{display:block;margin-top:8px}
+</style></head><body><main>
+<header><h1>LangChain Lab</h1><small>FastAPI · LM Studio · Elasticsearch (로컬 통합 서비스)</small>
+<div class="toolbar"><label for="mode">응답 모드</label>
+<select id="mode"><option value="chat">일반 채팅</option><option value="rag">RAG 문서 검색</option></select>
+<button id="check" class="secondary" type="button">연결 상태</button>
+<button id="clear" class="secondary" type="button">새 대화</button></div>
+<div id="status" role="status">서비스 상태 확인 중...</div></header>
+<section id="chat" aria-live="polite"><div class="msg assistant">질문을 입력하세요. 문서 검색은 RAG 모드를 선택합니다.</div></section>
+<footer><form id="form"><textarea id="question" rows="2" required placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈"></textarea><button id="send" type="submit">전송</button></form>
+<small>현재 PC에서만 접속하는 개발용 서비스입니다. 대화 기록은 아직 영구 저장하지 않습니다.</small></footer>
+</main><script>
+"use strict";
+const $=id=>document.getElementById(id), chat=$("chat");let history=[],busy=false;
+function append(cls,value){const node=document.createElement("div");node.className=cls;node.textContent=value;chat.appendChild(node);chat.scrollTop=chat.scrollHeight;return node}
+async function check(){
+ $("status").textContent="연결 확인 중...";
+ try{
+  const [a,b]=await Promise.all([fetch("/api/models"),fetch("/api/rag/status")]);
+  if(!a.ok)throw Error("LM Studio 연결 불가");
+  const model=await a.json(),rag=await b.json();
+  $("status").textContent="LLM: "+model.chat_model+" · Elasticsearch: "+(rag.connected?(rag.index_exists?"연결됨":"인덱스 없음"):"연결되지 않음");
+ }catch(e){$("status").textContent="서버 상태 확인 실패: "+e.message}
+}
+$("form").addEventListener("submit",async e=>{
+ e.preventDefault();if(busy||!$("question").value.trim())return;
+ const content=$("question").value.trim(),mode=$("mode").value;
+ const messages=[...history,{role:"user",content}];
+ append("msg user",content);$("question").value="";const result=append("msg assistant","답변 생성 중...");
+ busy=true;$("send").disabled=true;$("clear").disabled=true;$("mode").disabled=true;
+ try{
+  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages,mode})});
+  const data=await r.json();if(!r.ok)throw Error(data.detail||"API 오류");
+  result.textContent=data.answer||"응답 없음";
+  history=[...messages,{role:"assistant",content:data.answer||""}];
+  if(mode==="rag"&&data.sources?.length){
+   const text=data.sources.map((s,i)=>"["+(i+1)+"] 점수 "+s.score+" · "+s.text).join("\n");
+   append("sources","검색 근거\n"+text);
+  }
+ }catch(err){result.textContent="오류: "+err.message}
+ finally{busy=false;$("send").disabled=false;$("clear").disabled=false;$("mode").disabled=false;chat.scrollTop=chat.scrollHeight}
+});
+$("question").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("form").requestSubmit()}});
+$("mode").addEventListener("change",()=>{history=[];chat.replaceChildren();append("msg assistant","모드를 전환했습니다. 새 대화를 시작합니다.")});
+$("clear").addEventListener("click",()=>{if(busy)return;history=[];chat.replaceChildren();append("msg assistant","새 대화를 시작합니다.")});
+$("check").addEventListener("click",check);check();
+</script></body></html>
