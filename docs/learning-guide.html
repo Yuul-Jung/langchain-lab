@@ -29,8 +29,16 @@ pre{font-size:15px;line-height:1.75}
  .diagram .half .subentry strong{font-size:17px}
  .diagram{padding:17px}
 }
+
+/* Study document quick navigation */
+.quick-nav{position:fixed;right:22px;bottom:24px;z-index:50;display:flex;flex-direction:column;gap:9px}
+.quick-nav button,.quick-nav a{font:700 15px/1.2 system-ui,"Noto Sans KR",sans-serif;text-decoration:none;color:#244a7c;background:#fff;border:1px solid #cdd9e9;box-shadow:0 3px 15px #22334b1a;border-radius:12px;min-height:45px;min-width:110px;display:flex;align-items:center;justify-content:center;padding:10px 14px;cursor:pointer}
+.quick-nav button:hover,.quick-nav a:hover{background:#eaf2ff}
+.quick-nav button:focus-visible,.quick-nav a:focus-visible{outline:3px solid #3b82f6;outline-offset:2px}
+@media(max-width:740px){.quick-nav{right:9px;bottom:10px;gap:6px}.quick-nav button,.quick-nav a{font-size:13px;min-height:41px;min-width:89px;padding:8px}}
+@media print{.quick-nav{display:none}}
 </style></head>
-<body><div class="shell"><aside><div class="brand">📘 Local AI<br>LangChain Lab</div><nav>
+<body><div id="top"></div><div class="shell"><aside><div class="brand">📘 Local AI<br>LangChain Lab</div><nav>
 <div class="tochead">학습 목차</div>
 <a href="#overview">01 · 실습 개요</a><a href="#architecture">02 · 전체 블록다이어그램</a>
 <a href="#roles">03 · 도구별 역할</a><a href="#environment">04 · 개발환경</a>
@@ -250,4 +258,8 @@ journalctl --user -u langchain-lab -n 40 --no-pager</code></pre>
 <div class="arrow">↓</div><div class="node highlight"><strong>05 · 전기·전자 회로 설계 자동화 연계</strong><small>데이터시트 · 핀맵 · 전기적 제약 · KiCad 생성·검증</small></div></div>
 <div class="note"><strong>기술 문서 검색에서 특히 중요한 원칙</strong> — <code>STM32F103C8T6</code>, <code>PA9</code>, <code>USART1_TX</code>, <code>3.3V</code> 등은 의미 검색만으로 답을 확정하지 않는다. 정확 일치 검색 및 실제 데이터시트 검증을 함께 수행한다.</div>
 <div class="footer">학습용 배포자료 · 2026-11-09 · <a href="https://github.com/Yuul-Jung/langchain-lab">Yuul-Jung/langchain-lab</a><br>이 문서는 재현 가능한 단계와 관찰된 검증 결과를 구분하여 작성했다. 실제 개인 비밀번호·토큰·내부 문서 내용은 포함하지 않는다.</div>
-</main></div></body></html>
+</main></div><nav class="quick-nav" aria-label="교재 빠른 이동">
+<button type="button" onclick="if(history.length>1){history.back()}else{location.href='../index.html'}" title="이전 페이지로 돌아가기">← 뒤로 가기</button>
+<a href="../index.html" title="학습자료 메인 목차">⌂ 메인으로</a>
+<a href="#top" title="문서 맨 위로 이동">↑ 맨 위로</a>
+</nav></body></html>
