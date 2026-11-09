@@ -1,0 +1,181 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>로컬 AI/RAG 시스템 실습 교재 · 심화 개정판</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--paper:#f1f2ee;--card:#fff;--ink:#15171c;--ink2:#4a4f5a;--ink3:#858b96;--line:#dddFD8;--accent:#4635b1;--soft:#edeafa;--maxw:1240px;--blue:#eaf1fc}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans KR",system-ui,sans-serif;line-height:1.75;font-size:17px}code,pre{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+.hero{background:#15171c;color:#f1f2ee;position:relative;overflow:hidden}.hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(to right,#ffffff0e 1px,transparent 1px),linear-gradient(to bottom,#ffffff0e 1px,transparent 1px);background-size:28px 28px;pointer-events:none}.hero-inner{position:relative;max-width:var(--maxw);padding:76px 30px 62px;margin:auto}.kick{color:#ffd24a;border-bottom:2px solid #ffd24a;display:inline-block;padding-bottom:7px;font-weight:700;font-size:19px}.hero h1{font-size:clamp(35px,5vw,57px);line-height:1.2;letter-spacing:-.04em;max-width:19ch;margin:22px 0}.hero p{color:#bfc4ce;font-size:19px;max-width:850px}.meta{display:flex;flex-wrap:wrap;gap:10px;margin:32px 0}.meta span{font-size:14px;border:1px solid #ffffff44;padding:5px 12px}.meta b,.hero strong{color:#ffd24a}.hero-terms{border-top:1px solid #ffffff30;display:grid;grid-template-columns:repeat(3,1fr);gap:22px;padding-top:30px;margin-top:35px}.hero-terms h3{font-size:19px;margin:0 0 5px}.hero-terms p{font-size:16px;line-height:1.65;margin:0}
+.layout{max-width:var(--maxw);margin:auto;padding:0 25px 90px;display:grid;grid-template-columns:210px minmax(0,1fr);gap:44px;align-items:start}nav.toc{position:sticky;top:0;max-height:100vh;overflow:auto;padding:40px 0}nav.toc h2{font-size:14px;letter-spacing:.12em;color:var(--ink3)}nav.toc a{display:block;text-decoration:none;color:#515766;border-left:2px solid transparent;padding:7px 10px;font-size:15px;line-height:1.45}nav.toc a:hover{color:var(--accent);border-color:var(--accent)}main{padding-top:38px}section.chapter{background:var(--card);border:1px solid var(--line);padding:32px 35px 36px;margin-bottom:18px;scroll-margin-top:20px}section.chapter h2{margin:0 0 18px;font-size:25px;line-height:1.35}section.chapter h2 .n{display:inline-block;background:var(--soft);color:var(--accent);padding:3px 9px;margin-right:12px;font-size:17px}h3{font-size:20px;margin:25px 0 10px}p{color:var(--ink2);margin:12px 0}ul{padding-left:23px;color:var(--ink2)}li{margin:7px 0}table{border-collapse:collapse;width:100%;font-size:15px;margin:18px 0}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f4f4f1}code{background:#f4f4f1;padding:1px 4px;font-size:.9em}pre code{background:none;padding:0;color:inherit}.codecard{border:1px solid var(--line);margin:20px 0 0}.codecard .bar{background:#f3f3ef;padding:9px 15px;font-size:14px;color:#6b7180;border-bottom:1px solid var(--line)}.codecard .bar strong{color:var(--accent)}.codecard pre{background:#fbfbf9;white-space:pre;overflow-x:auto;padding:20px;margin:0;font-size:14px;line-height:1.75;color:#242a33}.output{border:1px solid var(--line);border-top:0;background:#f7f7f4;margin:0}.output .bar{padding:8px 15px;background:#efefeb;border-bottom:1px solid var(--line);color:#176540;font-size:14px;font-weight:700}.output pre{padding:17px 20px;overflow:auto;margin:0;font-size:14px;white-space:pre-wrap}.explain{border:1px solid var(--line);border-top:0;margin:0 0 24px;padding:20px 22px}.explain h3{color:var(--accent);font-size:18px;margin:0 0 10px}.explain p{font-size:16px}.explain dl{display:grid;grid-template-columns:180px 1fr;gap:10px;margin:15px 0}.explain dt{font-weight:700;font-size:15px}.explain dd{margin:0;color:var(--ink2);font-size:15px}.note{background:var(--soft);border:1px solid #ded8fa;padding:15px 19px;margin:22px 0;color:#362d84}.warn{background:#fff5e8;border-color:#efdbba;color:#70470d}.diagram{background:#fafbfd;border:1px solid #dbe4ef;border-radius:22px;padding:21px 23px;margin:22px 0;text-align:center}.node{background:#fff;border:1px solid #d8e1ec;border-radius:16px;padding:17px;margin:auto;min-width:0}.node.primary{background:#eaf1fe;border-color:#d4e2f8}.node strong{display:block;font-size:20px}.node small{font-size:16px;display:block;color:#5f7087}.arr{font-size:27px;line-height:1.55;color:#263d63}.split{display:grid;grid-template-columns:1fr 1fr;gap:15px}.split .arr{font-size:24px}.mini{padding:18px;border:1px solid var(--line);background:#fcfcfa}.mini h3{margin-top:0}.status{display:inline-block;padding:3px 9px;border-radius:3px;background:#eaf7ef;color:#176540;font-size:13px;font-weight:700}.status.pending{background:#fff5e8;color:#87560a}.summary{background:#15171c!important;color:#fff}.summary h2{color:#fff}.summary p,.summary li{color:#d0d3da}.summary code{background:#ffffff22;color:#fff}.quick{position:fixed;bottom:20px;right:20px;display:flex;gap:6px;z-index:40}.quick a{padding:10px 12px;background:#fff;border:1px solid #cbd3e0;color:#243e62;text-decoration:none;border-radius:9px;font-size:14px;box-shadow:0 2px 12px #0001}
+@media(max-width:950px){.layout{grid-template-columns:1fr;gap:0}nav.toc{position:static;max-height:none;padding:18px 0;display:flex;flex-wrap:wrap;gap:4px}nav.toc h2{width:100%}nav.toc a{font-size:13px}main{padding-top:15px}.hero-terms{grid-template-columns:1fr}}@media(max-width:650px){.layout{padding:0 11px 60px}section.chapter{padding:24px 17px}.hero-inner{padding:47px 18px}.split{grid-template-columns:1fr}.explain dl{grid-template-columns:1fr;gap:1px}.explain dd{margin-bottom:10px}.quick{right:6px;bottom:5px}.quick a{font-size:12px;padding:8px}}@media print{.hero{background:#fff;color:#000}.hero p{color:#555}.layout{display:block}.toc,.quick{display:none!important}.chapter{break-inside:avoid}.hero:before{display:none}}
+</style></head><body>
+<header class="hero"><div class="hero-inner"><div class="kick">로컬 AI / LangChain / RAG 실습</div><h1>LM Studio부터 Elasticsearch까지</h1><p>Ubuntu에서 DeepSeek와 Qwen3 임베딩 모델을 실행하고 LangChain·FastAPI·Elasticsearch를 연결하는 단계형 학습 교재. 코드 → 출력 → 코드 풀이 구조로 실제 검증 결과와 이후 과제를 구분한다.</p><div class="meta"><span>Elasticsearch <b>9.5.6</b></span><span>Qwen3 임베딩 <b>2,560차원</b></span><span>DeepSeek <b>14B</b></span><span>실습 <b>15절</b></span></div><div class="hero-terms"><div><h3>생성 모델</h3><p>질문을 입력받고 한국어 설명을 작성한다. 검색과 실제 사실 확인의 책임을 모두 대신하지는 않는다.</p></div><div><h3>임베딩 모델</h3><p>검색할 문장과 질문을 숫자 벡터로 바꿔 의미 유사도를 계산할 수 있도록 한다.</p></div><div><h3>검색 엔진</h3><p>문서와 벡터를 저장하고 관련 자료를 찾아 생성 모델에 제공한다.</p></div></div></div></header>
+<div class="layout"><nav class="toc" aria-label="장별 목차"><h2>학습 목차</h2><a href="#s00">00 · 학습 개요</a>
+<a href="#s01">01 · 전체 실습 흐름</a>
+<a href="#s02">02 · 실행 환경 및 프로젝트 구성</a>
+<a href="#s03">03 · LM Studio 모델 목록 확인</a>
+<a href="#s04">04 · LangChain으로 DeepSeek 호출</a>
+<a href="#s05">05 · Elasticsearch 서버 시작과 인증</a>
+<a href="#s06">06 · Qwen3 임베딩: 텍스트를 숫자로 변환</a>
+<a href="#s07">07 · 벡터 인덱스 생성과 kNN 검색</a>
+<a href="#s08">08 · FastAPI: 채팅 API와 웹 화면 연결</a>
+<a href="#s09">09 · RAG: 질문 검색부터 답변 생성까지</a>
+<a href="#s10">10 · systemd 자동 실행과 운영</a>
+<a href="#s11">11 · 오류 해결: 증상 → 원인 → 조치</a>
+<a href="#s12">12 · 검증 결과와 남은 한계</a>
+<a href="#s13">13 · 확장 구조: PDF·데이터시트 전문 RAG</a>
+<a href="#s14">14 · 핵심 정리</a></nav><main><section class="chapter " id="s00"><h2><span class="n">00</span>학습 개요 — 전체 기술 위치</h2><p>로컬 RAG(Retrieval-Augmented Generation, 검색 증강 생성)는 단일 언어 모델이 모든 것을 기억하도록 만들지 않는다. <b>질문을 검색하고, 관련 문서를 찾아, 그 문서의 내용으로 답변을 생성</b>하는 시스템이다. 모델을 실행하는 엔진·검색 데이터베이스·웹 서버는 역할이 다르다.</p>
+<figure class="diagram"><div class="node "><strong>HTML + JavaScript</strong><small>사용자가 질문 입력</small></div><div class="arr">↓</div><div class="node "><strong>FastAPI</strong><small>질문을 Python 처리 코드로 전달</small></div><div class="arr">↓</div><div class="node primary"><strong>LangChain 기반 응용 로직</strong><small>검색 자료와 모델 입력 연결</small></div><div class="split"><div><div class="arr">↓</div><div class="node "><strong>LM Studio</strong><small>DeepSeek 답변 생성 · Qwen3 임베딩</small></div></div><div><div class="arr">↓</div><div class="node "><strong>Elasticsearch 9.5.6</strong><small>문서와 2,560차원 벡터 검색</small></div></div></div></figure>
+<table><tr><th>기술</th><th>무엇을 하는가</th><th>무엇을 하지 않는가</th></tr><tr><td>LM Studio</td><td>AI 모델을 메모리에 올리고 API로 실행</td><td>기술 문서 검색 데이터베이스가 아님</td></tr><tr><td>LangChain</td><td>프롬프트·모델 호출·검색 결과 연결</td><td>모델을 직접 학습시키는 실행 엔진이 아님</td></tr><tr><td>Elasticsearch</td><td>문서 저장·키워드 및 벡터 검색</td><td>자연어 답변 생성 모델이 아님</td></tr><tr><td>FastAPI</td><td>웹 질문·응답 및 관리 API</td><td>검색 품질을 자동 보장하지 않음</td></tr></table>
+<div class="note">이 과정의 실제 검증 범위: LangChain 모델 호출, Qwen3 2,560차원 벡터 생성, Elasticsearch 문장 3개 검색, 로컬 HTML 일반 채팅. PDF 자동 등록·실제 문서 출처·완전한 운영 자동화는 후속 과제이다.</div></section>
+<section class="chapter " id="s01"><h2><span class="n">01</span>전체 실습 흐름</h2><figure class="diagram"><div class="node "><strong>① LM Studio 모델 확인</strong><small>DeepSeek + Qwen3-Embedding</small></div><div class="arr">↓</div><div class="node "><strong>② LangChain 연결</strong><small>로컬 ChatOpenAI.invoke()</small></div><div class="arr">↓</div><div class="node "><strong>③ Elasticsearch 보안 연결</strong><small>HTTPS + CA 인증서 + 사용자 비밀번호</small></div><div class="arr">↓</div><div class="node primary"><strong>④ 문장 임베딩</strong><small>2,560차원 배열 생성</small></div><div class="arr">↓</div><div class="node "><strong>⑤ 벡터 인덱스 저장·검색</strong><small>kNN으로 관련 문장 정렬</small></div><div class="arr">↓</div><div class="node "><strong>⑥ FastAPI와 통합 웹 화면</strong><small>일반 채팅 / RAG 모드 선택</small></div></figure>
+<p>각 단계의 출력이 다음 단계의 입력이다. 예를 들어 벡터 생성에 실패했다면 Elasticsearch를 설치해도 의미 검색은 수행되지 않는다. 장별로 결과를 직접 확인한 뒤 다음 단계로 이동한다.</p></section>
+<section class="chapter " id="s02"><h2><span class="n">02</span>실행 환경 및 프로젝트 구성</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · Ubuntu Terminal</div><pre><code>cd ~/langchain_web
+source .venv/bin/activate
+git pull origin main
+python -m pip install -r requirements.txt</code></pre></div><div class="output"><div class="bar">OUTPUT · 실제 관찰 또는 확인 기준</div><pre>[확인 기준]
+- 가상환경 활성화: 터미널 프롬프트에 (.venv) 표시
+- git pull: 최신 변경 반영 또는 Already up to date
+- pip: 패키지 설치 성공, 의존성 충돌 없음</pre></div><div class="explain"><h3>코드 풀이 — 기존 성공 환경을 보존하면서 최신 코드를 반영한다</h3><p><code>source</code>는 현재 셸에 가상환경 경로를 적용한다. <code>git pull</code>은 GitHub의 업데이트를 가져오므로 로컬에서 수정한 파일이 있다면 먼저 변경 내용을 확인한다.</p><dl><dt>langchain_lab</dt><dd>처음 LangChain 호출을 검증한 실습 폴더</dd><dt>langchain_web</dt><dd>GitHub 저장소를 복제한 웹 서버·RAG 통합 프로젝트</dd><dt>.venv</dt><dd>프로젝트별 독립 Python 패키지 환경</dd></dl></div>
+<pre><code>langchain_web/
+├── app.py                      # FastAPI + DeepSeek 채팅
+├── rag_search.py               # Elasticsearch 읽기 검색
+├── test_langchain.py           # LangChain 연결 확인
+├── test_embedding.py           # Qwen3 벡터 생성 확인
+├── test_elasticsearch_vector.py # kNN 검색 실습
+├── static/index.html           # 로컬 웹 화면
+├── scripts/                    # 자동 시작·비밀번호 구성
+└── requirements.txt            # 설치할 Python 패키지</code></pre></section>
+<section class="chapter " id="s03"><h2><span class="n">03</span>LM Studio 모델 목록 확인</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · Terminal</div><pre><code>curl http://127.0.0.1:1234/v1/models</code></pre></div><div class="output"><div class="bar">OUTPUT · 실제 관찰 또는 확인 기준</div><pre>{"data":[
+ {"id":"deepseek-r1-distill-qwen-14b"},
+ {"id":"text-embedding-qwen3-embedding-4b"},
+ {"id":"text-embedding-nomic-embed-text-v1.5"}
+]}</pre></div><div class="explain"><h3>코드 풀이 — 실행 가능한 모델 ID를 정확히 구분한다</h3><p>첫 번째는 자연어 생성 모델이다. 두 번째와 세 번째는 문장을 벡터로 만드는 모델이다. 임베딩 모델 ID를 채팅 모델에 넣으면 정상적인 대화 응답을 기대할 수 없다.</p><p>LM Studio의 모델 검색 목록에 표시되는 것과 실제 API 호출에 응답할 수 있는지는 다르다. 벡터 생성 실습에서 두 번째 검증을 수행한다.</p></div>
+<figure class="diagram"><div class="node "><strong>LM Studio 모델 서버</strong><small>http://127.0.0.1:1234/v1</small></div><div class="split"><div><div class="arr">↓</div><div class="node "><strong>deepseek-r1-distill-qwen-14b</strong><small>질문 → 자연어 답변</small></div></div><div><div class="arr">↓</div><div class="node "><strong>text-embedding-qwen3-embedding-4b</strong><small>문장 → 벡터 배열</small></div></div></div></figure>
+</section>
+<section class="chapter " id="s04"><h2><span class="n">04</span>LangChain으로 DeepSeek 호출</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · test_langchain.py 핵심 코드</div><pre><code>from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    model="deepseek-r1-distill-qwen-14b",
+    base_url="http://127.0.0.1:1234/v1",
+    api_key="lm-studio",
+    temperature=0,
+    use_responses_api=False,
+)
+response = llm.invoke([
+    ("system", "모든 답변은 한국어로 작성하세요."),
+    ("human", "LangChain이 무엇인지 간단히 설명해줘.")
+])
+print(response.content)</code></pre></div><div class="output"><div class="bar">OUTPUT · 실제 관찰 또는 확인 기준</div><pre>[실제 검증 요약]
+LangChain은 언어 모델을 활용한 애플리케이션을 만드는 프레임워크입니다.
+문서 분석, 대화 및 데이터 처리 흐름 연결 등에 사용할 수 있습니다.</pre></div><div class="explain"><h3>코드 풀이 — LangChain은 모델을 직접 실행하지 않고 API를 통해 LM Studio를 호출한다</h3><dl><dt>base_url</dt><dd>LM Studio 로컬 모델 서버의 API 주소</dd><dt>model</dt><dd>채팅 생성용 모델 ID. 임베딩 ID와 구분</dd><dt>temperature=0</dt><dd>출력 무작위성을 낮추지만 사실 정확도를 보장하지는 않음</dd><dt>invoke()</dt><dd>입력 메시지 목록을 보내고 답변 객체를 반환</dd></dl></div>
+<div class="note warn">실제 후속 시험에서 DeepSeek-R1-Distill-Qwen-14B가 중국어 표현을 혼용하고 날짜를 추측한 문제가 발견되었다. 로컬 모델의 유창성과 사실 검증은 별도로 평가해야 한다.</div></section>
+<section class="chapter " id="s05"><h2><span class="n">05</span>Elasticsearch 서버 시작과 인증</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · Terminal</div><pre><code>sudo systemctl start elasticsearch
+sudo systemctl enable elasticsearch
+systemctl is-active elasticsearch
+
+curl --cacert ~/.config/elasticsearch/http_ca.crt \
+  -u elastic https://localhost:9200</code></pre></div><div class="output"><div class="bar">OUTPUT · 실제 관찰 또는 확인 기준</div><pre>active
+{
+  "cluster_name": "elasticsearch",
+  "version": {"number": "9.5.6"},
+  "tagline": "You Know, for Search"
+}</pre></div><div class="explain"><h3>코드 풀이 — HTTPS 인증서와 관리자 계정이 모두 통과해야 검색할 수 있다</h3><p>처음에는 인증서 파일을 읽지 못해 <code>curl (77)</code> 오류가 발생했다. 인증서를 사용자 폴더로 안전하게 복사한 뒤 <code>401</code> 비밀번호 오류를 별도로 해결하여 서버 정보를 정상 확인했다.</p><p>위 JSON은 실제 출력의 주요 필드만 발췌한 것이다. 개인정보를 포함할 수 있는 호스트 이름과 클러스터 ID는 배포 예제에서 제외한다.</p></div>
+<figure class="diagram"><div class="node "><strong>Python / curl 클라이언트</strong><small>HTTPS :9200</small></div><div class="arr">↓</div><div class="node "><strong>CA 인증서 검증</strong><small>~/.config/elasticsearch/http_ca.crt</small></div><div class="arr">↓</div><div class="node primary"><strong>계정 비밀번호 검증</strong><small>인증 통과 후 검색 요청 실행</small></div></figure>
+<div class="note warn">실무용 서비스에서는 관리자 <code>elastic</code> 계정을 상시 사용하지 않는다. 최소 권한 API 키 또는 서비스 계정을 적용하고 비밀번호를 GitHub에 올리지 않는다.</div></section>
+<section class="chapter " id="s06"><h2><span class="n">06</span>Qwen3 임베딩: 텍스트를 숫자로 변환</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · test_embedding.py 실행</div><pre><code>cd ~/langchain_web
+source .venv/bin/activate
+python test_embedding.py</code></pre></div><div class="output"><div class="bar">OUTPUT · 실제 관찰 또는 확인 기준</div><pre>모델: text-embedding-qwen3-embedding-4b
+임베딩 생성 성공
+벡터 차원: 2560
+벡터 일부: [-0.00018037761037703604, 0.029143691062927246,
+ -0.02527211233973503, -0.033204201608896255,
+ -0.0012401206186041236]</pre></div><div class="explain"><h3>코드 풀이 — 사람의 문장을 2,560개 숫자의 배열로 변환한다</h3><p>‘전동기 과열 방지 시스템’이라는 한국어 문장을 전송하면 2,560개의 실수값이 돌아온다. 첫 다섯 값만 출력한 이유는 전체 벡터를 표시할 필요가 없기 때문이다.</p><dl><dt>2560차원</dt><dd>문장 하나를 표현하는 숫자 2,560개. 인덱스 필드의 차원과 같아야 한다.</dd><dt>의미 근접성</dt><dd>단어가 정확히 같지 않더라도 유사한 내용이 벡터 공간에서 가깝게 나타날 수 있다.</dd><dt>주의</dt><dd>문장 의미의 근접성은 실제 전기적 사양이나 핀 매핑의 정확성을 증명하지 않는다.</dd></dl></div>
+<figure class="diagram"><div class="node "><strong>“전동기 과열 방지 시스템”</strong><small>문자열 입력</small></div><div class="arr">↓</div><div class="node primary"><strong>Qwen3-Embedding-4B</strong><small>text-embedding-qwen3-embedding-4b</small></div><div class="arr">↓</div><div class="node "><strong>2,560개 실수값</strong><small>[-0.00018, 0.02914, -0.02527, …]</small></div></figure></section>
+<section class="chapter " id="s07"><h2><span class="n">07</span>벡터 인덱스 생성과 kNN 검색</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · test_elasticsearch_vector.py 핵심 흐름</div><pre><code># 질문과 문서 모두 동일한 임베딩 모델로 벡터화
+query_vector = embed("모터 과열 시 확인할 사항은?")
+
+# Elasticsearch에서 가장 가까운 문서 3건 검색
+result = es.search(
+    index="langchain_embedding_lab",
+    size=3,
+    knn={
+        "field": "embedding",
+        "query_vector": query_vector,
+        "k": 3,
+        "num_candidates": 10,
+    },
+    source=["text"],
+)</code></pre></div><div class="output"><div class="bar">OUTPUT · 실제 관찰 또는 확인 기준</div><pre>질문: 모터 과열 시 확인할 사항은?
+1. 점수 0.8531 | 전동기가 과열되면 온도 센서와 냉각팬을 점검한다.
+2. 점수 0.8146 | 모터 온도가 높아질 때 보호 회로가 동작한다.
+3. 점수 0.6654 | 오늘 날씨는 맑고 바람이 약하다.</pre></div><div class="explain"><h3>코드 풀이 — 키워드가 완전히 동일하지 않아도 관련 문장이 우선 검색된다</h3><p>모터와 전동기는 서로 다른 단어지만 의미가 유사해 상위에 배치되었다. 날씨 문장이 마지막에 배치된 것은 검색이 어느 정도 구분하고 있다는 근거다. 단, <b>문서가 세 개뿐인 실험</b>이므로 실제 데이터시트 검색 성능은 별도 평가가 필요하다.</p><dl><dt>index</dt><dd>벡터가 저장된 실습 전용 인덱스. 다른 인덱스를 삭제하지 않음</dd><dt>k</dt><dd>가져올 상위 검색 결과 수</dd><dt>num_candidates</dt><dd>최근접 문서 탐색 시 후보로 고려할 문서 수</dd><dt>_score</dt><dd>Elasticsearch 검색 점수. 정답률 85.31%와 같은 뜻이 아님</dd></dl></div>
+<div class="mini"><h3>실제 검색 점수 비교</h3><div style="display:grid;grid-template-columns:125px 1fr 52px;align-items:center;gap:10px;font-size:15px"><span>전동기 과열</span><div style="height:17px;background:#e6eaf1;border-radius:4px"><div style="width:85.31%;height:100%;background:#6a7ccc;border-radius:4px"></div></div><strong>0.8531</strong><span>보호 회로</span><div style="height:17px;background:#e6eaf1;border-radius:4px"><div style="width:81.46%;height:100%;background:#8191d7;border-radius:4px"></div></div><strong>0.8146</strong><span>날씨</span><div style="height:17px;background:#e6eaf1;border-radius:4px"><div style="width:66.54%;height:100%;background:#b6bedf;border-radius:4px"></div></div><strong>0.6654</strong></div></div></section>
+<section class="chapter " id="s08"><h2><span class="n">08</span>FastAPI: 채팅 API와 웹 화면 연결</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · app.py 핵심 API</div><pre><code>@app.get("/")
+def home():
+    return FileResponse(ROOT / "static" / "index.html")
+
+@app.get("/api/models")
+def models():
+    return {
+        "models": available_models(),
+        "chat_model": CHAT_MODEL,
+    }
+
+@app.post("/api/chat")
+def chat(body: ChatRequest):
+    # 사용자 질문과 모드 검사 후
+    # LangChain 호출 및 선택적 RAG 검색 수행
+    ...</code></pre></div><div class="output"><div class="bar">OUTPUT · 예상 실행 형식</div><pre>[예상 실행 형식]
+GET /api/models → {"models":[...],"chat_model":"deepseek-r1-distill-qwen-14b"}
+POST /api/chat  → {"mode":"chat","answer":"...","sources":[]}</pre></div><div class="explain"><h3>코드 풀이 — 웹 화면과 모델 서버의 역할을 분리한다</h3><p>HTML은 입력을 받고 결과를 표시하지만 Python 로직을 실행할 수 없다. FastAPI가 HTTP 요청을 받아 LangChain과 Elasticsearch 코드를 호출한다. 현재는 로컬 화면을 FastAPI에서 함께 제공하므로 GitHub Pages의 브라우저 보안 제약을 우회한다.</p><div class="note">코드의 <code>...</code>는 설명용 생략 표시다. 실행 가능한 전체 코드는 저장소 <code>app.py</code>를 기준으로 확인한다.</div></div>
+<figure class="diagram"><div class="node "><strong>브라우저 :8000</strong><small>HTML / JavaScript</small></div><div class="arr">↓</div><div class="node primary"><strong>FastAPI /api/chat</strong><small>질문 검증 · 모드 구분</small></div><div class="arr">↓</div><div class="split"><div><div class="node "><strong>chat 모드</strong><small>DeepSeek에 질문 전달</small></div></div><div><div class="node "><strong>rag 모드</strong><small>Elasticsearch 문서 검색 후 생성</small></div></div></div></figure>
+</section>
+<section class="chapter " id="s09"><h2><span class="n">09</span>RAG: 질문 검색부터 답변 생성까지</h2><figure class="diagram"><div class="node "><strong>사용자 질문</strong><small>모터 과열 점검</small></div><div class="arr">↓</div><div class="split"><div><div class="node "><strong>질문 임베딩</strong><small>Qwen3 → 2,560차원</small></div><div class="arr">↓</div><div class="node "><strong>문서 유사도 검색</strong><small>Elasticsearch kNN</small></div></div><div><div class="node "><strong>대화 컨텍스트</strong><small>이전 질문·답변 관리</small></div><div class="arr">↓</div><div class="node "><strong>시스템 규칙</strong><small>한국어 답변 · 근거 부족 시 인정</small></div></div></div><div class="arr">↓</div><div class="node primary"><strong>프롬프트 결합</strong><small>질문 + 검색 문서 + 지시사항</small></div><div class="arr">↓</div><div class="node "><strong>DeepSeek 14B</strong><small>문서 기반 답변 생성</small></div><div class="arr">↓</div><div class="node "><strong>답변 + 출처 목록</strong><small>HTML 화면 표시</small></div></figure>
+<div class="codecard"><div class="bar"><strong>CODE</strong> · rag_search.py 주요 반환 데이터</div><pre><code>return [
+    {
+        "id": hit["_id"],
+        "score": round(hit["_score"], 4),
+        "text": hit["_source"].get("text", ""),
+    }
+    for hit in result["hits"]["hits"]
+]</code></pre></div><div class="output"><div class="bar">OUTPUT · 예상 실행 형식</div><pre>[예상 응답 구조]
+[
+ {"id":"motor_hot","score":0.8531,"text":"전동기가 과열되면 ..."},
+ {"id":"motor_temp","score":0.8146,"text":"모터 온도가 높아질 때 ..."}
+]</pre></div><div class="explain"><h3>코드 풀이 — 검색 근거를 생성 모델에 전달하고 화면에도 반환한다</h3><p>생성 모델이 근거 없이 말하지 않도록 시스템 프롬프트에 검색 문장을 넣는다. 하지만 점수가 높다는 것만으로 문서가 질문에 충분한 근거라는 사실이 보장되지는 않는다. 향후 관련성 임계값·재정렬·근거 검증을 추가해야 한다.</p></div>
+<div class="note warn">현재 웹 화면에서 Elasticsearch가 ‘연결되지 않음’으로 표시된 기록이 있다. Python의 독립 벡터 검색은 성공했지만 <b>웹 RAG 전체가 정상 동작한다고 확정할 수 없다.</b></div></section>
+<section class="chapter " id="s10"><h2><span class="n">10</span>systemd 자동 실행과 운영</h2><div class="codecard"><div class="bar"><strong>CODE</strong> · Ubuntu Terminal</div><pre><code>cd ~/langchain_web
+python scripts/configure-elasticsearch.py
+bash scripts/install-service.sh
+
+# 이전에 수동 실행한 uvicorn은 해당 터미널에서 Ctrl+C
+systemctl --user start langchain-lab
+systemctl --user status langchain-lab --no-pager
+journalctl --user -u langchain-lab -n 40 --no-pager</code></pre></div><div class="output"><div class="bar">OUTPUT · 실제 관찰 또는 확인 기준</div><pre>[확인 기준]
+Active: active (running)
+8000 포트에 서버 하나만 LISTEN
+로그에 Address already in use 메시지 없음</pre></div><div class="explain"><h3>코드 풀이 — 중복 터미널 실행 없이 서비스 하나로 관리한다</h3><p><code>systemctl --user</code>는 사용자 계정의 서비스를 관리한다. 등록된 서비스는 일반적으로 사용자 로그인 후 자동 시작할 수 있다. LM Studio 모델 서버 자동 실행은 별도 설정이므로 두 작업을 구분한다.</p><dl><dt>status</dt><dd>서비스 시작 여부와 오류 상태 확인</dd><dt>journalctl</dt><dd>최근 실행 로그 확인</dd><dt>restart</dt><dd>GitHub 코드를 업데이트한 뒤 새 Python 코드를 다시 읽게 함</dd></dl></div>
+<figure class="diagram"><div class="node "><strong>Ubuntu 사용자 로그인</strong><small>systemd 사용자 서비스 활성화</small></div><div class="arr">↓</div><div class="split"><div><div class="node "><strong>Elasticsearch 서비스</strong><small>9200 / HTTPS</small></div></div><div><div class="node "><strong>LM Studio 설정</strong><small>1234 / 모델 로드</small></div></div></div><div class="arr">↓</div><div class="node primary"><strong>FastAPI 서비스</strong><small>8000 / 통합 웹 UI</small></div></figure></section>
+<section class="chapter " id="s11"><h2><span class="n">11</span>오류 해결: 증상 → 원인 → 조치</h2><table><thead><tr><th>증상</th><th>의미</th><th>해결 방향</th></tr></thead><tbody>
+<tr><td>Unit not found</td><td>서비스가 아직 설치·등록되지 않음</td><td>Elasticsearch 설치 상태 확인</td></tr>
+<tr><td>curl: (77)</td><td>CA 인증서 접근 불가</td><td>읽기 가능한 사용자 전용 CA 경로 사용</td></tr>
+<tr><td>HTTP 401</td><td>사용자 인증 실패</td><td>비밀번호 확인 또는 안전한 재설정</td></tr>
+<tr><td>ResolutionImpossible</td><td>Python 패키지 의존성 충돌</td><td>Elasticsearch 9 클라이언트 직접 사용</td></tr>
+<tr><td>UnicodeEncodeError</td><td>인증 문자열의 비ASCII 문자 처리 실패</td><td>UTF-8 Basic 인증 처리</td></tr>
+<tr><td>Address already in use</td><td>8000 포트 중복 점유</td><td>기존 uvicorn 확인 후 중복 실행 제거</td></tr>
+<tr><td>Failed to fetch</td><td>브라우저-로컬 API 연결 실패</td><td>FastAPI 동일 출처 서비스 사용</td></tr>
+<tr><td>영어·중국어 혼용</td><td>생성 모델 출력 품질 문제</td><td>한국어 품질 검증·모델 비교</td></tr>
+</tbody></table>
+<figure class="diagram"><div class="node "><strong>오류 발생</strong><small>웹 화면·터미널 출력 확보</small></div><div class="arr">↓</div><div class="node "><strong>서버 /api/models 확인</strong><small>FastAPI 및 LM Studio 상태</small></div><div class="arr">↓</div><div class="node "><strong>Elasticsearch /api/rag/status 확인</strong><small>CA 인증서 · 비밀번호 · 인덱스</small></div><div class="arr">↓</div><div class="node primary"><strong>모델 검색·응답 분리 검증</strong><small>검색 문제인가, 생성 문제인가?</small></div><div class="arr">↓</div><div class="node "><strong>정상 처리 확인</strong><small>기존 기능 보존 후 수정 적용</small></div></figure></section>
+<section class="chapter " id="s12"><h2><span class="n">12</span>검증 결과와 남은 한계</h2><table><tr><th>구분</th><th>현재 근거</th><th>판정</th></tr>
+<tr><td>LM Studio Chat</td><td>DeepSeek 한국어 답변 반환</td><td><span class="status">기능 성공</span></td></tr>
+<tr><td>Qwen3 임베딩</td><td>2,560차원과 벡터 일부 반환</td><td><span class="status">검증 완료</span></td></tr>
+<tr><td>Elasticsearch 연결</td><td>9.5.6 서버 정보 정상 반환</td><td><span class="status">검증 완료</span></td></tr>
+<tr><td>벡터 검색</td><td>3개 문장 검색 순위 반환</td><td><span class="status">소규모 기능 검증</span></td></tr>
+<tr><td>브라우저 일반 채팅</td><td>날짜·기술 설명 응답 확인</td><td><span class="status">기능 확인</span></td></tr>
+<tr><td>웹 RAG 종단 간</td><td>‘Elasticsearch 연결되지 않음’ 관찰</td><td><span class="status pending">추가 검증</span></td></tr>
+<tr><td>한국어 답변 품질</td><td>중국어·영어 혼용 사례</td><td><span class="status pending">개선 필요</span></td></tr>
+<tr><td>PDF 문서 업로드</td><td>미구현</td><td><span class="status pending">후속 과제</span></td></tr>
+<tr><td>재부팅 자동 복구</td><td>자동 시작 스크립트 작성</td><td><span class="status pending">실기 확인 필요</span></td></tr></table>
+<p>데모 질문 세 개에서 관련 문장이 앞섰다고 해서 완성된 검색 시스템으로 단정하면 안 된다. 검색 정확도·출처 일치율·한국어 응답 품질을 별도로 평가한다.</p></section>
+<section class="chapter " id="s13"><h2><span class="n">13</span>확장 구조: PDF·데이터시트 전문 RAG</h2><figure class="diagram"><div class="node "><strong>PDF · 데이터시트 입력</strong><small>파일명·페이지·개정판 저장</small></div><div class="arr">↓</div><div class="node "><strong>텍스트 추출 및 청크 분할</strong><small>의미 단위로 문서를 나눔</small></div><div class="arr">↓</div><div class="split"><div><div class="node "><strong>Qwen3 임베딩</strong><small>청크 → 2,560차원 벡터</small></div></div><div><div class="node "><strong>메타데이터</strong><small>부품 번호 · 핀명 · 페이지 · 원문 위치</small></div></div></div><div class="arr">↓</div><div class="node primary"><strong>Elasticsearch 문서 등록</strong><small>키워드 + 벡터 + 정확 일치 필드</small></div><div class="arr">↓</div><div class="node "><strong>검색·근거 검증·답변</strong><small>출처 페이지까지 표시</small></div></figure>
+<p>STM32 데이터시트처럼 정확한 핀명·전압·레지스터 주소가 중요한 자료는 벡터 유사도만으로 결론을 확정하지 않는다. 키워드 정확 일치 검색, 문서 버전 확인, 물리적·전기적 규칙 검증을 함께 사용한다.</p>
+<div class="note warn">위 구조는 후속 설계 목표다. 현재 실습에 PDF 자동 업로드나 하이브리드 검색이 이미 구현되어 있다는 뜻이 아니다.</div></section>
+<section class="chapter summary" id="s14"><h2><span class="n">14</span>핵심 정리</h2><p>현 단계에서 완료된 것은 <strong>모델 호출·문장 벡터화·Elasticsearch 벡터 검색의 핵심 요소</strong>이다. 이를 상용 수준의 기술 문서 검색 시스템으로 만드는 과정에는 안정적인 웹 RAG 연결, 문서 인제스트, 출처 메타데이터, 검색 품질 검증이 더 필요하다.</p><ul><li>LM Studio: 로컬 모델 실행 서버</li><li>DeepSeek: 검색 결과를 바탕으로 자연어 답변 작성</li><li>Qwen3-Embedding-4B: 문장과 질문을 같은 벡터 공간으로 변환</li><li>Elasticsearch: 관련 문서를 검색하는 데이터베이스</li><li>LangChain + FastAPI: 처리 흐름과 웹 통신 연결</li><li>GitHub: 검증된 코드와 교재를 버전 관리하는 공간</li></ul>
+<p>다음 실습에서는 웹 RAG 연결 문제를 해결한 후 실제 기술 PDF를 인덱싱하고, 출처가 있는 질의응답을 완성한다.</p></section><p style="font-size:14px;color:#727987">학습자료 개정판 · 기준 2026-11-09 · 원본 코드 및 실제 검증 자료: <a href="https://github.com/Yuul-Jung/langchain-lab">Yuul-Jung/langchain-lab</a><br>샘플 문서의 편집·설명 체계를 준용한 별도 교재이며, 과거 실습 성공과 아직 검증되지 않은 통합 기능을 명확하게 구별한다.</p></main></div><div class="quick"><a href="../index.html">⌂ 목차</a><a href="#s00">↑ 처음으로</a></div></body></html>
