@@ -51,7 +51,7 @@ def clock_answer(question):
 
 def unavailable_live_answer(question):
     """Do not ask the LLM to improvise live weather without a weather tool."""
-    q = re.sub(r"\\s+", "", question)
+    q = re.sub(r"\s+", "", question)
     if re.search(r"(오늘|현재|지금|실시간|내일)", q) and re.search(
         r"(날씨|기온|강수|비예보|미세먼지|습도|풍속)", q
     ):
@@ -67,8 +67,8 @@ def needs_korean_rewrite(answer):
     """Detect substantial foreign-language leakage, not English technical terms."""
     if not answer.strip():
         return False
-    han = len(re.findall(r"[\\u4e00-\\u9fff]", answer))
-    hangul = len(re.findall(r"[\\uac00-\\ud7a3]", answer))
+    han = len(re.findall(r"[\u4e00-\u9fff]", answer))
+    hangul = len(re.findall(r"[\uac00-\ud7a3]", answer))
     latin_words = len(re.findall(r"[A-Za-z]{3,}", answer))
     # One Hanja character or technical abbreviation is not a reason to retry.
     return han >= 2 or (latin_words >= 28 and hangul < 15)
