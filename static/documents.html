@@ -1,0 +1,78 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LangChain Lab · 문서 관리</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f2ee;color:#15171c;font:17px/1.7 system-ui,"Noto Sans KR",sans-serif}
+header{background:#15171c;color:#fff;padding:25px max(20px,calc((100vw - 1040px)/2))}header h1{margin:4px 0;font-size:30px}header p{margin:0;color:#bbc3d0}a{color:#4635b1}header a{color:#fff}
+main{max-width:1080px;margin:auto;padding:22px 16px 80px}
+section{background:#fff;border:1px solid #d9dcd7;padding:25px;margin:14px 0}h2{margin:0 0 14px;font-size:23px}h3{font-size:19px;margin:15px 0 7px}
+p,small{color:#526070}button,input{font:inherit}button{background:#4635b1;color:white;border:0;border-radius:7px;padding:10px 16px;cursor:pointer}
+button:disabled{opacity:.5}button.secondary{background:#eaeafb;color:#342589;border:1px solid #cecaf0}
+input[type=file]{border:1px dashed #949bc0;padding:15px;width:100%}
+.row{display:flex;gap:13px;align-items:center;flex-wrap:wrap;margin:12px 0}
+label{font-weight:500}.hint{font-size:15px}.status{border-left:4px solid #6a73ac;background:#edf3fc;padding:12px;white-space:pre-wrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{border:1px solid #d9dcd7;border-radius:12px;padding:15px;background:#fafbf9}.card h3{margin:0 0 4px;overflow-wrap:anywhere}
+.card small{display:block;font-size:13px}.card p{font-size:15px}
+.badge{font-size:13px;background:#eaf0f9;border-radius:4px;padding:3px 6px;margin:3px 4px 3px 0;display:inline-block}
+.detail{overflow-x:auto;background:#fafbf9;border:1px solid #e4e7e0;padding:14px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:9px;border-bottom:1px solid #ddd;text-align:left}
+input[type=text]{flex:1;min-width:200px;padding:11px;border:1px solid #ccc;border-radius:5px}
+.flow{padding:12px;border:1px solid #e0e5ed;border-radius:14px;text-align:center;margin:auto;max-width:600px}
+.flow strong{display:block;font-size:20px}.flow small{font-size:15px}.focus{background:#eaf1ff}.arrow{text-align:center;font-size:27px}
+@media(max-width:650px){section{padding:16px}header{padding:20px}body{font-size:16px}}
+</style></head><body>
+<header><a href="/">← 채팅</a> · <a href="https://yuul-jung.github.io/langchain-lab/docs/ch02-document-ingestion.html" target="_blank" rel="noopener">제2장 학습안내서</a><h1>로컬 문서 구조화 관리</h1><p>원본 구조 · 자동 분류 · 학습 순서 · 지식 관계 · 검색 등록</p></header>
+<main><section><h2>01 · 자료 업로드</h2><p class="hint">PDF / DOCX / HTML / Markdown / TXT · 최대 8MB · 파일은 현재 PC의 비공개 로컬 폴더에 보관됩니다. 스캔 PDF는 미지원.</p>
+<form id="upload"><input type="file" id="file" accept=".pdf,.docx,.html,.htm,.md,.markdown,.txt" required>
+<div class="row"><label><input id="ai" type="checkbox" checked> 로컬 LLM 분류 제안</label>
+<label><input id="index" type="checkbox" checked> Elasticsearch 벡터 등록</label></div>
+<button id="uploadBtn" type="submit">업로드 · 구조 분석</button></form><div id="status" class="status" role="status">자료를 선택하세요.</div></section>
+<section><h2>02 · 처리 단계</h2>
+<div class="flow"><strong>원본 파일</strong><small>SHA-256 해시 · 파일 형식 · 원본 보관</small></div><div class="arrow">↓</div>
+<div class="flow"><strong>장·절·페이지 구조 추출</strong><small>원본 순서 source_order 보존</small></div><div class="arrow">↓</div>
+<div class="flow focus"><strong>주제 분류 · 선수학습 제안</strong><small>추출한 사실과 LLM/규칙 추론값 분리</small></div><div class="arrow">↓</div>
+<div class="flow"><strong>학습 순서 · 관계 생성</strong><small>근거가 있는 관계를 검토 후 승인</small></div><div class="arrow">↓</div>
+<div class="flow"><strong>별도 Elasticsearch 인덱스</strong><small>langchain_documents_v1</small></div></section>
+<section><div class="row"><h2>03 · 등록된 문서</h2><button class="secondary" id="refresh" type="button">새로고침</button></div><div id="list" class="cards"></div></section>
+<section><h2>04 · 문서 구조와 분석 정보</h2><p class="hint">원본 구조는 유지됩니다. 추론한 분류·학습 순서·관계는 별도 제안으로 보관됩니다.</p><div id="detail" class="detail">문서를 선택하면 상세 분석을 표시합니다.</div></section>
+<section><h2>05 · 벡터 검색</h2><form id="search" class="row"><input id="query" type="text" required placeholder="문서 검색 질문"><button type="submit">검색</button></form><div id="results" class="detail">검색 질의를 입력하세요.</div></section></main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+function el(tag,text,cls){const n=document.createElement(tag);if(text!==null)n.textContent=String(text);if(cls)n.className=cls;return n}
+async function call(url,opt){const r=await fetch(url,opt);const j=await r.json();if(!r.ok)throw Error(typeof j.detail==="string"?j.detail:"요청 실패");return j}
+async function refresh(){const list=$("list");list.replaceChildren(el("p","조회 중..."));try{const data=await call("/api/documents");list.replaceChildren();
+if(!data.documents.length){list.append(el("p","등록된 문서가 없습니다."));return}
+for(const item of data.documents){const card=el("article",null,"card");card.append(el("h3",item.filename),el("small",item.uploaded_at));
+for(const value of [item.classification.topic,"절 "+item.section_count,"청크 "+item.chunk_count,item.index_status])card.append(el("span",value,"badge"));
+const b=el("button","구조 보기","secondary");b.onclick=()=>detail(item.document_id);card.append(b);list.append(card)}
+}catch(e){list.replaceChildren(el("p","조회 실패: "+e.message))}}
+async function detail(id){const root=$("detail");root.replaceChildren(el("p","조회 중..."));try{
+const d=(await call("/api/documents/"+encodeURIComponent(id))).document;root.replaceChildren(el("h3",d.filename),el("p","문서 ID: "+d.document_id+" / 색인: "+d.index_status));
+root.append(el("h3","원본 순서 및 장·절 구조"));
+const table=el("table");const row=el("tr");for(const key of ["순서","제목","페이지","근거"])row.append(el("th",key));table.append(row);
+for(const s of d.sections){const tr=el("tr");for(const key of [s.source_order,s.title,s.page||"-",s.provenance])tr.append(el("td",key));table.append(tr)}root.append(table);
+root.append(el("h3","분류 및 개념 제안"),el("p",d.classification.topic+" · "+d.classification.difficulty+" · "+d.classification.method+" · "+d.classification.review_status),
+ el("p",d.classification.concepts.join(", ")||"추출된 개념 없음"));
+root.append(el("h3","제안된 학습 순서"));
+root.append(el("p",d.learning_sequence.section_ids.map(id=>d.sections.find(s=>s.id===id)?.title||id).join(" → ")));
+root.append(el("p","검토 상태: "+d.learning_sequence.review_status));
+root.append(el("h3","지식 관계 및 승인"));const checks=[];
+for(let i=0;i<d.relations.length;i++){const edge=d.relations[i],label=el("label",null);label.style.display="block";
+if(edge.provenance!=="source_extracted"){const cb=document.createElement("input");cb.type="checkbox";cb.value=i;checks.push(cb);label.append(cb)}
+label.append(el("span"," "+edge.from+" → "+edge.to+" / "+edge.type+" / "+edge.provenance+" / "+edge.review_status));root.append(label)}
+const btn=el("button","분류·순서·체크한 관계 승인");btn.style.marginTop="15px";
+btn.onclick=async()=>{btn.disabled=true;try{await call("/api/documents/"+d.document_id+"/review",
+{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({approve_classification:true,approve_learning_sequence:true,approved_relation_indices:checks.filter(x=>x.checked).map(x=>Number(x.value))})});await detail(id)}catch(e){alert(e.message)}finally{btn.disabled=false}};root.append(btn);
+if(d.index_status!=="indexed"){const retry=el("button","벡터 등록 재시도","secondary");retry.style.marginLeft="10px";retry.onclick=async()=>{retry.disabled=true;try{await call("/api/documents/"+d.document_id+"/reindex",{method:"POST"});await detail(id);await refresh()}catch(e){alert(e.message)}finally{retry.disabled=false}};root.append(retry)}
+}catch(e){root.replaceChildren(el("p","조회 실패: "+e.message))}}
+$("upload").onsubmit=async e=>{e.preventDefault();const btn=$("uploadBtn");btn.disabled=true;$("status").textContent="구조화 및 임베딩 처리 중...";try{
+const form=new FormData();form.append("file",$("file").files[0]);form.append("use_ai",$("ai").checked?"true":"false");form.append("index",$("index").checked?"true":"false");
+const data=await call("/api/documents/upload",{method:"POST",body:form});$("status").textContent=data.duplicate?"이미 등록된 동일 파일입니다.":"처리 완료 / "+data.document.index_status;
+await refresh();await detail(data.document.document_id)}catch(err){$("status").textContent="처리 실패: "+err.message;await refresh()}finally{btn.disabled=false}};
+$("search").onsubmit=async e=>{e.preventDefault();const root=$("results");root.replaceChildren(el("p","검색 중..."));try{
+const data=await call("/api/documents/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:$("query").value,limit:5})});
+root.replaceChildren();if(!data.results.length){root.append(el("p","검색 결과 없음"));return}
+for(const hit of data.results){const card=el("article",null,"card");card.style.marginBottom="10px";
+card.append(el("h3",hit.filename+" · "+hit.title),el("small","점수 "+hit.score+" · 순서 "+hit.source_order+" · 페이지 "+(hit.page||"-")),el("p",hit.text));root.append(card)}}catch(err){root.replaceChildren(el("p",err.message))}};
+$("refresh").onclick=refresh;refresh();
+</script></body></html>
