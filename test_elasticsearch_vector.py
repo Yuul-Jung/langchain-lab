@@ -100,7 +100,7 @@ def main():
             "k": 3,
             "num_candidates": 10,
         },
-        source=["text"],
+        body={"_source": ["text"]},
     )
     print("\n질문:", QUERY)
     for rank, hit in enumerate(result["hits"]["hits"], 1):
