@@ -11,11 +11,17 @@ from fastapi.responses import FileResponse
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 from rag_search import INDEX, es_client, search_documents
+from document_api import router as document_router
 
 ROOT = Path(__file__).resolve().parent
 LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
 CHAT_MODEL = os.getenv("CHAT_MODEL", "deepseek-r1-distill-qwen-14b")
 app = FastAPI(title="LangChain Lab")
+app.include_router(document_router)
+
+@app.get("/documents")
+def documents_page():
+    return FileResponse(ROOT / "static" / "documents.html")
 
 class Message(BaseModel):
     role: str
