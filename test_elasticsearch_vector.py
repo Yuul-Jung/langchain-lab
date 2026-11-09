@@ -3,6 +3,7 @@
 This test only creates/updates documents in its dedicated lab index.
 No credentials are saved or sent to GitHub.
 """
+import base64
 import getpass
 import os
 from pathlib import Path
@@ -45,9 +46,15 @@ def main():
     password = os.environ.get("ES_PASSWORD") or getpass.getpass(
         f"Elasticsearch {ES_USER} 비밀번호: "
     )
+    # Encode Basic credentials as UTF-8 to support non-ASCII passwords.
+    # The Elasticsearch Python client's basic_auth helper assumes ASCII.
+    credentials = f"{ES_USER}:{password}".encode("utf-8")
+    authorization = "Basic " + base64.b64encode(credentials).decode("ascii")
     es = Elasticsearch(
-        ES_URL, ca_certs=CA_CERT,
-        basic_auth=(ES_USER, password), request_timeout=30
+        ES_URL,
+        ca_certs=CA_CERT,
+        headers={"Authorization": authorization},
+        request_timeout=30,
     )
 
     info = es.info()
