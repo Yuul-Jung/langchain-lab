@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LangChain Local AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #111827; color: #f9fafb;
+      font-family: system-ui, "Noto Sans KR", sans-serif; }
+    .app { max-width: 960px; height: 100dvh; margin: auto;
+      display: flex; flex-direction: column; }
+    header { padding: 16px 20px; border-bottom: 1px solid #374151;
+      display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    h1 { margin: 0; font-size: 19px; }
+    #status { color: #a5b4fc; font-size: 12px; overflow-wrap: anywhere; }
+    #chat { flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+      gap: 14px; padding: 20px; }
+    .message { padding: 13px 16px; max-width: 86%; line-height: 1.65;
+      border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .user { align-self: flex-end; background: #2563eb; }
+    .assistant { align-self: flex-start; background: #1f2937; }
+    footer { padding: 16px 20px; border-top: 1px solid #374151; }
+    form { display: flex; gap: 10px; }
+    textarea { flex: 1; min-width: 0; border: 1px solid #4b5563;
+      border-radius: 10px; padding: 12px; font: inherit; resize: none;
+      background: #1f2937; color: #f9fafb; }
+    button { border: 0; border-radius: 10px; padding: 11px 17px;
+      background: #2563eb; color: #fff; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+    .toolbar button { background: #374151; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>LangChain Local AI</h1>
+      <span id="status">모델 연결 확인 중...</span>
+    </header>
+    <main id="chat" aria-live="polite">
+      <div class="message assistant">안녕하세요. 로컬 AI 채팅입니다.</div>
+    </main>
+    <footer>
+      <div class="toolbar"><button id="clear" type="button">새 대화</button></div>
+      <form id="form">
+        <textarea id="question" rows="2" required
+          placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈"></textarea>
+        <button id="send" type="submit">전송</button>
+      </form>
+    </footer>
+  </div>
+  <script>
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("form");
+    const question = document.getElementById("question");
+    const send = document.getElementById("send");
+    const clear = document.getElementById("clear");
+    const status = document.getElementById("status");
+    let history = [];
+    let busy = false;
+
+    // Use textContent rather than HTML to display model output safely.
+    function addMessage(role, text) {
+      const node = document.createElement("div");
+      node.className = "message " + role;
+      node.textContent = text;
+      chat.appendChild(node);
+      chat.scrollTop = chat.scrollHeight;
+      return node;
+    }
+
+    async function checkModels() {
+      try {
+        const response = await fetch("/api/models");
+        if (!response.ok) throw new Error("연결 실패");
+        const data = await response.json();
+        status.textContent = data.models.length
+          ? "모델: " + data.models[0] : "로드된 모델 없음";
+      } catch {
+        status.textContent = "LM Studio 연결 실패";
+      }
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (busy || !question.value.trim()) return;
+      const text = question.value.trim();
+      const messages = [...history, {role: "user", content: text}];
+      addMessage("user", text);
+      question.value = "";
+      busy = true;
+      send.disabled = true;
+      clear.disabled = true;
+      const pending = addMessage("assistant", "답변 생성 중...");
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({messages})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "응답 오류");
+        const answer = typeof data.answer === "string"
+          ? data.answer : JSON.stringify(data.answer);
+        pending.textContent = answer;
+        history = [...messages, {role: "assistant", content: answer}];
+      } catch (error) {
+        pending.textContent = "오류: " + error.message;
+      } finally {
+        busy = false;
+        send.disabled = false;
+        clear.disabled = false;
+        chat.scrollTop = chat.scrollHeight;
+        question.focus();
+      }
+    });
+
+    question.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    clear.addEventListener("click", () => {
+      if (busy) return;
+      history = [];
+      chat.replaceChildren();
+      addMessage("assistant", "새 대화를 시작합니다.");
+    });
+    checkModels();
+  </script>
+</body>
+</html>
