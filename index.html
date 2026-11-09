@@ -1,63 +1,50 @@
 <!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LangChain Lab · 웹 채팅</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LangChain Lab — AI/RAG 학습 자료</title>
+<meta name="description" content="로컬 AI/RAG 실습 안내서 및 블록다이어그램 표준 템플릿">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#101827;color:#ecf3ff;font-family:system-ui,"Noto Sans KR",sans-serif}
-.app{max-width:950px;height:100dvh;margin:auto;display:flex;flex-direction:column}
-header,footer{padding:16px 20px;border-bottom:1px solid #334155}footer{border-bottom:0;border-top:1px solid #334155}
-h1{font-size:20px;margin:0 0 6px}small{color:#a3b2ca}#status{color:#93c5fd;margin-top:9px}
-#chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
-.msg{max-width:85%;padding:13px 16px;border-radius:13px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
-.user{background:#1d4ed8;align-self:flex-end}.ai{background:#233149;align-self:flex-start}
-form{display:flex;gap:9px}textarea{flex:1;min-width:0;background:#1f2937;color:white;border:1px solid #475569;border-radius:9px;padding:12px;font:inherit;resize:none}
-button{background:#2563eb;border:0;color:white;border-radius:9px;padding:12px;cursor:pointer}button:disabled{opacity:.5}
-nav{display:flex;gap:8px;margin-top:12px}nav button{background:#334155}
-</style>
-</head>
-<body>
-<div class="app">
-<header><h1>LangChain 웹 채팅</h1><small>GitHub Pages 화면 → 내 PC FastAPI/LangChain → LM Studio</small>
-<nav><button id="check" type="button">서버 연결 확인</button><button id="reset" type="button">새 대화</button></nav>
-<div id="status" role="status">서버 연결 확인 중...</div>
-</header>
-<section id="chat" aria-live="polite"><div class="msg ai">LangChain에 연결한 뒤 질문을 입력하세요.</div></section>
-<footer><form id="form"><textarea id="question" rows="2" placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈" required></textarea><button id="send" type="submit">전송</button></form>
-<small>같은 PC에서 LM Studio와 FastAPI 서버가 실행 중이어야 합니다. 대화는 브라우저 메모리에만 보관합니다.</small></footer>
-</div>
-<script>
-"use strict";
-// The browser's localhost means the computer opening this GitHub Pages tab.
-const API = "http://127.0.0.1:8000";
-const $=id=>document.getElementById(id);
-const chat=$("chat");let history=[],busy=false;
-function show(role,value){const el=document.createElement("div");el.className="msg "+role;el.textContent=value;chat.appendChild(el);chat.scrollTop=chat.scrollHeight;return el}
-async function check(){
- $("status").textContent="로컬 서버 확인 중...";
- try{
-  const r=await fetch(API+"/api/models",{signal:AbortSignal.timeout(10000)});
-  if(!r.ok)throw Error("HTTP "+r.status);
-  const d=await r.json();
-  $("status").textContent=d.models?.length?"연결 성공 · "+d.models.join(", "):"모델이 없습니다.";
- }catch(e){$("status").textContent="연결 실패 · uvicorn 서버, LM Studio, CORS 설정을 확인하세요. ("+e.message+")"}
-}
-$("form").addEventListener("submit",async e=>{
- e.preventDefault();if(busy||!$("question").value.trim())return;
- const text=$("question").value.trim();const messages=[...history,{role:"user",content:text}];
- show("user",text);$("question").value="";const pending=show("ai","답변 생성 중...");
- busy=true;$("send").disabled=true;$("reset").disabled=true;
- try{
-  const r=await fetch(API+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages})});
-  const d=await r.json();if(!r.ok)throw Error(d.detail||"HTTP "+r.status);
-  const answer=typeof d.answer==="string"?d.answer:JSON.stringify(d.answer);
-  pending.textContent=answer;history=[...messages,{role:"assistant",content:answer}];
- }catch(err){pending.textContent="오류: "+err.message}
- finally{busy=false;$("send").disabled=false;$("reset").disabled=false;chat.scrollTop=chat.scrollHeight;$("question").focus()}
-});
-$("question").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("form").requestSubmit()}});
-$("check").addEventListener("click",check);
-$("reset").addEventListener("click",()=>{if(busy)return;history=[];chat.replaceChildren();show("ai","새 대화를 시작합니다.")});
-check();
-</script>
-</body></html>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#1b293d;font:18px/1.7 system-ui,"Noto Sans KR","Malgun Gothic",sans-serif}
+main{max-width:1120px;margin:auto;padding:32px 22px 85px}
+.hero{border:1px solid #dae4f0;border-radius:25px;background:linear-gradient(120deg,#eaf2ff,#fff 70%);padding:38px}
+.eyebrow{font-size:15px;color:#24589b;font-weight:800;letter-spacing:.09em}
+h1{font-size:38px;line-height:1.28;letter-spacing:-.04em;margin:12px 0}
+h2{font-size:28px;margin:44px 0 18px}h3{font-size:23px;margin:2px 0 8px}
+p{color:#52647c;margin:7px 0 14px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:white;border:1px solid #dbe4ef;border-radius:20px;padding:25px;display:flex;flex-direction:column}
+.card.featured{background:#eaf2ff;border-color:#d4e2f7}
+.card p{flex:1;font-size:17px}
+.label{font-size:15px;font-weight:800;color:#315d96}
+a.button{display:inline-block;align-self:flex-start;padding:12px 19px;background:#245db1;color:white;text-decoration:none;border-radius:11px;font-size:17px;font-weight:700;margin-top:10px}
+a.button.secondary{background:#edf3fc;color:#24518e;border:1px solid #d6e3f5}
+.diagram{background:#fbfcfe;border:1px solid #dce4ef;border-radius:26px;padding:25px;text-align:center}
+.node{background:#fff;border:1px solid #d9e3ef;border-radius:19px;padding:21px}
+.node.primary{background:#e9f1ff;border-color:#d5e3fb}
+.node strong{display:block;font-size:23px}.node span{font-size:17px;color:#5d6d82}
+.arrow{font-size:29px;color:#2b4d79;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.note{background:#eef4fc;border-left:4px solid #5488c7;padding:16px 20px;margin-top:22px;border-radius:0 11px 11px 0}
+footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:15px;color:#64748b}
+@media(max-width:680px){body{font-size:17px}main{padding:16px 12px 50px}.hero{padding:22px}h1{font-size:28px}h2{font-size:25px}.cards,.grid{grid-template-columns:1fr}.node strong{font-size:20px}.node span{font-size:16px}.diagram{padding:15px}}
+</style></head><body><main>
+<section class="hero"><div class="eyebrow">LOCAL AI · LANGCHAIN · ELASTICSEARCH</div>
+<h1>로컬 AI/RAG 시스템<br>학습자료 라이브러리</h1>
+<p>LM Studio, LangChain, DeepSeek, Qwen3 임베딩, Elasticsearch를 실제로 연동한 구축 교재와 재사용 가능한 구조도 템플릿입니다.</p></section>
+<h2>학습 교재 바로가기</h2>
+<section class="cards">
+<article class="card featured"><div class="label">01 · 디자인 표준</div><h3>블록다이어그램 표준 템플릿 + 구조도 6종</h3><p>시스템 구성도, RAG 흐름도, 벡터 검색, 서버 자동 시작, 오류 진단, PDF 등록 구조도를 제공합니다.</p><a class="button" href="docs/diagram-style-guide.html">구조도 교재 열기 →</a></article>
+<article class="card"><div class="label">02 · 구축 과정</div><h3>LM Studio + LangChain + Elasticsearch 실습 교재</h3><p>개발 환경부터 임베딩, HTTPS 인증, 벡터 검색, FastAPI 채팅, 오류 해결까지 실제 검증 과정을 정리합니다.</p><a class="button" href="docs/learning-guide.html">전체 실습 교재 열기 →</a></article>
+<article class="card"><div class="label">03 · 재사용 도구</div><h3>공통 CSS 디자인 시스템</h3><p>다른 HTML 문서에도 동일한 색상·글꼴·박스 배치를 적용할 수 있는 스타일 소스입니다.</p><a class="button secondary" href="docs/diagram-components.css">공통 CSS 보기 →</a></article>
+<article class="card"><div class="label">04 · 소스코드</div><h3>GitHub 개발 프로젝트</h3><p>FastAPI, LangChain, RAG 검색, 자동 실행 스크립트 등 실제 소스 파일을 확인할 수 있습니다.</p><a class="button secondary" href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소 열기 →</a></article>
+</section>
+<h2>현재 시스템 구성</h2>
+<section class="diagram"><div class="node"><strong>HTML + JavaScript</strong><span>사용자 화면</span></div><div class="arrow">↕</div>
+<div class="node"><strong>FastAPI</strong><span>웹 서버·API</span></div><div class="arrow">↕</div>
+<div class="node primary"><strong>LangChain</strong><span>모델·검색 처리 흐름</span></div>
+<div class="grid"><div><div class="arrow">↕</div><div class="node"><strong>LM Studio</strong><span>DeepSeek 14B · Qwen3 임베딩</span></div></div>
+<div><div class="arrow">↕</div><div class="node"><strong>Elasticsearch 9.5.6</strong><span>문서 저장 · 벡터 검색</span></div></div></div></section>
+<h2>로컬 AI 채팅</h2>
+<div class="card"><h3>FastAPI + LangChain 웹 채팅</h3><p>로컬 AI 모델과 서버가 실행 중인 컴퓨터에서만 이용할 수 있습니다. GitHub Pages는 학습자료를 제공하며, Python 모델 서버를 대신 실행하지 않습니다.</p><a class="button secondary" href="http://127.0.0.1:8000">로컬 AI 채팅 열기 →</a></div>
+<div class="note"><strong>안내:</strong> 이 첫 화면은 학습 자료용이며 로컬 서버에 자동 연결하지 않습니다. 따라서 AI 서버가 꺼져 있어도 HTML 교재와 구조도는 정상적으로 열립니다.</div>
+<footer>LangChain Lab · 학습자료 / 디자인 표준 v1.1 · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소</a></footer>
+</main></body></html>
