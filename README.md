@@ -65,3 +65,13 @@ RAG는 **기존** `langchain_embedding_lab` 인덱스를 읽기 전용으로 검
 - GitHub Pages 배포 링크: https://yuul-jung.github.io/langchain-lab/docs/learning-guide.html
 
 교재는 실제 성공 단계와 검증 대기 단계를 구별하여 정리했습니다.
+
+## 교육용 블록다이어그램 표준 템플릿
+
+- [표준 스타일 가이드 + 구조도 6종](docs/diagram-style-guide.html)
+- [공통 CSS 디자인 토큰](docs/diagram-components.css)
+- [기존 LangChain 구축 학습 교재](docs/learning-guide.html)
+
+GitHub Pages: https://yuul-jung.github.io/langchain-lab/docs/diagram-style-guide.html
+
+구조도는 HTML/CSS로 작성되어 텍스트와 박스를 수정할 수 있으며, 인쇄/PDF 저장도 지원합니다.
