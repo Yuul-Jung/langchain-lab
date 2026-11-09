@@ -49,6 +49,31 @@ def clock_answer(question):
     return (f"오늘은 {now.year}년 {now.month}월 {now.day}일 "
             f"{weekdays[now.weekday()]}요일입니다. (한국 표준시 기준)")
 
+def unavailable_live_answer(question):
+    """Do not ask the LLM to improvise live weather without a weather tool."""
+    q = re.sub(r"\\s+", "", question)
+    if re.search(r"(오늘|현재|지금|실시간|내일)", q) and re.search(
+        r"(날씨|기온|강수|비예보|미세먼지|습도|풍속)", q
+    ):
+        return (
+            "현재 이 프로그램에는 실시간 기상 정보 조회 기능이 연결되어 있지 않아 "
+            "수원의 현재 날씨를 확인할 수 없습니다. "
+            "정확한 날씨는 기상청 날씨누리(https://www.weather.go.kr/)에서 확인해 주세요."
+        )
+    return None
+
+
+def needs_korean_rewrite(answer):
+    """Detect substantial foreign-language leakage, not English technical terms."""
+    if not answer.strip():
+        return False
+    han = len(re.findall(r"[\\u4e00-\\u9fff]", answer))
+    hangul = len(re.findall(r"[\\uac00-\\ud7a3]", answer))
+    latin_words = len(re.findall(r"[A-Za-z]{3,}", answer))
+    # One Hanja character or technical abbreviation is not a reason to retry.
+    return han >= 2 or (latin_words >= 28 and hangul < 15)
+
+
 @app.get("/")
 def home():
     return FileResponse(ROOT / "static" / "index.html")
@@ -89,6 +114,9 @@ def chat(body: ChatRequest):
         result = clock_answer(body.messages[-1].content)
         if result is not None:
             return {"model": "system-clock", "mode": "chat", "answer": result, "sources": []}
+        result = unavailable_live_answer(body.messages[-1].content)
+        if result is not None:
+            return {"model": "system-policy", "mode": "chat", "answer": result, "sources": []}
 
     if CHAT_MODEL not in available_models():
         raise HTTPException(status_code=503, detail="DeepSeek 대화 모델을 사용할 수 없습니다.")
@@ -99,7 +127,8 @@ def chat(body: ChatRequest):
         "과거 학습 시점의 날짜를 현재 날짜로 주장하지 마세요. "
         "날씨·뉴스·최신 사건 등 외부 정보는 확인된 실시간 자료가 없습니다. "
         "정보가 없으면 모른다고 명확히 밝히고 절대 사실을 꾸며내지 마세요. "
-        "모든 답변을 한국어로 작성하세요."
+        "답변 본문을 반드시 자연스러운 한국어로 작성하고 중국어 한자 혼용 또는 영어 장문을 출력하지 마세요. "
+        "영어는 필요한 고유명사와 기술 약어에서만 사용하세요."
     )
 
     sources = []
@@ -135,10 +164,28 @@ def chat(body: ChatRequest):
             timeout=180, use_responses_api=False,
         )
         answer = llm.invoke(messages).content
+        answer = answer if isinstance(answer, str) else str(answer)
+        if needs_korean_rewrite(answer):
+            # One bounded retry to rewrite the same answer, without adding facts.
+            rewrite = llm.invoke([
+                ("system",
+                 "당신은 한국어 교정기입니다. 아래 초안을 자연스러운 한국어로만 "
+                 "재작성하세요. 중국어 표현과 불필요한 영어 문장을 한국어로 번역하세요. "
+                 "내용을 추가하거나 사실을 변경하지 마세요. 결과 본문만 출력하세요."),
+                ("human", answer),
+            ]).content
+            rewrite = rewrite if isinstance(rewrite, str) else str(rewrite)
+            if rewrite.strip() and not needs_korean_rewrite(rewrite):
+                answer = rewrite
+            else:
+                answer = (
+                    "답변에서 다른 언어가 혼용되어 정확한 한국어 결과를 만들지 못했습니다. "
+                    "질문을 다시 입력하거나 다른 한국어 지원 모델을 선택해 주세요."
+                )
     except Exception as exc:
         raise HTTPException(status_code=502, detail="LM Studio 모델 응답 실패") from exc
     return {
         "model": CHAT_MODEL, "mode": body.mode,
-        "answer": answer if isinstance(answer, str) else str(answer),
+        "answer": answer,
         "sources": sources,
     }
