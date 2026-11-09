@@ -82,6 +82,9 @@ def search_documents_api(request: SearchRequest):
 def reindex_document(document_id: str):
     """Retry only this document, never modify the legacy RAG lab index."""
     meta = _load(document_id)
+    if meta.get("index_status") == "indexed":
+        return {"document_id": document_id, "index_status": "indexed",
+                "chunk_count": meta["chunk_count"], "already_indexed": True}
     ext = meta["format"]
     stored = UPLOAD_DIR / f"{document_id}{ext}"
     if not stored.is_file():
