@@ -37,7 +37,7 @@ async function check(){
   const [a,b]=await Promise.all([fetch("/api/models"),fetch("/api/rag/status")]);
   if(!a.ok)throw Error("LM Studio 연결 불가");
   const model=await a.json(),rag=await b.json();
-  $("status").textContent="LLM: "+model.chat_model+" · Elasticsearch: "+(rag.connected?(rag.index_exists?"연결됨":"인덱스 없음"):"연결되지 않음");
+  $("status").textContent="LLM: "+model.chat_model+" · Elasticsearch: "+(rag.connected?(rag.index_exists?"연결됨":"인덱스 없음"):("연결되지 않음 · "+(rag.reason||"설정 확인 필요")));
  }catch(e){$("status").textContent="서버 상태 확인 실패: "+e.message}
 }
 $("form").addEventListener("submit",async e=>{
