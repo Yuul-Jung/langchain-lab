@@ -5,3 +5,9 @@ langchain-openai>=1,<2
 requests>=2.31,<3
 elasticsearch>=9,<10
 # Elasticsearch 9 Python client is used directly until langchain-elasticsearch supports 9.x.
+
+# Private document ingestion (PDF/DOCX/HTML/multipart)
+python-multipart>=0.0.20,<1
+pypdf>=5,<7
+python-docx>=1.1,<2
+beautifulsoup4>=4.12,<5
