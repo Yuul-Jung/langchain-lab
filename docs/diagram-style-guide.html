@@ -24,7 +24,15 @@ pre{font-size:15px;line-height:1.7}
  .diagram{padding:16px}
  .arrow{font-size:27px}
 }
-</style></head><body><main>
+
+/* Study document quick navigation */
+.quick-nav{position:fixed;right:22px;bottom:24px;z-index:50;display:flex;flex-direction:column;gap:9px}
+.quick-nav button,.quick-nav a{font:700 15px/1.2 system-ui,"Noto Sans KR",sans-serif;text-decoration:none;color:#244a7c;background:#fff;border:1px solid #cdd9e9;box-shadow:0 3px 15px #22334b1a;border-radius:12px;min-height:45px;min-width:110px;display:flex;align-items:center;justify-content:center;padding:10px 14px;cursor:pointer}
+.quick-nav button:hover,.quick-nav a:hover{background:#eaf2ff}
+.quick-nav button:focus-visible,.quick-nav a:focus-visible{outline:3px solid #3b82f6;outline-offset:2px}
+@media(max-width:740px){.quick-nav{right:9px;bottom:10px;gap:6px}.quick-nav button,.quick-nav a{font-size:13px;min-height:41px;min-width:89px;padding:8px}}
+@media print{.quick-nav{display:none}}
+</style></head><body><div id="top"></div><main>
 <section class="intro"><div class="overline">STANDARD UI SYSTEM · VERSION 1.0</div><h1>학습용 HTML 블록다이어그램<br>표준 템플릿 & 구조도 세트</h1>
 <p class="lead">로컬 AI/RAG 구축 교재의 디자인을 표준화한 재사용 가능한 HTML/CSS 기반 구조도 모음. Mermaid나 SVG 없이 의미 있는 HTML 박스를 사용하며, 브라우저 확대·인쇄·화면 크기에 대응한다.</p>
 <span class="pill">둥근 사각형</span><span class="pill">옅은 회색·파랑</span><span class="pill">제목 + 역할 설명</span><span class="pill">최소 화살표</span><span class="pill">2열 병렬 구조</span>
@@ -143,4 +151,8 @@ pre{font-size:15px;line-height:1.7}
 <p id="copyStatus" class="caption" role="status"></p></div>
 <div class="note warning"><b>표현 기준:</b> 화살표는 흐름의 방향을 뜻한다. 운영환경은 실행 기반이므로 데이터 흐름 박스처럼 오해되지 않도록 설명을 병기한다. FPGA/RTL 자료의 구조도는 실제 모듈명과 신호명을 우선 사용한다.</div>
 <footer class="footer">표준 디자인 시스템 v1.0 · 2026-11-09 · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 소스 저장소</a> · 기존 학습 교재 <a href="learning-guide.html">learning-guide.html</a></footer>
-</main><script>async function copyStyle(){const t=document.querySelector("style").textContent;try{await navigator.clipboard.writeText(t);document.getElementById("copyStatus").textContent="공통 CSS를 복사했습니다."}catch(e){document.getElementById("copyStatus").textContent="복사가 제한된 경우 브라우저 소스에서 style 내용을 복사하세요."}}</script></body></html>
+</main><script>async function copyStyle(){const t=document.querySelector("style").textContent;try{await navigator.clipboard.writeText(t);document.getElementById("copyStatus").textContent="공통 CSS를 복사했습니다."}catch(e){document.getElementById("copyStatus").textContent="복사가 제한된 경우 브라우저 소스에서 style 내용을 복사하세요."}}</script><nav class="quick-nav" aria-label="교재 빠른 이동">
+<button type="button" onclick="if(history.length>1){history.back()}else{location.href='../index.html'}" title="이전 페이지로 돌아가기">← 뒤로 가기</button>
+<a href="../index.html" title="학습자료 메인 목차">⌂ 메인으로</a>
+<a href="#top" title="문서 맨 위로 이동">↑ 맨 위로</a>
+</nav></body></html>
