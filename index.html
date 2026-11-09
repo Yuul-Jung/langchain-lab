@@ -1,151 +1,63 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LangChain Lab · Local AI Chat</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LangChain Lab · 웹 채팅</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,"Noto Sans KR",sans-serif}
-*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#e7edf7}
-main{max-width:1024px;height:100dvh;margin:auto;display:flex;flex-direction:column}
-header{padding:16px 22px;border-bottom:1px solid #2b364b}
-h1{font-size:21px;margin:0 0 4px}.sub{color:#9aaac2;font-size:12px}
-.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}
-input,select,textarea{background:#172235;color:#ecf3ff;border:1px solid #3a4963;border-radius:9px;padding:10px;font:inherit}
-input{width:215px}select{flex:1;min-width:180px}button{background:#2563eb;color:white;border:0;border-radius:9px;padding:11px 16px;cursor:pointer}
-button.secondary{background:#32435e}button:disabled{opacity:.5;cursor:wait}
-#status{font-size:12px;color:#fbbf24;margin-top:10px;min-height:18px}
-#chat{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:22px}
-.message{max-width:86%;padding:14px 17px;border-radius:15px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
-.user{align-self:flex-end;background:#2559c5}.assistant{align-self:flex-start;background:#1e2a3d}
-footer{padding:14px 22px;border-top:1px solid #2b364b}
-form{display:flex;gap:10px}textarea{min-width:0;flex:1;resize:none}
-.note{margin:9px 0 0;color:#8999b2;font-size:11px}
-@media(max-width:600px){header,footer{padding:12px}#chat{padding:12px}.message{max-width:96%}input{width:100%;flex:1}}
+*{box-sizing:border-box}body{margin:0;background:#101827;color:#ecf3ff;font-family:system-ui,"Noto Sans KR",sans-serif}
+.app{max-width:950px;height:100dvh;margin:auto;display:flex;flex-direction:column}
+header,footer{padding:16px 20px;border-bottom:1px solid #334155}footer{border-bottom:0;border-top:1px solid #334155}
+h1{font-size:20px;margin:0 0 6px}small{color:#a3b2ca}#status{color:#93c5fd;margin-top:9px}
+#chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:85%;padding:13px 16px;border-radius:13px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.user{background:#1d4ed8;align-self:flex-end}.ai{background:#233149;align-self:flex-start}
+form{display:flex;gap:9px}textarea{flex:1;min-width:0;background:#1f2937;color:white;border:1px solid #475569;border-radius:9px;padding:12px;font:inherit;resize:none}
+button{background:#2563eb;border:0;color:white;border-radius:9px;padding:12px;cursor:pointer}button:disabled{opacity:.5}
+nav{display:flex;gap:8px;margin-top:12px}nav button{background:#334155}
 </style>
 </head>
 <body>
-<main>
-<header>
-<h1>LangChain Lab</h1>
-<div class="sub">GitHub Pages · LM Studio 로컬 채팅 (Python 서버 불필요)</div>
-<div class="bar">
-<label for="endpoint">LM Studio 주소</label>
-<input id="endpoint" value="http://127.0.0.1:1234/v1" spellcheck="false" aria-label="LM Studio API 주소">
-<button id="connect" class="secondary" type="button">연결 확인</button>
-<select id="models" aria-label="모델 선택"><option value="">모델 연결 대기</option></select>
-<button id="clear" class="secondary" type="button">새 대화</button>
-</div>
-<div id="status" role="status">LM Studio 서버를 실행하고 연결 확인을 누르세요.</div>
+<div class="app">
+<header><h1>LangChain 웹 채팅</h1><small>GitHub Pages 화면 → 내 PC FastAPI/LangChain → LM Studio</small>
+<nav><button id="check" type="button">서버 연결 확인</button><button id="reset" type="button">새 대화</button></nav>
+<div id="status" role="status">서버 연결 확인 중...</div>
 </header>
-<section id="chat" aria-live="polite"><div class="message assistant">안녕하세요. LM Studio에 연결한 뒤 질문을 입력하세요.</div></section>
-<footer>
-<form id="form">
-<textarea id="question" rows="2" placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈" required></textarea>
-<button id="send" type="submit">전송</button>
-</form>
-<p class="note">이 화면은 GitHub에서 제공하며, 질문은 이 브라우저에서 지정한 LM Studio 서버로 전송됩니다. 서버가 꺼져 있거나 다른 PC에서 접속하면 동작하지 않습니다. 대화는 저장되지 않습니다.</p>
-</footer>
-</main>
+<section id="chat" aria-live="polite"><div class="msg ai">LangChain에 연결한 뒤 질문을 입력하세요.</div></section>
+<footer><form id="form"><textarea id="question" rows="2" placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈" required></textarea><button id="send" type="submit">전송</button></form>
+<small>같은 PC에서 LM Studio와 FastAPI 서버가 실행 중이어야 합니다. 대화는 브라우저 메모리에만 보관합니다.</small></footer>
+</div>
 <script>
 "use strict";
-const $ = id => document.getElementById(id);
-const chat = $("chat"), status = $("status"), form = $("form");
-let history = [], busy = false;
-
-function baseURL() {
-  const raw = $("endpoint").value.trim().replace(/\/+$/, "");
-  const u = new URL(raw);
-  // Prevent credential leakage to arbitrary remote hosts.
-  if (u.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(u.hostname)) {
-    throw new Error("보안을 위해 이 버전은 현재 PC의 localhost 서버만 연결할 수 있습니다.");
-  }
-  if (u.username || u.password) throw new Error("주소에 계정 정보를 넣지 마세요.");
-  return raw;
+// The browser's localhost means the computer opening this GitHub Pages tab.
+const API = "http://127.0.0.1:8000";
+const $=id=>document.getElementById(id);
+const chat=$("chat");let history=[],busy=false;
+function show(role,value){const el=document.createElement("div");el.className="msg "+role;el.textContent=value;chat.appendChild(el);chat.scrollTop=chat.scrollHeight;return el}
+async function check(){
+ $("status").textContent="로컬 서버 확인 중...";
+ try{
+  const r=await fetch(API+"/api/models",{signal:AbortSignal.timeout(10000)});
+  if(!r.ok)throw Error("HTTP "+r.status);
+  const d=await r.json();
+  $("status").textContent=d.models?.length?"연결 성공 · "+d.models.join(", "):"모델이 없습니다.";
+ }catch(e){$("status").textContent="연결 실패 · uvicorn 서버, LM Studio, CORS 설정을 확인하세요. ("+e.message+")"}
 }
-function addMessage(role, value) {
-  const e = document.createElement("div");
-  e.className = "message " + role;
-  e.textContent = value;
-  chat.appendChild(e);
-  chat.scrollTop = chat.scrollHeight;
-  return e;
-}
-function setBusy(value) {
-  busy = value;
-  $("send").disabled = value;
-  $("connect").disabled = value;
-  $("clear").disabled = value;
-  $("models").disabled = value;
-}
-async function connect() {
-  status.textContent = "모델 목록 조회 중...";
-  $("models").replaceChildren();
-  try {
-    const r = await fetch(baseURL() + "/models", {signal: AbortSignal.timeout(10000)});
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const data = await r.json();
-    const models = data.data || [];
-    for (const m of models) {
-      const o = document.createElement("option");
-      o.value = m.id; o.textContent = m.id;
-      $("models").appendChild(o);
-    }
-    status.textContent = models.length
-      ? "연결 성공 · 모델 " + models.length + "개"
-      : "LM Studio에 로드된 모델이 없습니다.";
-  } catch (e) {
-    status.textContent = "연결 실패: " + e.message + " · LM Studio의 서버 실행 및 CORS 설정을 확인하세요.";
-  }
-}
-form.addEventListener("submit", async e => {
-  e.preventDefault();
-  if (busy || !$("question").value.trim()) return;
-  if (!$("models").value) {status.textContent = "먼저 연결 확인으로 모델을 선택하세요."; return;}
-  const prompt = $("question").value.trim();
-  const messages = [...history, {role:"user",content:prompt}];
-  addMessage("user",prompt);
-  $("question").value = "";
-  const output = addMessage("assistant","답변 생성 중...");
-  setBusy(true);
-  try {
-    const r = await fetch(baseURL() + "/chat/completions", {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:$("models").value,
-        messages:[
-          {role:"system", content:"답변은 한국어로 작성하세요. 기술 용어는 필요한 경우 영어를 병기하세요."},
-          ...messages
-        ],
-        stream:false, temperature:0
-      })
-    });
-    if (!r.ok) throw new Error("HTTP " + r.status + " · 모델 및 서버 설정 확인");
-    const json = await r.json();
-    const answer = json.choices?.[0]?.message?.content || "응답 내용이 비어 있습니다.";
-    output.textContent = answer;
-    history = [...messages,{role:"assistant",content:answer}];
-    status.textContent = "응답 완료";
-  } catch (err) {
-    output.textContent = "오류: " + err.message;
-    status.textContent = "응답 실패 · LM Studio 서버 상태를 확인하세요.";
-  } finally {
-    setBusy(false);
-    chat.scrollTop = chat.scrollHeight;
-    $("question").focus();
-  }
+$("form").addEventListener("submit",async e=>{
+ e.preventDefault();if(busy||!$("question").value.trim())return;
+ const text=$("question").value.trim();const messages=[...history,{role:"user",content:text}];
+ show("user",text);$("question").value="";const pending=show("ai","답변 생성 중...");
+ busy=true;$("send").disabled=true;$("reset").disabled=true;
+ try{
+  const r=await fetch(API+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages})});
+  const d=await r.json();if(!r.ok)throw Error(d.detail||"HTTP "+r.status);
+  const answer=typeof d.answer==="string"?d.answer:JSON.stringify(d.answer);
+  pending.textContent=answer;history=[...messages,{role:"assistant",content:answer}];
+ }catch(err){pending.textContent="오류: "+err.message}
+ finally{busy=false;$("send").disabled=false;$("reset").disabled=false;chat.scrollTop=chat.scrollHeight;$("question").focus()}
 });
-$("question").addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();form.requestSubmit();}
-});
-$("connect").addEventListener("click",connect);
-$("clear").addEventListener("click",()=>{
-  if(busy)return;
-  history=[];
-  chat.replaceChildren();
-  addMessage("assistant","새 대화를 시작합니다.");
-});
-connect();
+$("question").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("form").requestSubmit()}});
+$("check").addEventListener("click",check);
+$("reset").addEventListener("click",()=>{if(busy)return;history=[];chat.replaceChildren();show("ai","새 대화를 시작합니다.")});
+check();
 </script>
-</body>
-</html>
+</body></html>
