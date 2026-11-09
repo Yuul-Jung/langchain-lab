@@ -100,14 +100,15 @@ def main():
     es.indices.refresh(index=INDEX)
 
     result = es.search(
-        index=INDEX, size=3,
+        index=INDEX,
+        size=3,
         knn={
             "field": "embedding",
             "query_vector": query_vector,
             "k": 3,
             "num_candidates": 10,
         },
-        body={"_source": ["text"]},
+        source=["text"],
     )
     print("\n질문:", QUERY)
     for rank, hit in enumerate(result["hits"]["hits"], 1):
