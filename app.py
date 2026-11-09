@@ -6,12 +6,22 @@ from pathlib import Path
 import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
 BASE_DIR = Path(__file__).resolve().parent
 LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
 app = FastAPI(title="LangChain Local AI Chat")
+
+# Allow GitHub Pages browser to use the local server on this PC.
+# CORS is not authentication: keep uvicorn bound to 127.0.0.1.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://yuul-jung.github.io"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 SYSTEM_PROMPT = (
     "당신은 한국어 AI 도우미입니다. "
