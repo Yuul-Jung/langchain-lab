@@ -105,6 +105,40 @@ class DocumentPipelineTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 dp._catalog_path(invalid)
 
+    def test_indexing_diagnostic_does_not_expose_credentials(self):
+        from requests.exceptions import HTTPError
+        from requests import Response
+        response = Response()
+        response.status_code = 404
+        response._content = b"secret error body"
+        error = HTTPError("sensitive message", response=response)
+        issue = dp.diagnose_failure(error, "embedding")
+        self.assertEqual(issue.code, "LM_MODEL_NOT_FOUND")
+        self.assertNotIn("secret", issue.hint)
+        self.assertEqual(issue.phase, "embedding")
+
+    def test_es_password_missing_diagnostic(self):
+        issue = dp.diagnose_failure(
+            RuntimeError("ES_PASSWORD가 설정되지 않았습니다."), "es_connection"
+        )
+        self.assertEqual(issue.code, "ES_PASSWORD_MISSING")
+        self.assertNotIn("elastic:", issue.hint)
+
+    def test_upload_failed_index_keeps_source_and_diagnostic(self):
+        content = b"# UART\nA UART digital design source document for testing."
+        with patch.object(dp, "_index_chunks", side_effect=dp.IndexingFailure(
+            "LM_CONNECTION", "embedding", "LM Studio 연결 확인 필요"
+        )):
+            with self.assertRaises(dp.IndexingFailure):
+                dp.ingest_file("uart.md", content, use_ai=False, index=True)
+        files = dp.list_documents()
+        self.assertEqual(len(files), 1)
+        self.assertEqual(files[0]["index_status"], "failed")
+        self.assertEqual(files[0]["index_error"]["code"], "LM_CONNECTION")
+        self.assertTrue(list(dp.UPLOAD_DIR.glob("*.md")))
+        saved = dp.get_document(files[0]["document_id"])
+        self.assertEqual(saved["sections"][0]["source_order"], 1)
+
     def test_classification_is_proposal(self):
         sections = [dp._new_section(1, "AXI4-Lite", "AXI bus and register map")]
         result = dp.analyze_document(sections, "test.md", use_ai=False)
