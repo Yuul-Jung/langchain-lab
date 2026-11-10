@@ -176,3 +176,19 @@ curl -s http://127.0.0.1:8000/api/documents/health/status
 비밀번호는 터미널에 표시되지 않습니다. 검증에 실패하면 기존 `.env`는 변경하지 않습니다. 기존 `uploads/` 원본과 `data/` 카탈로그, Elasticsearch 인덱스는 삭제하지 않습니다. 진단 결과에서 Elasticsearch와 임베딩이 모두 정상인 경우 기존 문서의 **구조 보기 → 벡터 등록 재시도**를 누릅니다.
 
 스크립트는 사용자가 **현재 알고 있는 Elasticsearch 계정 비밀번호**를 입력받는 방식입니다. 비밀번호 자체를 잊은 경우에는 별도의 안전한 관리자 재설정 절차가 필요합니다.
+
+## 인증 복구 후에도 ES_AUTH가 반복될 때
+
+비밀번호 재설정과 `repair-es-auth.py` 성공 후에도 색인이 401로 실패할 수 있는 원인 중 하나는 프로세스에 남아 있는 예전 `ES_PASSWORD` 환경변수입니다. 이 프로젝트는 **`rag_search.py`에서 로컬 `.env`를 요청 시마다 다시 읽도록 수정**했으며, 환경변수와 값이 다를 경우 프로젝트의 `.env`를 우선 사용합니다.
+
+```bash
+# 단일 업데이트 스크립트가 소스·테스트·서비스를 순서대로 반영
+bash ~/langchain_web/scripts/update-local.sh
+
+# 권한·비밀번호를 노출하지 않는 현재 접속 진단
+curl -s http://127.0.0.1:8000/api/documents/health/status
+```
+
+진단의 `elasticsearch.ok`와 `embedding.ok`가 모두 `true`인지 확인합니다. 연결 성공 후 `failed`인 과거 기록이 자동으로 바뀌는 것은 아니므로, **2청크 안내서부터 벡터 등록 재시도**하여 새 결과를 확인합니다. 계속 실패한다면 새로 표시된 실패 코드와 실패 단계를 기준으로 추가 원인을 진단합니다.
+
+서비스 장애 확인: `journalctl --user -u langchain-lab -n 40 --no-pager` (인증 관련 민감 정보는 외부에 공유하지 않음).
