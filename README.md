@@ -192,3 +192,14 @@ curl -s http://127.0.0.1:8000/api/documents/health/status
 진단의 `elasticsearch.ok`와 `embedding.ok`가 모두 `true`인지 확인합니다. 연결 성공 후 `failed`인 과거 기록이 자동으로 바뀌는 것은 아니므로, **2청크 안내서부터 벡터 등록 재시도**하여 새 결과를 확인합니다. 계속 실패한다면 새로 표시된 실패 코드와 실패 단계를 기준으로 추가 원인을 진단합니다.
 
 서비스 장애 확인: `journalctl --user -u langchain-lab -n 40 --no-pager` (인증 관련 민감 정보는 외부에 공유하지 않음).
+
+## 연결은 정상인데 색인이 계속 실패하는 경우 — 단일 문서 진단
+
+서버 연결 상태가 모두 정상인데도 `failed`가 유지된다면, 이전 실패 기록인지 실제 색인 단계 오류인지 구별해야 합니다. PDF를 다시 업로드하거나 비밀번호를 재설정하지 말고 다음 진단을 실행합니다.
+
+```bash
+cd ~/langchain_web && git pull --ff-only origin main && .venv/bin/python scripts/diagnose-reindex.py
+```
+
+이 스크립트는 문서 목록에서 **가장 청크 수가 작은 failed 문서 1개**만 재색인하고 성공 여부 또는 오류 코드·단계를 출력합니다. `ES_AUTH` 과거 기록은 실제 요청 결과와 구분됩니다. 다른 문서와 원본 파일은 변경하지 않습니다.
+
