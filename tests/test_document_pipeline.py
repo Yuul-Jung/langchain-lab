@@ -22,7 +22,7 @@ class DocumentPipelineTests(unittest.TestCase):
     def test_pdf_detects_clear_headings_without_losing_original_text(self):
         class Page:
             def extract_text(self):
-                return "머리말 설명\\n1. 과정 개요\\n교육 목적 설명\\n2. 과정 내용\\n실습과 평가"
+                return "머리말 설명\n1. 과정 개요\n교육 목적 설명\n2. 과정 내용\n실습과 평가"
 
         class Reader:
             is_encrypted = False
@@ -37,8 +37,8 @@ class DocumentPipelineTests(unittest.TestCase):
         self.assertEqual(sections[1]["provenance"], "rule_inferred")
         self.assertEqual(sections[0]["provenance"], "source_extracted")
         self.assertEqual(
-            "\\n".join(s["text"] for s in sections),
-            "머리말 설명\\n1. 과정 개요\\n교육 목적 설명\\n2. 과정 내용\\n실습과 평가",
+            "\n".join(s["text"] for s in sections),
+            "머리말 설명\n1. 과정 개요\n교육 목적 설명\n2. 과정 내용\n실습과 평가",
         )
 
     def test_md_structure_and_hierarchy(self):
