@@ -159,6 +159,16 @@ def reanalyze_document(document_id: str):
         # Analyze the latest extracted text, but preserve stored section IDs,
         # chunk boundaries and source order until a dedicated migration.
         analysis_sections = extract_sections(stored)
+        # A proposed heading tree is independent from the immutable indexed
+        # chunks. It is never silently used to rewrite existing search IDs.
+        meta["structure_proposal"] = [
+            {key: section.get(key) for key in (
+                "id", "source_order", "title", "page", "level",
+                "parent_id", "provenance",
+            )}
+            for section in analysis_sections
+        ]
+        meta["structure_review_status"] = "proposed"
         classification = analyze_document(
             analysis_sections, meta["filename"], use_ai=True
         )
