@@ -63,7 +63,7 @@ label.append(el("span"," "+edge.from+" → "+edge.to+" / "+edge.type+" / "+edge.
 const btn=el("button","분류·순서·체크한 관계 승인");btn.style.marginTop="15px";
 btn.onclick=async()=>{btn.disabled=true;try{await call("/api/documents/"+d.document_id+"/review",
 {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({approve_classification:true,approve_learning_sequence:true,approved_relation_indices:checks.filter(x=>x.checked).map(x=>Number(x.value))})});await detail(id)}catch(e){alert(e.message)}finally{btn.disabled=false}};root.append(btn);
-if(d.index_status!=="indexed"){const retry=el("button","벡터 등록 재시도","secondary");retry.style.marginLeft="10px";retry.onclick=async()=>{retry.disabled=true;try{await call("/api/documents/"+d.document_id+"/reindex",{method:"POST"});await detail(id);await refresh()}catch(e){alert(e.message)}finally{retry.disabled=false}};root.append(retry)}
+if(d.index_status!=="indexed"){const retry=el("button","벡터 등록 재시도","secondary");retry.style.marginLeft="10px";retry.onclick=async()=>{retry.disabled=true;try{await call("/api/documents/"+d.document_id+"/reindex",{method:"POST"});await detail(id);await refresh()}catch(e){alert("재등록 결과: "+e.message);await refresh();await detail(id)}finally{retry.disabled=false}};root.append(retry)}
 }catch(e){root.replaceChildren(el("p","조회 실패: "+e.message))}}
 $("upload").onsubmit=async e=>{e.preventDefault();const btn=$("uploadBtn");btn.disabled=true;$("status").textContent="구조화 및 임베딩 처리 중...";try{
 const form=new FormData();form.append("file",$("file").files[0]);form.append("use_ai",$("ai").checked?"true":"false");form.append("index",$("index").checked?"true":"false");
