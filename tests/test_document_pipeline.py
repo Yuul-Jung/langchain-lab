@@ -19,6 +19,28 @@ class DocumentPipelineTests(unittest.TestCase):
         self.addCleanup(self.patch_upload.stop)
         self.addCleanup(self.patch_catalog.stop)
 
+    def test_pdf_detects_clear_headings_without_losing_original_text(self):
+        class Page:
+            def extract_text(self):
+                return "머리말 설명\\n1. 과정 개요\\n교육 목적 설명\\n2. 과정 내용\\n실습과 평가"
+
+        class Reader:
+            is_encrypted = False
+            pages = [Page()]
+
+        with patch.object(dp, "PdfReader", return_value=Reader()):
+            sections = dp._parse_pdf(self.base / "input.pdf")
+        self.assertEqual(len(sections), 3)
+        self.assertEqual(sections[0]["title"], "PDF 1쪽")
+        self.assertEqual(sections[1]["title"], "1. 과정 개요")
+        self.assertEqual(sections[2]["title"], "2. 과정 내용")
+        self.assertEqual(sections[1]["provenance"], "rule_inferred")
+        self.assertEqual(sections[0]["provenance"], "source_extracted")
+        self.assertEqual(
+            "\\n".join(s["text"] for s in sections),
+            "머리말 설명\\n1. 과정 개요\\n교육 목적 설명\\n2. 과정 내용\\n실습과 평가",
+        )
+
     def test_md_structure_and_hierarchy(self):
         source = self.base / "example.md"
         source.write_text(
