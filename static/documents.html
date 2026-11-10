@@ -28,12 +28,12 @@ input[type=text]{flex:1;min-width:200px;padding:11px;border:1px solid #ccc;borde
 <button id="uploadBtn" type="submit">업로드 · 구조 분석</button></form><div id="status" class="status" role="status">자료를 선택하세요.</div></section>
 <section><h2>02 · 서비스 진단</h2><p class="hint">Elasticsearch와 Qwen3 임베딩 서버를 각각 검사합니다. 오류가 나오면 원인을 수정한 후 기존 문서에서 “벡터 등록 재시도”를 누르세요.</p><button type="button" id="healthBtn" class="secondary">연결 진단 실행</button><div id="healthResult" class="status">진단 대기</div></section><section><h2>03 · 처리 단계</h2>
 <div class="flow"><strong>원본 파일</strong><small>SHA-256 해시 · 파일 형식 · 원본 보관</small></div><div class="arrow">↓</div>
-<div class="flow"><strong>장·절·페이지 구조 추출</strong><small>원본 순서 source_order 보존</small></div><div class="arrow">↓</div>
+<div class="flow"><strong>페이지·확인 가능한 제목 추출</strong><small>원본 순서 source_order 보존</small></div><div class="arrow">↓</div>
 <div class="flow focus"><strong>주제 분류 · 선수학습 제안</strong><small>추출한 사실과 LLM/규칙 추론값 분리</small></div><div class="arrow">↓</div>
 <div class="flow"><strong>학습 순서 · 관계 생성</strong><small>근거가 있는 관계를 검토 후 승인</small></div><div class="arrow">↓</div>
 <div class="flow"><strong>별도 Elasticsearch 인덱스</strong><small>langchain_documents_v1</small></div></section>
 <section><div class="row"><h2>04 · 등록된 문서</h2><button class="secondary" id="refresh" type="button">새로고침</button></div><div id="list" class="cards"></div></section>
-<section><h2>05 · 문서 구조와 분석 정보</h2><p class="hint">원본 구조는 유지됩니다. 추론한 분류·학습 순서·관계는 별도 제안으로 보관됩니다.</p><div id="detail" class="detail">문서를 선택하면 상세 분석을 표시합니다.</div></section>
+<section><h2>05 · 문서 구조와 분석 정보</h2><p class="hint">PDF에서 제목을 식별하지 못하면 페이지 단위로 표시합니다. 제목 추정은 검토 대상이며, 분류·학습 순서는 확정된 사실이 아닙니다.</p><div id="detail" class="detail">문서를 선택하면 상세 분석을 표시합니다.</div></section>
 <section><h2>06 · 벡터 검색</h2><form id="search" class="row"><input id="query" type="text" required placeholder="문서 검색 질문"><button type="submit">검색</button></form><div id="results" class="detail">검색 질의를 입력하세요.</div></section></main>
 <script>
 "use strict";
@@ -48,11 +48,18 @@ const b=el("button","구조 보기","secondary");b.onclick=()=>detail(item.docum
 }catch(e){list.replaceChildren(el("p","조회 실패: "+e.message))}}
 async function detail(id){const root=$("detail");root.replaceChildren(el("p","조회 중..."));try{
 const d=(await call("/api/documents/"+encodeURIComponent(id))).document;root.replaceChildren(el("h3",d.filename),el("p","문서 ID: "+d.document_id+" / 색인: "+d.index_status));if(d.index_error){const issue=el("p","실패 단계: "+d.index_error.phase+" / 코드: "+d.index_error.code+" / 해결: "+d.index_error.hint);issue.style.color="#9c4d1e";root.append(issue)}
-root.append(el("h3","원본 순서 및 장·절 구조"));
+root.append(el("h3","원문 구조 (PDF는 페이지 단위일 수 있음)"));
 const table=el("table");const row=el("tr");for(const key of ["순서","제목","페이지","근거"])row.append(el("th",key));table.append(row);
 for(const s of d.sections){const tr=el("tr");for(const key of [s.source_order,s.title,s.page||"-",s.provenance])tr.append(el("td",key));table.append(tr)}root.append(table);
 root.append(el("h3","분류 및 개념 제안"),el("p",d.classification.topic+" · "+d.classification.difficulty+" · "+d.classification.method+" · "+d.classification.review_status),
- el("p",d.classification.concepts.join(", ")||"추출된 개념 없음"));
+ el("p",d.classification.concepts.join(", ")||"추출된 개념 없음"),
+ el("p","분석 근거: "+(d.classification.reason||"미기록")));
+const again=el("button","LLM 분류 재분석","secondary");again.style.marginBottom="12px";
+again.onclick=async()=>{again.disabled=true;again.textContent="로컬 LLM 분석 중...";
+try{await call("/api/documents/"+d.document_id+"/reanalyze",{method:"POST"});
+await detail(id);await refresh()}catch(e){alert("재분석 실패: "+e.message);again.disabled=false;again.textContent="LLM 분류 재분석"}};
+root.append(again);
+root.append(el("p","참고: 이미 색인된 문서는 기존 검색 청크를 보존합니다. PDF 장·절 재추출은 별도의 색인 마이그레이션이 필요합니다."));
 root.append(el("h3","제안된 학습 순서"));
 root.append(el("p",d.learning_sequence.section_ids.map(id=>d.sections.find(s=>s.id===id)?.title||id).join(" → ")));
 root.append(el("p","검토 상태: "+d.learning_sequence.review_status));
