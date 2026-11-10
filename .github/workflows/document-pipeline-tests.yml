@@ -7,6 +7,8 @@ on:
       - 'document_api.py'
       - 'app.py'
       - 'tests/test_document_pipeline.py'
+      - 'tests/test_es_settings.py'
+      - 'rag_search.py'
       - 'requirements.txt'
       - '.github/workflows/document-pipeline-tests.yml'
   workflow_dispatch:
@@ -25,4 +27,4 @@ jobs:
       - name: Check syntax
         run: python -m compileall -q app.py rag_search.py document_pipeline.py document_api.py
       - name: Run offline regression tests
-        run: python -m unittest discover -s tests -p 'test_document_pipeline.py' -v
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
