@@ -155,3 +155,24 @@ bash ~/langchain_web/scripts/install-update-shortcut.sh
 현 버전의 PDF 구조 추출은 **페이지 단위**이며, `PDF 1쪽`은 실제 장 제목이 아닙니다. PDF의 진짜 장절·표·도면 구조 분석은 향후 별도 고도화할 예정입니다.
 
 UI의 `undefined` 텍스트 출력 오류는 JavaScript 요소 생성 함수에서 `undefined`를 문자열로 출력하던 문제로 수정했습니다. GitHub 코드를 가져온 뒤 기존 로컬 서비스를 다시 시작해야 적용됩니다.
+
+## ES_AUTH 인증 실패 복구 (기존 PDF 유지)
+
+문서 관리자에서 `ES_AUTH`가 나타나면 Elasticsearch가 현재 프로젝트의 `.env` 비밀번호를 받아들이지 않은 것입니다. **서버의 비밀번호를 함부로 초기화하거나 문서를 삭제하지 마세요.**
+
+```bash
+# 최신 안전 복구 스크립트 받기
+cd ~/langchain_web
+git pull --ff-only origin main
+
+# 비밀번호 입력 및 실제 Elasticsearch 인증 검증 후 .env만 갱신
+.venv/bin/python scripts/repair-es-auth.py
+
+# 재시작과 최종 확인
+systemctl --user restart langchain-lab
+curl -s http://127.0.0.1:8000/api/documents/health/status
+```
+
+비밀번호는 터미널에 표시되지 않습니다. 검증에 실패하면 기존 `.env`는 변경하지 않습니다. 기존 `uploads/` 원본과 `data/` 카탈로그, Elasticsearch 인덱스는 삭제하지 않습니다. 진단 결과에서 Elasticsearch와 임베딩이 모두 정상인 경우 기존 문서의 **구조 보기 → 벡터 등록 재시도**를 누릅니다.
+
+스크립트는 사용자가 **현재 알고 있는 Elasticsearch 계정 비밀번호**를 입력받는 방식입니다. 비밀번호 자체를 잊은 경우에는 별도의 안전한 관리자 재설정 절차가 필요합니다.
