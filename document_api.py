@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from document_pipeline import (
     ALLOWED_RELATIONS, MAX_BYTES, UPLOAD_DIR, _index_chunks, _write_catalog,
     extract_sections, get_document, ingest_file, list_documents, make_chunks,
+    analyze_document, propose_relations, learning_sequence,
     search_uploaded, IndexingFailure, diagnose_failure, DOCUMENT_INDEX,
 )
 
@@ -140,6 +141,58 @@ def reindex_document(document_id: str):
             "code": issue.code, "phase": issue.phase, "hint": issue.hint,
             "message": "기존 원본 파일과 분석 결과는 보존됩니다.",
         }) from exc
+
+
+@router.post("/{document_id}/reanalyze")
+def reanalyze_document(document_id: str):
+    """Refresh proposed classification without touching original PDF or vector index.
+
+    Old human approvals are invalidated when new analysis is proposed.
+    Previously indexed chunks remain searchable, with their original provenance.
+    """
+    meta = _load(document_id)
+    stored = UPLOAD_DIR / f'{document_id}{meta["format"]}'
+    if not stored.is_file():
+        raise HTTPException(status_code=404, detail="저장된 원본 파일을 찾지 못했습니다.")
+    try:
+        sections = extract_sections(stored)
+        # Existing indexed documents must keep their chunk IDs until a separate
+        # reindex/migration step. Do not silently modify indexed section structure.
+        old_sections = meta.get("sections", [])
+        same_ids = [s["id"] for s in sections] == [s["id"] for s in old_sections]
+        same_count = len(sections) == len(old_sections)
+        if meta.get("index_status") == "indexed" and not (same_ids and same_count):
+            # Analyze original stored sections only; heading migration requires reindex.
+            from pypdf import PdfReader
+            if meta["format"] == ".pdf":
+                reader = PdfReader(str(stored))
+                sections = []
+                for old in old_sections:
+                    page_no = old.get("page")
+                    if page_no and 1 <= page_no <= len(reader.pages):
+                        text = (reader.pages[page_no - 1].extract_text() or "").strip()
+                    else:
+                        text = ""
+                    sections.append({
+                        **old, "text": text,
+                    })
+            else:
+                raise HTTPException(status_code=409, detail="원본 절 구조가 변경되었습니다. 재구조화 마이그레이션이 필요합니다.")
+        classification = analyze_document(sections, meta["filename"], use_ai=True)
+        relations = propose_relations(sections, classification["concepts"])
+        sequence = learning_sequence(sections, relations)
+        meta["classification"] = classification
+        meta["relations"] = relations
+        meta["learning_sequence"] = sequence
+        meta["analysis_updated_at"] = __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc
+        ).isoformat()
+        _write_catalog(meta)
+        return {"document": meta, "structure_changed": False}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="분석 실패: 로컬 서비스 로그를 확인하세요.") from exc
 
 
 @router.post("/{document_id}/review")
