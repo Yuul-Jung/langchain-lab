@@ -51,6 +51,17 @@ const d=(await call("/api/documents/"+encodeURIComponent(id))).document;root.rep
 root.append(el("h3","원문 구조 (PDF는 페이지 단위일 수 있음)"));
 const table=el("table");const row=el("tr");for(const key of ["순서","제목","페이지","근거"])row.append(el("th",key));table.append(row);
 for(const s of d.sections){const tr=el("tr");for(const key of [s.source_order,s.title,s.page||"-",s.provenance])tr.append(el("td",key));table.append(tr)}root.append(table);
+if(Array.isArray(d.structure_proposal)){
+  root.append(el("h3","PDF 제목·절 구조 후보 (원문 미수정)"));
+  root.append(el("p","현재 색인된 청크와 구분되는 추정 구조입니다. 제목 판별 근거가 rule_inferred이면 원문 줄을 기준으로 추정한 것이므로 검토가 필요합니다."));
+  const proposed=el("table");const ph=el("tr");
+  for(const text of ["순서","제목 후보","페이지","근거"])ph.append(el("th",text));
+  proposed.append(ph);
+  for(const s of d.structure_proposal){const tr=el("tr");
+    for(const val of [s.source_order,s.title,s.page||"-",s.provenance])tr.append(el("td",val));
+    proposed.append(tr)}
+  root.append(proposed);
+}
 root.append(el("h3","분류 및 개념 제안"),el("p",d.classification.topic+" · "+d.classification.difficulty+" · "+d.classification.method+" · "+d.classification.review_status),
  el("p",d.classification.concepts.join(", ")||"추출된 개념 없음"),
  el("p","분석 근거: "+(d.classification.reason||"미기록")));
