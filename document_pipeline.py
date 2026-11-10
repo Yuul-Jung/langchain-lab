@@ -396,7 +396,7 @@ def list_documents():
             meta = json.loads(path.read_text(encoding="utf-8"))
             result.append({k: meta.get(k) for k in (
                 "document_id", "filename", "sha256", "uploaded_at",
-                "section_count", "chunk_count", "classification", "index_status",
+                "section_count", "chunk_count", "classification", "index_status", "index_error",
             )})
         except (OSError, ValueError, KeyError):
             continue
@@ -436,12 +436,65 @@ def _ensure_index(es):
     }})
 
 
+class IndexingFailure(RuntimeError):
+    """Public-safe indexing failure with diagnostic phase and code."""
+
+    def __init__(self, code, phase, hint):
+        super().__init__(hint)
+        self.code, self.phase, self.hint = code, phase, hint
+
+
+def diagnose_failure(exc, phase):
+    """Use stable error categories, never include exception strings or credentials."""
+    from elasticsearch import ApiError
+    if isinstance(exc, IndexingFailure):
+        return exc
+    if isinstance(exc, RuntimeError):
+        message = str(exc)
+        if "ES_PASSWORD" in message:
+            return IndexingFailure("ES_PASSWORD_MISSING", phase, "로컬 .env의 ES_PASSWORD 설정을 확인하세요.")
+        if "CA 인증서" in message:
+            return IndexingFailure("ES_CA_MISSING", phase, "CA 인증서 경로와 파일 읽기 권한을 확인하세요.")
+        if "벡터 차원" in message or "차원이 2560" in message:
+            return IndexingFailure("EMBEDDING_DIMENSION", phase, "임베딩 모델 ID와 2560차원 설정을 확인하세요.")
+        if "호환되지" in message:
+            return IndexingFailure("INDEX_MAPPING", phase, "기존 문서 인덱스 매핑을 확인하세요. 자동 삭제하지 않습니다.")
+    if isinstance(exc, requests.Timeout):
+        return IndexingFailure("LM_TIMEOUT", phase, "LM Studio 임베딩 서버 응답 시간이 초과되었습니다.")
+    if isinstance(exc, requests.HTTPError):
+        status = getattr(exc.response, "status_code", None)
+        if status == 404:
+            return IndexingFailure("LM_MODEL_NOT_FOUND", phase, "LM Studio 임베딩 모델 ID와 서버 상태를 확인하세요.")
+        if status == 400:
+            return IndexingFailure("LM_BAD_REQUEST", phase, "LM Studio 임베딩 모델 지원 여부·입력 크기를 확인하세요.")
+        return IndexingFailure("LM_HTTP_ERROR", phase, "LM Studio 모델 서버 요청이 실패했습니다. 로컬 서비스 로그를 확인하세요.")
+    if isinstance(exc, requests.RequestException):
+        return IndexingFailure("LM_CONNECTION", phase, "LM Studio 127.0.0.1:1234 모델 서버 연결을 확인하세요.")
+    if isinstance(exc, ApiError):
+        status = getattr(exc, "status_code", None)
+        if status == 401:
+            return IndexingFailure("ES_AUTH", phase, "Elasticsearch 로그인 정보(.env)를 확인하세요.")
+        if status == 403:
+            return IndexingFailure("ES_PERMISSION", phase, "Elasticsearch 사용자에게 인덱스 생성·쓰기 권한이 필요합니다.")
+        if status == 400:
+            return IndexingFailure("ES_BAD_REQUEST", phase, "문서 인덱스 매핑 또는 색인 요청을 확인하세요.")
+        return IndexingFailure("ES_API_ERROR", phase, "Elasticsearch 요청이 실패했습니다. 시스템 로그를 확인하세요.")
+    if "elastic" in type(exc).__module__.lower():
+        return IndexingFailure("ES_CONNECTION", phase, "Elasticsearch 9200 포트·HTTPS·인증서를 확인하세요.")
+    return IndexingFailure("INDEXING_ERROR", phase, "서버 로그에서 오류 원인을 확인하세요.")
+
+
 def _index_chunks(meta, chunks):
-    es = es_client()
-    _ensure_index(es)
+    phase = "es_connection"
+    es = None
     try:
+        es = es_client()
+        phase = "index_mapping"
+        _ensure_index(es)
         for item in chunks:
+            phase = "embedding"
             vector = embed_query(item["text"])
+            phase = "es_write"
             es.index(index=DOCUMENT_INDEX,
                      id=f'{meta["document_id"]}_{item["chunk_id"]}',
                      document={
@@ -454,17 +507,21 @@ def _index_chunks(meta, chunks):
                          "provenance": "source_extracted",
                          "embedding": vector,
                      })
+        phase = "index_refresh"
         es.indices.refresh(index=DOCUMENT_INDEX)
-    except Exception:
-        # Roll back only new document's index records; never touch the lab index.
-        try:
-            es.delete_by_query(
-                index=DOCUMENT_INDEX, refresh=True, conflicts="proceed",
-                query={"term": {"document_id": meta["document_id"]}},
-            )
-        except Exception:
-            pass
-        raise
+    except Exception as exc:
+        failure = diagnose_failure(exc, phase)
+        # Only remove chunks for this document; leave the old lab index untouched.
+        if es is not None:
+            try:
+                if es.indices.exists(index=DOCUMENT_INDEX):
+                    es.delete_by_query(
+                        index=DOCUMENT_INDEX, refresh=True, conflicts="proceed",
+                        query={"term": {"document_id": meta["document_id"]}},
+                    )
+            except Exception:
+                pass
+        raise failure from exc
 
 
 def ingest_file(filename, data, use_ai=True, index=True):
@@ -510,8 +567,13 @@ def ingest_file(filename, data, use_ai=True, index=True):
             try:
                 _index_chunks(meta, chunks)
                 meta["index_status"] = "indexed"
-            except Exception:
+                meta.pop("index_error", None)
+            except IndexingFailure as exc:
                 meta["index_status"] = "failed"
+                meta["index_error"] = {
+                    "code": exc.code, "phase": exc.phase, "hint": exc.hint,
+                    "checked_at": _now(),
+                }
                 _write_catalog(meta)
                 raise
         _write_catalog(meta)
