@@ -72,16 +72,46 @@ def _new_section(number, title, text, page=None, level=1, parent=None):
 
 
 def _parse_pdf(path):
+    """Keep full original page text while extracting clearly delimited headings.
+
+    An uncertain PDF line is left in its original page section instead of being
+    presented as a verified chapter. Derived heading spans are rule_inferred.
+    """
     reader = PdfReader(str(path))
     if reader.is_encrypted:
         raise ValueError("암호화된 PDF는 업로드할 수 없습니다.")
     sections = []
+    heading = re.compile(
+        r"^(?:[1-9][0-9]?\\.\\s+[^\\n]{2,65}|"
+        r"제\\s*[1-9][0-9]?\\s*[장절]\\s*[^\\n]{2,65})$"
+    )
     for page_no, page in enumerate(reader.pages, 1):
         text = (page.extract_text() or "").strip()
-        if text:
-            sections.append(_new_section(len(sections) + 1, f"PDF {page_no}쪽", text, page_no))
-        if len(sections) > MAX_SECTIONS:
-            raise ValueError("페이지 수가 제한을 초과합니다.")
+        if not text:
+            continue
+        lines = text.splitlines()
+        candidates = [
+            i for i, line in enumerate(lines)
+            if heading.fullmatch(_clean(line))
+        ]
+        # Excessive matches usually mean a table or numbered list, not headings.
+        if len(candidates) > 12:
+            candidates = []
+        starts = [0] + [i for i in candidates if i > 0]
+        starts = sorted(set(starts))
+        for pos, start in enumerate(starts):
+            end = starts[pos + 1] if pos + 1 < len(starts) else len(lines)
+            fragment = "\\n".join(lines[start:end]).strip()
+            if not fragment:
+                continue
+            has_heading = start in candidates
+            title = _clean(lines[start]) if has_heading else f"PDF {page_no}쪽"
+            item = _new_section(len(sections) + 1, title, fragment, page_no)
+            if has_heading:
+                item["provenance"] = "rule_inferred"
+            sections.append(item)
+            if len(sections) > MAX_SECTIONS:
+                raise ValueError("추출된 절이 최대 개수를 초과했습니다.")
     return sections
 
 
