@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from document_pipeline import (
     ALLOWED_RELATIONS, MAX_BYTES, UPLOAD_DIR, _index_chunks, _write_catalog,
     extract_sections, get_document, ingest_file, list_documents, make_chunks,
-    search_uploaded,
+    search_uploaded, IndexingFailure, diagnose_failure, DOCUMENT_INDEX,
 )
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -37,6 +37,34 @@ def documents_list():
     return {"documents": list_documents()}
 
 
+@router.get("/health/status")
+def indexing_health():
+    """Read-only check of ES credentials and embedding model; no secrets returned."""
+    from rag_search import es_client, embed_query
+    result = {
+        "elasticsearch": {"ok": False, "code": "NOT_CHECKED"},
+        "embedding": {"ok": False, "code": "NOT_CHECKED"},
+        "document_index": DOCUMENT_INDEX,
+    }
+    try:
+        es = es_client()
+        es.info()
+        result["elasticsearch"] = {"ok": True, "code": "CONNECTED"}
+    except Exception as exc:
+        issue = diagnose_failure(exc, "es_connection")
+        result["elasticsearch"] = {"ok": False, "code": issue.code, "hint": issue.hint}
+    try:
+        values = embed_query("문서 색인 연결 진단")
+        result["embedding"] = {
+            "ok": len(values) == 2560,
+            "code": "READY" if len(values) == 2560 else "EMBEDDING_DIMENSION",
+        }
+    except Exception as exc:
+        issue = diagnose_failure(exc, "embedding")
+        result["embedding"] = {"ok": False, "code": issue.code, "hint": issue.hint}
+    return result
+
+
 @router.get("/{document_id}")
 def document_detail(document_id: str):
     return {"document": _load(document_id)}
@@ -57,10 +85,15 @@ async def upload_document(
             return ingest_file(file.filename or "", body, use_ai=use_ai, index=index)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except IndexingFailure as exc:
+            raise HTTPException(status_code=503, detail={
+                "code": exc.code, "phase": exc.phase, "hint": exc.hint,
+                "message": "문서 구조화는 보존되었습니다. 색인 실패 원인을 확인한 뒤 재등록하세요.",
+            }) from exc
         except Exception as exc:
             raise HTTPException(
                 status_code=503,
-                detail="문서 처리 또는 벡터 등록 실패. 저장된 문서의 상태와 서버 로그를 확인하세요.",
+                detail="문서 처리 실패. 로컬 서버 로그와 문서 목록의 상태를 확인하세요.",
             ) from exc
     finally:
         await file.close()
@@ -94,13 +127,19 @@ def reindex_document(document_id: str):
         chunks = make_chunks(sections)
         _index_chunks(meta, chunks)
         meta["index_status"] = "indexed"
+        meta.pop("index_error", None)
         _write_catalog(meta)
         return {"document_id": document_id, "index_status": "indexed",
                 "chunk_count": len(chunks)}
     except Exception as exc:
+        issue = diagnose_failure(exc, "reindex")
         meta["index_status"] = "failed"
+        meta["index_error"] = {"code": issue.code, "phase": issue.phase, "hint": issue.hint}
         _write_catalog(meta)
-        raise HTTPException(status_code=503, detail="재등록 실패. ES·LM Studio 상태를 확인하세요.") from exc
+        raise HTTPException(status_code=503, detail={
+            "code": issue.code, "phase": issue.phase, "hint": issue.hint,
+            "message": "기존 원본 파일과 분석 결과는 보존됩니다.",
+        }) from exc
 
 
 @router.post("/{document_id}/review")
