@@ -113,3 +113,30 @@ systemctl --user restart langchain-lab
 **검증 상태:** GitHub 소스와 오프라인 자동 테스트 코드를 추가했습니다. 실제 사용자의 LM Studio, Elasticsearch, 파일별 추출 및 브라우저 업로드 동작은 로컬 PC에서 실행·검증해야 합니다. CI 설정은 `.github/workflows/document-pipeline-tests.yml`에 있습니다.
 
 **보안:** 로컬 개발 환경 전용입니다. `.env`와 업로드 원본은 Git에 추가하지 마세요. 외부 네트워크에 노출하지 마세요. 업로드를 통한 스크립트 실행을 허용하지 않지만, 불신 파일에 대한 완전한 악성 파일 검사나 멀티유저 인증은 구현되지 않았습니다.
+
+## 한 번에 업데이트·검증·실행 (권장)
+
+우분투의 **프로젝트 폴더가 이미 존재하는 경우**, 다음 명령 **한 줄**로 최신 소스 다운로드, Python 가상환경 확인, 필수 패키지 설치, 구문 및 오프라인 단위 테스트, FastAPI 서비스 재시작, /documents API 진단까지 처리합니다.
+
+```bash
+cd ~/langchain_web && git pull --ff-only origin main && bash scripts/update-local.sh
+```
+
+처음 한 번 위 명령으로 스크립트를 받아 실행한 이후에는 다음 명령만 사용합니다.
+
+```bash
+bash ~/langchain_web/scripts/update-local.sh
+```
+
+선택적으로 우분투 바탕화면에 **LangChain Lab 업데이트** 실행 아이콘을 만들 수 있습니다.
+
+```bash
+bash ~/langchain_web/scripts/install-update-shortcut.sh
+```
+
+- 업데이트 스크립트는 `scripts/update-local.sh`입니다.
+- GitHub Pages에서 로컬 Ubuntu 명령을 직접 실행할 수는 없습니다. 업데이트는 로컬 터미널 또는 바탕화면 실행 아이콘에서 시작합니다.
+- `git pull --ff-only`는 로컬 변경을 자동 병합하지 않고 문제가 있을 때 멈춥니다.
+- 설치 또는 검증 실패 시 **기존 서버를 재시작하지 않고** 오류를 표시합니다. 서비스 설정이 없는 최초 환경에서는 등록합니다.
+- 자동 검사 통과가 실제 Elasticsearch 임베딩 연동의 성공을 보장하지 않으므로, 문서 하나를 업로드하여 확인해야 합니다.
+- 새 문서 API 확인: http://127.0.0.1:8000/documents
