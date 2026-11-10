@@ -35,7 +35,7 @@ step 4 "Python 구문 및 파일 확인"
 [[ -f static/documents.html ]] || fail "static/documents.html이 없습니다."
 
 step 5 "문서 처리 오프라인 단위 테스트"
-"$PYTHON" -m unittest discover -s tests -p 'test_document_pipeline.py' -v ||
+"$PYTHON" -m unittest discover -s tests -p 'test_*.py' -v ||
     fail "단위 테스트 실패. 서버는 기존 상태로 유지합니다."
 
 step 6 "FastAPI 사용자 서비스 재시작"
