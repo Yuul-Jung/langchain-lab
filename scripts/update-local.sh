@@ -71,6 +71,18 @@ for _ in range(12):
             raise RuntimeError("문서 목록 API 응답 형식이 올바르지 않습니다.")
         print("FastAPI /documents 및 /api/documents 정상")
         print("등록 문서 수:", len(result["documents"]))
+        # Service diagnosis is informational; missing ES/model should not hide a valid deployment.
+        try:
+            with urlopen(base + "/api/documents/health/status", timeout=25) as h:
+                health = json.load(h)
+            es = health.get("elasticsearch", {})
+            em = health.get("embedding", {})
+            print("Elasticsearch:", "정상" if es.get("ok") else es.get("code", "미확인"))
+            print("Qwen3 임베딩:", "정상" if em.get("ok") else em.get("code", "미확인"))
+            if not es.get("ok") or not em.get("ok"):
+                print("안내: 문서 관리 화면의 '연결 진단 실행'에서 해결 방법을 확인하세요.")
+        except Exception:
+            print("안내: 실시간 연결 진단은 완료되지 않았습니다. 문서 관리 화면에서 확인하세요.")
         break
     except (OSError, ValueError, KeyError, RuntimeError) as exc:
         last_error = str(exc)
