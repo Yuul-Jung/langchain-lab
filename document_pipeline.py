@@ -82,8 +82,8 @@ def _parse_pdf(path):
         raise ValueError("암호화된 PDF는 업로드할 수 없습니다.")
     sections = []
     heading = re.compile(
-        r"^(?:[1-9][0-9]?\\.\\s+[^\\n]{2,65}|"
-        r"제\\s*[1-9][0-9]?\\s*[장절]\\s*[^\\n]{2,65})$"
+        r"^(?:[1-9][0-9]?\.\s+[^\n]{2,65}|"
+        r"제\s*[1-9][0-9]?\s*[장절]\s*[^\n]{2,65})$"
     )
     for page_no, page in enumerate(reader.pages, 1):
         text = (page.extract_text() or "").strip()
@@ -101,7 +101,7 @@ def _parse_pdf(path):
         starts = sorted(set(starts))
         for pos, start in enumerate(starts):
             end = starts[pos + 1] if pos + 1 < len(starts) else len(lines)
-            fragment = "\\n".join(lines[start:end]).strip()
+            fragment = "\n".join(lines[start:end]).strip()
             if not fragment:
                 continue
             has_heading = start in candidates
