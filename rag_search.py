@@ -8,32 +8,45 @@ import os
 from pathlib import Path
 
 import requests
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from elasticsearch import Elasticsearch
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
+ENV_FILE = Path(__file__).resolve().parent / ".env"
+
+# The local .env is the canonical credential source for this single-user service.
+# An inherited ES_PASSWORD from a desktop/systemd session must not silently
+# override a password that repair-es-auth.py has just verified and saved.
+def es_settings():
+    values = dotenv_values(ENV_FILE) if ENV_FILE.is_file() else {}
+    def setting(name, default):
+        return values.get(name) or os.environ.get(name) or default
+
+    return {
+        "url": setting("ES_URL", "https://localhost:9200"),
+        "ca_cert": os.path.expanduser(
+            setting("ES_CA_CERT", "~/.config/elasticsearch/http_ca.crt")
+        ),
+        "user": setting("ES_USER", "elastic"),
+        "password": setting("ES_PASSWORD", ""),
+    }
+
 
 INDEX = os.getenv("ES_RAG_INDEX", "langchain_embedding_lab")
-ES_URL = os.getenv("ES_URL", "https://localhost:9200")
-ES_CA_CERT = os.path.expanduser(
-    os.getenv("ES_CA_CERT", "~/.config/elasticsearch/http_ca.crt")
-)
-ES_USER = os.getenv("ES_USER", "elastic")
 EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b"
 LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
 
 
 def es_client():
-    password = os.getenv("ES_PASSWORD", "")
-    if not password:
+    settings = es_settings()
+    if not settings["password"]:
         raise RuntimeError("ES_PASSWORD가 설정되지 않았습니다.")
-    if not Path(ES_CA_CERT).is_file():
+    if not Path(settings["ca_cert"]).is_file():
         raise RuntimeError("Elasticsearch CA 인증서를 찾지 못했습니다.")
-    # Support UTF-8 passwords used by Elasticsearch basic authentication.
-    raw = f"{ES_USER}:{password}".encode("utf-8")
+    # UTF-8 Basic auth supports non-ASCII passwords.
+    raw = f'{settings["user"]}:{settings["password"]}'.encode("utf-8")
     header = "Basic " + base64.b64encode(raw).decode("ascii")
     return Elasticsearch(
-        ES_URL, ca_certs=ES_CA_CERT,
+        settings["url"], ca_certs=settings["ca_cert"],
         headers={"Authorization": header}, request_timeout=20,
     )
 
