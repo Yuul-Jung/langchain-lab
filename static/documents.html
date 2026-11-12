@@ -81,6 +81,17 @@ label.append(el("span"," "+edge.from+" → "+edge.to+" / "+edge.type+" / "+edge.
 const btn=el("button","분류·순서·체크한 관계 승인");btn.style.marginTop="15px";
 btn.onclick=async()=>{btn.disabled=true;try{await call("/api/documents/"+d.document_id+"/review",
 {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({approve_classification:true,approve_learning_sequence:true,approved_relation_indices:checks.filter(x=>x.checked).map(x=>Number(x.value))})});await detail(id)}catch(e){alert(e.message)}finally{btn.disabled=false}};root.append(btn);
+// (추가) 원본 다시 추출·재색인: 추출 방식이 개선된 뒤 이미 색인된 문서에 반영 (원본 파일은 그대로)
+{const box=el("div");box.style.margin="14px 0";const btn=el("button","원본 다시 추출·재색인","secondary");
+ const note=el("p","원본 파일은 그대로 두고 다시 추출해 이 문서의 검색 청크만 새로 만듭니다. 분류·학습 순서·관계 승인은 다시 검토 대기로 돌아갑니다.");note.className="hint";
+ const out=el("p",window.lastReextract&&window.lastReextract.id===d.document_id?window.lastReextract.msg:"");out.setAttribute("role","status");out.id="reextractOut";
+ btn.onclick=async()=>{btn.disabled=true;out.textContent="다시 추출·색인 중… (청크 수에 따라 수십 초~수 분)";let msg;
+  try{const r=await call("/api/documents/"+encodeURIComponent(d.document_id)+"/reextract",{method:"POST"});
+   msg="완료: 절 "+r.previous.section_count+" → "+r.section_count+", 청크 "+r.previous.chunk_count+" → "+r.chunk_count+", 색인 "+r.index_status;}
+  catch(e){msg="실패: "+e.message;}
+  // 화면을 다시 그린 뒤에도 결과가 보이도록 기억해 둔다
+  window.lastReextract={id:d.document_id,msg};btn.disabled=false;await refresh();await detail(id);};
+ box.append(btn,out,note);root.append(box)}
 if(d.index_status!=="indexed"){const retry=el("button","벡터 등록 재시도","secondary");retry.style.marginLeft="10px";retry.onclick=async()=>{retry.disabled=true;try{await call("/api/documents/"+d.document_id+"/reindex",{method:"POST"});await detail(id);await refresh()}catch(e){alert("재등록 결과: "+e.message);await refresh();await detail(id)}finally{retry.disabled=false}};root.append(retry)}
 }catch(e){root.replaceChildren(el("p","조회 실패: "+e.message))}}
 $("upload").onsubmit=async e=>{e.preventDefault();const btn=$("uploadBtn");btn.disabled=true;$("status").textContent="구조화 및 임베딩 처리 중...";try{
