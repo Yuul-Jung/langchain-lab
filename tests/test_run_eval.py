@@ -82,7 +82,7 @@ class ScoreTest(unittest.TestCase):
     def test_keyword_search_scoring(self):
         rows = [
             run_eval.score_keyword("산업안전", [hit(DOC_A, 8, "지역 산업 안전 교육"), hit(DOC_B, 15, "안전 표시")]),
-            run_eval.score_keyword("XADC", [hit(DOC_B, 2, "gpio 입력 설정")]),
+            run_eval.score_keyword("GPIO", [hit(DOC_B, 2, "gpio 입력 설정")]),
         ]
         self.assertEqual((rows[0]["containing"], rows[0]["top1_contains"]), (1, True))
         s = run_eval.summarize_keywords(rows)

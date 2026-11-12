@@ -48,7 +48,7 @@ class HeadingAdversarialTest(unittest.TestCase):
         self.assertEqual(pdf_heading_lines(["", "  ", "\t"]), ([], set()))
 
     def test_a02_date_line_is_not_a_heading(self):
-        # 수정 전: '11. 5.(목) 10:00 모임'가 제목으로 잡혔다
+        # 수정 전: '11. 5.(목) 10:00 모임' 같은 날짜 줄이 제목으로 잡혔다
         self.assertEqual(self.headings(["11. 5.(목) 10:00 모임", "장소 안내"]), [])
         self.assertEqual(self.headings(["2026. 11. 3. 회의", "본문"]), [])
 
@@ -160,9 +160,9 @@ class PageSplitAdversarialTest(unittest.TestCase):
         self.assertEqual([(s["title"], s["text"]) for s in sections], [("1. 개요", "머리\n1. 개요\n본문")])
 
     def test_b09_control_characters_are_replaced_by_spaces(self):
-        # 수정 전: NUL이 색인 본문에 그대로 남았다 (실측: 'data[7:0]' → '[7␀0]')
-        sections = parse_pages("1. 개요\ndata[7\x000] 값\x0c다음 HC\x00SR04")
-        self.assertEqual(sections[0]["text"], "1. 개요\ndata[7 0] 값 다음 HC SR04")
+        # 수정 전: NUL이 색인 본문에 그대로 남았다 (글꼴이 변환하지 못한 ':' '-' 자리, 예: 'data[7:0]' → '[7␀0]')
+        sections = parse_pages("1. 개요\ndata[7\x000] 값\x0c다음 AB\x00CD")
+        self.assertEqual(sections[0]["text"], "1. 개요\ndata[7 0] 값 다음 AB CD")
         self.assertFalse(re.search("[\x00-\x08\x0b\x0c\x0e-\x1f]", sections[0]["text"]))
 
     def test_b10_encrypted_pdf_is_refused(self):

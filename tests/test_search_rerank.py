@@ -82,9 +82,9 @@ class MatchedTermsTest(unittest.TestCase):
 
 class RerankTest(unittest.TestCase):
     hits = [
-        {"page": 7, "score": 0.75, "text": "분야 예시 자연재해 대응"},
-        {"page": 15, "score": 0.71, "text": "정지 안전 표시 0 0"},
-        {"page": 8, "score": 0.68, "text": "AI 기반 산업안전 수요 매칭"},
+        {"page": 7, "score": 0.75, "text": "분야 예시 설비 점검 대응"},
+        {"page": 15, "score": 0.71, "text": "버튼 안전 표시 켜짐"},
+        {"page": 8, "score": 0.68, "text": "지역 산업안전 교육 일정"},
     ]
 
     def test_chunk_containing_the_keyword_moves_to_the_top(self):
@@ -95,8 +95,8 @@ class RerankTest(unittest.TestCase):
         self.assertEqual(ranked[2]["term_coverage"], 0.0)
 
     def test_exact_keyword_beats_partial_match_with_higher_vector_score(self):
-        hits = [{"page": 7, "score": 0.75, "text": "전통산업 및 첨단산업 연쇄재난"},
-                {"page": 8, "score": 0.68, "text": "AI 기반 산업안전 수요 매칭"}]
+        hits = [{"page": 7, "score": 0.75, "text": "전통산업 및 첨단산업 지원"},
+                {"page": 8, "score": 0.68, "text": "지역 산업안전 교육 일정"}]
         ranked = rerank_by_terms(hits, "산업안전", 0.15)
         self.assertEqual([(h["page"], h["score"]) for h in ranked], [(8, 0.83), (7, 0.825)])
         self.assertEqual([h["partial_terms"] for h in ranked], [[], ["산업안전"]])
@@ -118,7 +118,7 @@ class SnippetTest(unittest.TestCase):
         self.assertEqual(make_snippet("짧은 본문", ["본문"]), "짧은 본문")
 
     def test_window_is_centered_on_the_match(self):
-        text = "가" * 600 + " 산업 안전 수요 " + "나" * 600
+        text = "가" * 600 + " 산업 안전 교육 " + "나" * 600
         snippet = make_snippet(text, ["산업안전"], size=100)
         self.assertIn("산업 안전", snippet)
         self.assertTrue(snippet.startswith("… ") and snippet.endswith(" …"))

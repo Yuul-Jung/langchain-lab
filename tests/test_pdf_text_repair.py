@@ -3,7 +3,7 @@ import unittest
 
 from document_pipeline import broken_space_glyphs, repair_broken_spaces
 
-# 2026-11-12 실측: 한글 PDF 제목에서 공백이 '堺'로 추출됨
+# 2026-11-12 실측에서 본 현상(한글 PDF에서 공백이 '堺'로 추출됨)을 지어낸 문장으로 재현한다
 # (변경) 깨진 공백은 띄어쓰기만큼 자주 나오므로(실측 1,487회) 판별 기준이 20회 이상이다.
 # 그래서 예시도 본문 줄을 붙여 실제에 가까운 빈도로 만든다.
 _BODY = "\n오늘은堺날씨가堺맑아서堺산책하기堺좋습니다" * 4

@@ -189,7 +189,7 @@ def _parse_pdf(path):
     sections = []
     # (변경) 문서 전체를 먼저 읽어 깨진 공백 한자를 판별·복원한 뒤 페이지별로 처리한다.
     # (변경) NUL 등 제어문자는 공백으로 바꾼다. PDF 글꼴이 변환하지 못한 문장부호 자리에
-    # NUL이 들어오는 경우가 있다(실측: 'data[7:0]' → '[7␀0]'). 원래 글자는 복구할 수 없다.
+    # NUL이 들어오는 경우가 있다(예: 'data[7:0]' → '[7␀0]'). 원래 글자는 복구할 수 없다.
     page_texts, _ = repair_broken_spaces(
         [_CONTROL_CHARS.sub(" ", page.extract_text() or "").strip() for page in reader.pages]
     )
