@@ -2,7 +2,8 @@
 # LangChain Lab 최초 1회 기본 세팅 (여러 번 실행해도 안전).
 #
 # 공개 시작 페이지의 한 줄 명령:
-#   [ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web
+#   if [ -d ~/langchain_web/.git ]; then git -C ~/langchain_web pull --ff-only origin main;
+#   else git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; fi &&
 #   bash ~/langchain_web/scripts/setup-local.sh
 #
 # 하는 일: 필수 프로그램 확인 → CA 인증서 확인 → .env(비밀번호) 생성 → update-local.sh

@@ -331,8 +331,8 @@ http://127.0.0.1:8000/                          (내 PC 에서만)
    └─ /documents          문서 관리자 (제2장)
 </code></pre></div>
 <p>공개 페이지의 <strong>명령 복사</strong> 버튼이 주는 세 명령:</p>
-<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># ① 처음 한 번: 기본 세팅 (프로젝트가 없으면 내려받고, 있으면 그대로 사용 · 다시 실행해도 안전)
-[ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; bash ~/langchain_web/scripts/setup-local.sh
+<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># ① 처음 한 번: 기본 세팅 (프로젝트가 없으면 내려받고, 있으면 최신 코드로 갱신 · 다시 실행해도 안전)
+if [ -d ~/langchain_web/.git ]; then git -C ~/langchain_web pull --ff-only origin main; else git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; fi &amp;&amp; bash ~/langchain_web/scripts/setup-local.sh
 
 # 평소 실행 (매번 이 명령 하나)
 cd ~/langchain_web &amp;&amp; bash scripts/start-local.sh
@@ -340,6 +340,7 @@ cd ~/langchain_web &amp;&amp; bash scripts/start-local.sh
 # 소스 업데이트 (GitHub에 새 버전이 올라왔을 때)
 cd ~/langchain_web &amp;&amp; bash scripts/update-local.sh
 </code></pre></div>
+<p>처음 배포한 명령은 폴더가 있으면 갱신 없이 바로 실행해, <code>setup-local.sh</code>가 추가되기 전 코드가 있던 PC에서 <code>No such file or directory</code>로 실패했습니다(2026-11-12 실측). 지금 명령은 폴더가 있으면 먼저 <code>git pull --ff-only</code>를 하고, 로컬 수정과 충돌하면 세팅을 실행하지 않고 멈춥니다.</p>
 <p>미리 필요한 것은 <strong>LM Studio</strong>(DeepSeek-R1-Distill-Qwen-14B, Qwen3-Embedding-4B 내려받기)와 <strong>Elasticsearch 9</strong> 설치입니다. 이 둘은 관리자 권한과 대용량 내려받기가 필요해 스크립트가 대신 설치하지 않고, 빠졌으면 무엇이 빠졌는지와 조치 명령을 알려 줍니다.</p>
 <table>
 <thead>
@@ -423,9 +424,9 @@ cd ~/langchain_web
 # education/course.json + content/ch0N.md → education/dist/*.html
 cd education &amp;&amp; ../.venv/bin/python build.py
 </code></pre></div>
-<p>실측 출력 (2026-11-12, 제1장 v04 개정 후):</p>
+<p>실측 출력 (2026-11-12, 제1장 v05 개정 후):</p>
 <div class="codeblock"><div class="codebar"><span>text</span></div><pre><code>생성 완료: 4 개 HTML 파일
-  …/education/dist/ch01_local_ai_rag_foundation_v04.html
+  …/education/dist/ch01_local_ai_rag_foundation_v05.html
   …/education/dist/ch02_document_ingestion_v01.html
   …/education/dist/ch03_vlm_ocr_recovery_v03.html
   …/education/dist/index.html
@@ -660,8 +661,8 @@ sources: motor_hot 0.8531 · motor_temp 0.8146 · weather 0.6654
 <li>다음 장에서는 PDF·DOCX·HTML 문서를 업로드해 구조를 추출하고 전용 인덱스에 등록합니다.</li>
 </ul>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
-<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v04  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v04.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v05  · 실습 결과는 실제 환경에서 검증</footer>
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v05.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;

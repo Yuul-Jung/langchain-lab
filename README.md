@@ -56,7 +56,7 @@ cd ~/langchain_web && git pull --ff-only origin main
 **한 줄 기본 세팅 (권장, 다시 실행해도 안전):**
 
 ```bash
-[ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; bash ~/langchain_web/scripts/setup-local.sh
+if [ -d ~/langchain_web/.git ]; then git -C ~/langchain_web pull --ff-only origin main; else git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; fi && bash ~/langchain_web/scripts/setup-local.sh
 ```
 
 필수 프로그램·CA 인증서 확인 → `.env` 생성 → `update-local.sh` → LM Studio 모델 준비 → **공개 페이지 실행 버튼 연결** → 최종 상태 출력까지 진행합니다.
