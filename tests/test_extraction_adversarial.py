@@ -121,7 +121,7 @@ class PageSplitAdversarialTest(unittest.TestCase):
 
     def test_b01_empty_whitespace_and_none_pages_are_skipped(self):
         sections = parse_pages("", "   ", None, "본문만 있는 쪽이다")
-        self.assertEqual([(s["title"], s["page"]) for s in sections], [("PDF 4쪽", 4)])
+        self.assertEqual([(s["title"], s["page"]) for s in sections], [("PDF 4쪽 · 본문만 있는 쪽이다", 4)])
 
     def test_b02_page_with_only_a_page_number_yields_nothing(self):
         self.assertEqual(parse_pages("42"), [])
@@ -139,7 +139,7 @@ class PageSplitAdversarialTest(unittest.TestCase):
         # 머리 줄을 붙일 절이 같은 쪽에 없으면 그대로 한 절로 남고, 다음 쪽으로 넘어가지 않는다
         sections = parse_pages("짧은 쪽", "1. 개요\n본문")
         self.assertEqual([(s["title"], s["text"]) for s in sections],
-                         [("PDF 1쪽", "짧은 쪽"), ("1. 개요", "1. 개요\n본문")])
+                         [("PDF 1쪽 · 짧은 쪽", "짧은 쪽"), ("1. 개요", "1. 개요\n본문")])
 
     def test_b06_table_of_contents_page_is_one_section(self):
         sections = parse_pages("표지\nⅠ. 개요\n1. 배경\n2. 구성\n3. 일정\nⅡ. 실습\n1. 준비\n2. 측정")
@@ -202,6 +202,48 @@ class PageSplitAdversarialTest(unittest.TestCase):
                 else:
                     self.assertRegex(line, r"^\d{1,4}$", f"시도 {trial}: 줄이 사라짐 {line!r} / 입력 {lines}")
             self.assertEqual(index, len(got), f"시도 {trial}: 없던 줄이 생김 / 입력 {lines}")
+
+
+class PageTitleAdversarialTest(unittest.TestCase):
+    """F. 번호형 제목이 없는 쪽(슬라이드)의 제목: 첫 줄을 제목으로 쓸지."""
+
+    def test_f01_slide_pages_get_their_first_line_as_title(self):
+        sections = parse_pages("실습 준비 순서\n도구를 점검하고 자리를 정한다", "측정값은 어떻게 읽을까?\n눈금과 단위를 함께 본다")
+        self.assertEqual(titles(sections), ["PDF 1쪽 · 실습 준비 순서", "PDF 2쪽 · 측정값은 어떻게 읽을까?"])
+
+    def test_f02_text_is_not_changed_by_the_title(self):
+        sections = parse_pages("슬라이드 제목\n본문 첫 줄\n본문 둘째 줄")
+        self.assertEqual(sections[0]["text"], "슬라이드 제목\n본문 첫 줄\n본문 둘째 줄")
+
+    def test_f03_running_header_repeated_on_many_pages_is_not_a_title(self):
+        pages = [f"실습 교재 2026 · {n}\n{n}번째 쪽의 본문이다" for n in range(1, 6)]
+        self.assertEqual(titles(parse_pages(*pages)), [f"PDF {n}쪽" for n in range(1, 6)])
+
+    def test_f04_header_repeated_on_only_two_pages_is_still_used(self):
+        sections = parse_pages("같은 제목\n본문 가", "같은 제목\n본문 나", "다른 제목\n본문 다")
+        self.assertEqual(titles(sections)[0], "PDF 1쪽 · 같은 제목")
+
+    def test_f05_too_short_too_long_or_numeric_first_lines_are_not_titles(self):
+        self.assertEqual(dp.page_title(3, "가나"), "PDF 3쪽")
+        self.assertEqual(dp.page_title(3, "가" * 46), "PDF 3쪽")
+        self.assertEqual(dp.page_title(3, "가" * 45), "PDF 3쪽 · " + "가" * 45)
+        self.assertEqual(dp.page_title(3, "12 / 34"), "PDF 3쪽")
+        self.assertEqual(dp.page_title(3, "  여백이   있는  제목 "), "PDF 3쪽 · 여백이 있는 제목")
+
+    def test_f06_contents_page_and_numbered_headings_keep_their_titles(self):
+        toc = parse_pages("표지\nⅠ. 개요\n1. 배경\n2. 구성\n3. 일정\nⅡ. 실습\n1. 준비\n2. 측정")
+        self.assertEqual(titles(toc), ["PDF 1쪽 (목차)"])
+        headed = parse_pages("1. 개요\n본문 내용이다")
+        self.assertEqual(titles(headed), ["1. 개요"])
+
+    def test_f07_long_lead_before_a_heading_gets_a_title_only_if_its_first_line_fits(self):
+        lead = "첫 줄은 짧다\n" + "둘째 줄은 아주 길어서 머리 조각 전체가 80자를 넘는다. " * 3
+        sections = parse_pages(lead.strip() + "\n1. 개요\n본문")
+        self.assertEqual(titles(sections), ["PDF 1쪽 · 첫 줄은 짧다", "1. 개요"])
+
+    def test_f08_repeated_header_detection_ignores_page_numbers_in_it(self):
+        repeated = dp.repeated_first_lines([f"강의 자료 {n}쪽\n본문" for n in range(1, 5)] + ["표지\n본문"])
+        self.assertEqual(repeated, {"강의 자료 #쪽"})
 
 
 class BrokenSpaceAdversarialTest(unittest.TestCase):

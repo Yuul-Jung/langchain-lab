@@ -18,12 +18,33 @@ def proposed(src, dst, kind="prerequisite"):
 
 
 class CarryOverApprovalsTest(unittest.TestCase):
-    def carry(self, old_meta, sections, relations=None, order=None):
+    def carry(self, old_meta, sections, relations=None, order=None, same_content=False):
         classification = {"topic": "t", "review_status": "proposed"}
         relations = relations if relations is not None else []
         sequence = {"section_ids": order or [s["id"] for s in sections], "review_status": "proposed"}
-        summary = dp.carry_over_approvals(old_meta, sections, classification, relations, sequence)
+        summary = dp.carry_over_approvals(old_meta, sections, classification, relations, sequence,
+                                          same_content=same_content)
         return summary, classification, relations, sequence
+
+    def test_renamed_titles_keep_approvals_when_the_text_is_identical(self):
+        # 제목 표기만 바뀐 경우('PDF 3쪽' → 'PDF 3쪽 · 첫 줄'): 본문이 같으면 같은 절이다
+        approved = dict(proposed("s0001", "s0002"), review_status="approved")
+        old = {"sections": [sec(1, "PDF 1쪽"), sec(2, "PDF 2쪽", page=2)], "relations": [approved],
+               "learning_sequence": {"section_ids": ["s0001", "s0002"], "review_status": "approved"}}
+        renamed = [sec(1, "PDF 1쪽 · 첫 줄 제목"), sec(2, "PDF 2쪽 · 다른 제목", page=2)]
+        summary, _, relations, sequence = self.carry(old, renamed, [proposed("s0001", "s0002")], same_content=True)
+        self.assertEqual((summary["same_structure"], summary["learning_sequence"], sequence["review_status"]),
+                         (True, "kept", "approved"))
+        self.assertEqual((relations[0]["review_status"], summary["relations_kept"]), ("approved", 1))
+        # 본문이 달라졌다면 제목이 다른 절은 다른 절로 본다
+        summary, _, _, sequence = self.carry(old, renamed, same_content=False)
+        self.assertEqual((summary["learning_sequence"], sequence["review_status"]), ("reset", "proposed"))
+
+    def test_identical_text_but_different_page_layout_is_not_treated_as_the_same(self):
+        old = {"sections": [sec(1, "가"), sec(2, "나", page=2)],
+               "learning_sequence": {"section_ids": ["s0001", "s0002"], "review_status": "approved"}}
+        summary, _, _, sequence = self.carry(old, [sec(1, "가"), sec(2, "나", page=3)], same_content=True)
+        self.assertEqual((summary["learning_sequence"], sequence["review_status"]), ("reset", "proposed"))
 
     def test_classification_approval_is_kept(self):
         old = {"sections": [sec(1, "가")], "classification": {"review_status": "approved"}}
@@ -116,17 +137,28 @@ class PreviewAndBatchTest(unittest.TestCase):
     def test_preview_changes_nothing_and_compares_with_the_index(self):
         self.grow(self.ids[0])
         before = self.catalog_bytes()
-        with patch.object(dp, "indexed_digest", return_value=("예전 색인의 지문", 1)):
+        with patch.object(dp, "indexed_digest", return_value=("예전 색인의 지문", 1, "예전 제목 지문")):
             info = dp.reextract_preview(self.ids[0])
         self.assertEqual(self.catalog_bytes(), before)
         self.assertEqual((info["changed"], info["compared_with"], info["indexed_chunk_count"]), (True, "index", 1))
+        self.assertEqual(info["changed_parts"], ["본문", "제목"])
         self.assertEqual((info["stored"]["section_count"], info["new"]["section_count"]), (1, 2))
         self.assertEqual(info["approvals"]["classification"], "not_approved")
 
     def test_preview_says_unchanged_when_the_index_matches(self):
         chunks = dp.make_chunks(dp.extract_sections(dp.UPLOAD_DIR / f"{self.ids[0]}.md"))
-        with patch.object(dp, "indexed_digest", return_value=(dp.chunks_digest(chunks), len(chunks))):
-            self.assertFalse(dp.reextract_preview(self.ids[0])["changed"])
+        same = (dp.chunks_digest(chunks), len(chunks), dp.titles_digest(chunks))
+        with patch.object(dp, "indexed_digest", return_value=same):
+            info = dp.reextract_preview(self.ids[0])
+        self.assertEqual((info["changed"], info["changed_parts"]), (False, []))
+
+    def test_preview_notices_documents_whose_titles_alone_changed(self):
+        # 본문은 색인과 같고 제목만 달라진 경우 (예: 쪽 제목 규칙이 바뀐 뒤)
+        chunks = dp.make_chunks(dp.extract_sections(dp.UPLOAD_DIR / f"{self.ids[0]}.md"))
+        only_titles = (dp.chunks_digest(chunks), len(chunks), "예전 제목 지문")
+        with patch.object(dp, "indexed_digest", return_value=only_titles):
+            info = dp.reextract_preview(self.ids[0])
+        self.assertEqual((info["changed"], info["changed_parts"]), (True, ["제목"]))
 
     def test_preview_falls_back_to_catalog_digest_then_structure(self):
         with patch.object(dp, "indexed_digest", return_value=None):

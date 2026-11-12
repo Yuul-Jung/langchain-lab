@@ -168,6 +168,33 @@ def pdf_heading_lines(lines):
 
 
 SHORT_LEAD_CHARS = 80  # 이보다 짧은 쪽 머리 조각은 다음 절에 붙인다
+PAGE_TITLE_MIN, PAGE_TITLE_MAX = 4, 45  # 쪽 제목으로 쓸 첫 줄의 길이 범위
+
+
+def repeated_first_lines(page_texts):
+    """(추가) 여러 쪽에 반복되는 첫 줄(머리말). 숫자는 같은 것으로 보고, 3쪽 이상이면서 30% 이상일 때."""
+    firsts = []
+    for text in page_texts:
+        lines = [_clean(line) for line in text.splitlines() if line.strip()]
+        if lines:
+            firsts.append(re.sub(r"\d+", "#", lines[0]))
+    counts = defaultdict(int)
+    for line in firsts:
+        counts[line] += 1
+    return {line for line, n in counts.items() if n >= 3 and n >= len(firsts) * 0.3}
+
+
+def page_title(page_no, first_line, repeated=frozenset()):
+    """(추가) 번호형 제목이 없는 쪽의 제목. 슬라이드처럼 첫 줄이 제목이면 'PDF 7쪽 · 첫 줄'.
+
+    슬라이드형 PDF는 번호 없는 첫 줄이 제목이라 모든 절이 'PDF N쪽'으로만 나왔다.
+    첫 줄이 너무 짧거나 길거나, 쪽 번호이거나, 여러 쪽에 반복되는 머리말이면 쓰지 않는다.
+    """
+    line = _clean(first_line)
+    if (PAGE_TITLE_MIN <= len(line) <= PAGE_TITLE_MAX and not re.fullmatch(r"[\d\W]+", line)
+            and re.sub(r"\d+", "#", line) not in repeated):
+        return f"PDF {page_no}쪽 · {line}"
+    return f"PDF {page_no}쪽"
 _CONTROL_CHARS = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 
@@ -193,6 +220,7 @@ def _parse_pdf(path):
     page_texts, _ = repair_broken_spaces(
         [_CONTROL_CHARS.sub(" ", page.extract_text() or "").strip() for page in reader.pages]
     )
+    repeated = repeated_first_lines(page_texts)
     for page_no, text in enumerate(page_texts, 1):
         if not text:
             continue
@@ -218,8 +246,10 @@ def _parse_pdf(path):
                 continue
             if lead:
                 fragment, lead = lead + "\n" + fragment, ""
+            # (변경) 번호형 제목이 없는 쪽은 첫 줄이 제목 꼴이면 함께 보여 준다 (page_title 참고)
             title = _clean(lines[start]) if has_heading else (
-                f"PDF {page_no}쪽 (목차)" if is_toc else f"PDF {page_no}쪽")
+                f"PDF {page_no}쪽 (목차)" if is_toc else
+                (page_title(page_no, fragment.splitlines()[0], repeated) if start == 0 else f"PDF {page_no}쪽"))
             item = _new_section(len(sections) + 1, title, fragment, page_no)
             if has_heading:
                 item["provenance"] = "rule_inferred"
@@ -690,6 +720,15 @@ def chunks_digest(chunks):
     return digest.hexdigest()
 
 
+def titles_digest(chunks):
+    """(추가) 청크의 제목·쪽 번호 지문. 본문은 같고 제목만 달라진 문서를 알아보는 데 쓴다."""
+    digest = hashlib.sha256()
+    for chunk in chunks:
+        digest.update(f'{chunk.get("page")}|{chunk.get("title")}'.encode("utf-8"))
+        digest.update(b"\x1e")
+    return digest.hexdigest()
+
+
 def section_signatures(sections):
     """(추가) 절을 (쪽, 제목, 같은 쪽·제목 안에서의 순번)으로 나타낸다.
 
@@ -704,16 +743,24 @@ def section_signatures(sections):
     return out
 
 
-def carry_over_approvals(old_meta, sections, classification, relations, sequence):
+def carry_over_approvals(old_meta, sections, classification, relations, sequence, same_content=False):
     """(추가) 재추출 뒤에도 유지할 수 있는 승인을 옮기고, 무엇을 유지·초기화했는지 돌려준다.
 
     - 분류(주제·난이도·개념): 재추출은 분류 내용을 바꾸지 않으므로 승인을 유지한다.
     - 학습 순서: 절 구성(쪽·제목·순서)과 순서가 모두 이전과 같을 때만 유지한다.
     - 관계: 같은 종류의 관계가 같은 절(쪽·제목) 사이에 다시 제안되면 유지한다.
+    - same_content=True (청크 본문이 이전과 완전히 같음)이고 쪽 구성도 같으면, 제목 표기만
+      달라진 것이므로 절을 순서대로 같은 절로 본다. 제목 규칙이 바뀔 때마다 승인이 풀리지 않게 한다.
     classification · relations · sequence 는 새로 만든 값이며 이 함수가 승인 상태를 고쳐 쓴다.
     """
-    old_sig = section_signatures(old_meta.get("sections") or [])
-    new_sig = section_signatures(sections)
+    old_sections = old_meta.get("sections") or []
+    same_pages = [s.get("page") for s in old_sections] == [s.get("page") for s in sections]
+    if same_content and same_pages:
+        old_sig = {s["id"]: n for n, s in enumerate(old_sections)}
+        new_sig = {s["id"]: n for n, s in enumerate(sections)}
+    else:
+        old_sig = section_signatures(old_sections)
+        new_sig = section_signatures(sections)
     same_structure = list(old_sig.values()) == list(new_sig.values())
     summary = {"same_structure": same_structure}
 
@@ -772,14 +819,21 @@ def reextract_document(document_id, keep_approvals=True):
     relations = propose_relations(sections, classification.get("concepts", []))
     sequence = learning_sequence(sections, relations)
     # (변경) 유지할 수 있는 승인은 옮긴다. keep_approvals=False 면 이전처럼 모두 검토 대기로 돌린다.
-    approvals = (carry_over_approvals(meta, sections, classification, relations, sequence)
+    # 본문이 이전과 같은지는 카탈로그의 지문으로, 없으면(이전에 등록한 문서) 색인의 지문으로 확인한다.
+    new_digest = chunks_digest(chunks)
+    old_digest = meta.get("chunks_digest")
+    if not old_digest and keep_approvals:
+        indexed = indexed_digest(document_id)
+        old_digest = indexed[0] if indexed else None
+    approvals = (carry_over_approvals(meta, sections, classification, relations, sequence,
+                                      same_content=old_digest == new_digest)
                  if keep_approvals else _reset_summary(meta))
     meta.update({
         "section_count": len(sections), "chunk_count": len(chunks),
         "sections": [{k: v for k, v in sec.items() if k != "text"} for sec in sections],
         "classification": classification, "relations": relations,
         "learning_sequence": sequence,
-        "chunks_digest": chunks_digest(chunks),
+        "chunks_digest": new_digest,
         "reextracted_at": _now(), "index_status": "pending",
     })
     meta.pop("structure_proposal", None)
@@ -804,19 +858,19 @@ def reextract_document(document_id, keep_approvals=True):
 
 
 def indexed_digest(document_id):
-    """(추가) 색인에 들어 있는 이 문서 청크의 (지문, 개수). 색인을 읽지 못하면 None."""
+    """(추가) 색인에 들어 있는 이 문서 청크의 (본문 지문, 개수, 제목 지문). 색인을 읽지 못하면 None."""
     try:
         es = es_client()
         if not es.indices.exists(index=DOCUMENT_INDEX):
             return None
         found = es.search(index=DOCUMENT_INDEX, size=max(1000, MAX_CHUNKS),
                           query={"term": {"document_id": document_id}},
-                          source=["text", "source_order", "chunk_id"])
+                          source=["text", "source_order", "chunk_id", "title", "page"])
     except Exception:
         return None
     rows = sorted((h["_source"] for h in found["hits"]["hits"]),
                   key=lambda r: (r.get("source_order") or 0, r.get("chunk_id") or ""))
-    return chunks_digest(rows), len(rows)
+    return chunks_digest(rows), len(rows), titles_digest(rows)
 
 
 def reextract_preview(document_id):
@@ -839,16 +893,19 @@ def reextract_preview(document_id):
         info["error"] = str(exc)
         return info
     new_digest = chunks_digest(chunks)
+    same_titles = (list(section_signatures(meta.get("sections") or []).values())
+                   == list(section_signatures(sections).values()))
     indexed = indexed_digest(document_id)
+    # (변경) 본문과 제목을 따로 비교해, 무엇이 달라졌는지 알려 준다
     if indexed is not None:
         info["indexed_chunk_count"] = indexed[1]
-        changed, basis = indexed[0] != new_digest, "index"
+        text_changed, titles_changed, basis = indexed[0] != new_digest, indexed[2] != titles_digest(chunks), "index"
     elif meta.get("chunks_digest"):
-        changed, basis = meta["chunks_digest"] != new_digest, "catalog"
+        text_changed, titles_changed, basis = meta["chunks_digest"] != new_digest, not same_titles, "catalog"
     else:
-        same = (list(section_signatures(meta.get("sections") or []).values())
-                == list(section_signatures(sections).values()))
-        changed, basis = (not same) or meta.get("chunk_count") != len(chunks), "structure"
+        text_changed, titles_changed, basis = meta.get("chunk_count") != len(chunks), not same_titles, "structure"
+    changed = text_changed or titles_changed
+    info["changed_parts"] = [name for name, flag in (("본문", text_changed), ("제목", titles_changed)) if flag]
     classification = dict(meta.get("classification") or {})
     classification["review_status"] = "proposed"
     relations = propose_relations(sections, classification.get("concepts", []))
@@ -856,7 +913,8 @@ def reextract_preview(document_id):
     info.update({
         "changed": changed, "compared_with": basis,
         "new": {"section_count": len(sections), "chunk_count": len(chunks)},
-        "approvals": carry_over_approvals(meta, sections, classification, relations, sequence),
+        "approvals": carry_over_approvals(meta, sections, classification, relations, sequence,
+                                          same_content=not text_changed),
     })
     return info
 

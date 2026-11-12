@@ -50,7 +50,7 @@ class DocumentPipelineTests(unittest.TestCase):
 
     def test_pdf_short_page_without_headings_is_kept(self):
         sections = self._parse_one_page("표지 한 줄")
-        self.assertEqual([(s["title"], s["text"]) for s in sections], [("PDF 1쪽", "표지 한 줄")])
+        self.assertEqual([(s["title"], s["text"]) for s in sections], [("PDF 1쪽 · 표지 한 줄", "표지 한 줄")])
 
     def test_md_structure_and_hierarchy(self):
         source = self.base / "example.md"
