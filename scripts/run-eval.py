@@ -12,6 +12,8 @@
   - hit@1, hit@k: 1위 / 상위 k개 안에 정답 쪽이 있는 질문 비율
   - MRR: 정답이 처음 나온 순위의 역수 평균 (1위=1.0, 2위=0.5, 없음=0)
   - keyword@k: 상위 k개 본문에 keywords 중 하나라도 있는 비율 (보조 지표)
+  - 평균 결과 수, 정밀도: 점수 컷오프(SEARCH_SCORE_MARGIN) 적용 후 실제로 보여 주는 결과 개수와
+    그중 정답 쪽의 비율. "관련 없는 쪽이 너무 많이 따라 나온다"를 재는 지표다.
 이 점수는 검색 단계만 본다. 답변 생성의 정확성은 채점하지 않는다.
 
 출력에는 문서 본문·파일명을 넣지 않는다. 결과는 data/eval/results/ 에 저장하고
@@ -21,6 +23,7 @@
   .venv/bin/python scripts/run-eval.py                 # 전체 질문
   .venv/bin/python scripts/run-eval.py --k 10          # 상위 10개까지 채점
   .venv/bin/python scripts/run-eval.py --only-approved # 검토 완료 질문만
+  .venv/bin/python scripts/run-eval.py --margin 0      # 컷오프 없이 (상위 k개 그대로)
 """
 from __future__ import annotations
 
@@ -81,7 +84,11 @@ def score_question(item, hits, k):
     keywords = [w.lower() for w in item.get("keywords") or []]
     keyword_hit = None if not keywords else any(
         w in (h.get("text") or "").lower() for h in hits[:k] for w in keywords)
+    shown = hits[:k]
+    relevant = sum(1 for h in shown
+                   if h.get("document_id") == item["document_id"] and h.get("page") in pages)
     return {"id": item["id"], "status": item["status"], "rank": rank, "doc_rank": doc_rank,
+            "returned": len(shown), "relevant": relevant,
             "top1_page": hits[0].get("page") if hits else None,
             "top1_same_doc": bool(hits) and hits[0].get("document_id") == item["document_id"],
             "keyword_hit": keyword_hit}
@@ -97,6 +104,8 @@ def summarize(results, k):
         "mrr": round(sum(1 / r["rank"] for r in results if r["rank"]) / n, 3),
         "doc@1": round(sum(r["top1_same_doc"] for r in results) / n, 3),
         f"keyword@{k}": round(sum(r["keyword_hit"] for r in with_kw) / len(with_kw), 3) if with_kw else None,
+        "avg_results": round(sum(r["returned"] for r in results) / n, 2),
+        "precision": round(sum(r["relevant"] / r["returned"] for r in results if r["returned"]) / n, 3),
     }
 
 
@@ -113,9 +122,14 @@ def main():
     parser.add_argument("--k", type=int, default=5, help="상위 몇 개까지 채점할지 (기본 5)")
     parser.add_argument("--only-approved", action="store_true", help="검토 완료(approved) 질문만")
     parser.add_argument("--no-save", action="store_true", help="결과 파일을 저장하지 않음")
+    parser.add_argument("--margin", type=float, default=None,
+                        help="점수 컷오프 폭 (기본: 설정값 SEARCH_SCORE_MARGIN, 0 이면 끔)")
     args = parser.parse_args()
 
-    from document_pipeline import list_documents, search_uploaded
+    import settings
+    from document_pipeline import list_documents, search_uploaded, trim_by_margin
+
+    margin = settings.SEARCH_SCORE_MARGIN if args.margin is None else args.margin
 
     known = [d["document_id"] for d in list_documents()]
     try:
@@ -131,14 +145,16 @@ def main():
 
     results = []
     for item in items:
-        hits = search_uploaded(item["question"], limit=args.k)
+        hits = trim_by_margin(search_uploaded(item["question"], limit=args.k), margin)
         results.append(score_question(item, hits, args.k))
 
-    print(f"{'id':6s} {'상태':8s} {'정답 순위':>8s} {'문서 순위':>8s} 1위 쪽  키워드")
+    print(f"점수 컷오프 폭: {margin} (1위 점수에서 이 폭 안의 결과만 채점)")
+    print(f"{'id':6s} {'상태':8s} {'정답 순위':>8s} {'문서 순위':>8s} 1위 쪽  결과 수(정답)  키워드")
     for r in results:
         kw = "-" if r["keyword_hit"] is None else ("있음" if r["keyword_hit"] else "없음")
         print(f"{r['id']:6s} {r['status']:8s} {str(r['rank'] or '없음'):>8s} "
-              f"{str(r['doc_rank'] or '없음'):>8s} {str(r['top1_page']):>5s}  {kw}")
+              f"{str(r['doc_rank'] or '없음'):>8s} {str(r['top1_page']):>5s}  "
+              f"{r['returned']}({r['relevant']})          {kw}")
     summary = summarize(results, args.k)
     print("\n요약:", json.dumps(summary, ensure_ascii=False))
     drafts = sum(r["status"] == "draft" for r in results)
@@ -155,7 +171,7 @@ def main():
     if not args.no_save:
         RESULTS.mkdir(parents=True, exist_ok=True)
         out = RESULTS / f"{datetime.now():%Y%m%d-%H%M%S}.json"
-        out.write_text(json.dumps({"summary": summary, "results": results},
+        out.write_text(json.dumps({"summary": summary, "margin": margin, "results": results},
                                   ensure_ascii=False, indent=1), encoding="utf-8")
         print("결과 저장:", out.relative_to(ROOT))
     print("안전: 색인·문서를 바꾸지 않았고 문서 본문·파일명은 출력하지 않았습니다.")

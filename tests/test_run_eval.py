@@ -75,6 +75,9 @@ class ScoreTest(unittest.TestCase):
         self.assertEqual(s["hit@5"], 0.667)
         self.assertEqual(s["mrr"], 0.5)
         self.assertEqual(s["keyword@5"], 0.333)
+        # 결과 수 1·2·1개, 그중 정답 1·1·0개 → 평균 1.33개, 정밀도 (1 + 0.5 + 0) / 3
+        self.assertEqual(s["avg_results"], 1.33)
+        self.assertEqual(s["precision"], 0.5)
 
     def test_compare_lists_changed_ranks(self):
         prev = {"results": [{"id": "q1", "rank": 3}, {"id": "q2", "rank": 1}]}

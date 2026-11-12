@@ -1,7 +1,23 @@
 """PDF 번호 제목 판별: 목차·번호 목록 줄을 제목으로 쓰지 않는지 (서버·PDF 파일 없이 실행)."""
 import unittest
 
-from document_pipeline import is_page_number_only, pdf_heading_lines
+from document_pipeline import is_page_number_only, pdf_heading_lines, trim_by_margin
+
+
+class TrimByMarginTest(unittest.TestCase):
+    hits = [{"score": 0.93, "page": 23}, {"score": 0.89, "page": 28},
+            {"score": 0.88, "page": 23}, {"score": 0.86, "page": 24}]
+
+    def test_keeps_results_close_to_the_top_score(self):
+        self.assertEqual([h["page"] for h in trim_by_margin(self.hits, 0.05)], [23, 28, 23])
+
+    def test_top_result_always_stays(self):
+        self.assertEqual(len(trim_by_margin(self.hits, 0.001)), 1)
+
+    def test_zero_or_missing_margin_disables_trimming(self):
+        self.assertEqual(len(trim_by_margin(self.hits, 0)), 4)
+        self.assertEqual(len(trim_by_margin(self.hits, None)), 4)
+        self.assertEqual(trim_by_margin([], 0.05), [])
 
 
 class PageNumberOnlyTest(unittest.TestCase):

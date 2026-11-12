@@ -51,6 +51,11 @@ EMBEDDING_DIMS = get_int("EMBEDDING_DIMS", 2560)
 # ---- Elasticsearch 인덱스
 ES_RAG_INDEX = get("ES_RAG_INDEX", "langchain_embedding_lab")
 ES_DOCUMENT_INDEX = get("ES_DOCUMENT_INDEX", "langchain_documents_v1")
+# (추가) 검색 결과 컷오프: 1위 점수에서 이 폭 안의 결과만 보여 준다 (0 이면 끔). 점수 범위는 0~1.
+try:
+    SEARCH_SCORE_MARGIN = float(get("SEARCH_SCORE_MARGIN", "0.05"))
+except ValueError:
+    SEARCH_SCORE_MARGIN = 0.05
 # (추가) 채팅 RAG 검색 대상: documents(업로드 문서, 기본) · lab(제1장 실습 문장) · both
 CHAT_RAG_SOURCE = get("CHAT_RAG_SOURCE", "documents").lower()
 
@@ -76,7 +81,7 @@ def describe() -> dict:
         "lm_studio_url": LM_STUDIO_URL, "chat_model": CHAT_MODEL,
         "embedding_model": EMBEDDING_MODEL, "embedding_dims": EMBEDDING_DIMS,
         "es_rag_index": ES_RAG_INDEX, "es_document_index": ES_DOCUMENT_INDEX,
-        "chat_rag_source": CHAT_RAG_SOURCE,
+        "chat_rag_source": CHAT_RAG_SOURCE, "search_score_margin": SEARCH_SCORE_MARGIN,
         "llm_providers": LLM_PROVIDERS, "default_provider": DEFAULT_PROVIDER,
         "openai_configured": bool(OPENAI_API_KEY and OPENAI_MODEL),
         "anthropic_configured": bool(ANTHROPIC_API_KEY and ANTHROPIC_MODEL),

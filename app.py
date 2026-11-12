@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 from rag_search import EMBEDDING_MODEL, INDEX, es_client, search_documents
 from document_api import router as document_router
-from document_pipeline import DOCUMENT_INDEX, search_uploaded
+from document_pipeline import DOCUMENT_INDEX, search_uploaded, trim_by_margin
 from chat_search import format_context, search_for_chat
 import settings
 from llm_providers import make_chat, providers, resolve
@@ -165,6 +165,11 @@ def local_status():
     status["version"] = APP_VERSION
     return status
 
+def _search_uploaded_trimmed(query, limit=4):
+    """(추가) 채팅 근거에도 점수 컷오프를 적용해, 관련이 약한 쪽을 답변 모델에 넘기지 않는다."""
+    return trim_by_margin(search_uploaded(query, limit=limit), settings.SEARCH_SCORE_MARGIN)
+
+
 @app.post("/api/chat")
 def chat(body: ChatRequest):
     if body.mode not in ("chat", "rag"):
@@ -205,7 +210,7 @@ def chat(body: ChatRequest):
         try:
             # (변경) 업로드 문서 인덱스를 검색 (CHAT_RAG_SOURCE, chat_search.py 참고)
             sources = search_for_chat(body.messages[-1].content, settings.CHAT_RAG_SOURCE,
-                                      search_uploaded=search_uploaded, search_lab=search_documents)
+                                      search_uploaded=_search_uploaded_trimmed, search_lab=search_documents)
         except Exception as exc:
             raise HTTPException(
                 status_code=503,

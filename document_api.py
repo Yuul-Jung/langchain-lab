@@ -10,7 +10,7 @@ from document_pipeline import (
     ALLOWED_RELATIONS, MAX_BYTES, UPLOAD_DIR, _index_chunks, _write_catalog,
     extract_sections, get_document, ingest_file, list_documents, make_chunks,
     analyze_document, propose_relations, learning_sequence,
-    search_uploaded, IndexingFailure, diagnose_failure, DOCUMENT_INDEX,
+    search_uploaded, trim_by_margin, IndexingFailure, diagnose_failure, DOCUMENT_INDEX,
     reextract_document,
 )
 
@@ -106,9 +106,13 @@ async def upload_document(
 @router.post("/search")
 def search_documents_api(request: SearchRequest):
     try:
-        return {"results": search_uploaded(
+        found = search_uploaded(
             request.query, limit=request.limit, document_id=request.document_id,
-        )}
+        )
+        # (변경) 1위와 점수 차이가 큰 결과는 숨긴다 (SEARCH_SCORE_MARGIN). 숨긴 개수도 알려 준다.
+        results = trim_by_margin(found, settings.SEARCH_SCORE_MARGIN)
+        return {"results": results, "hidden": len(found) - len(results),
+                "margin": settings.SEARCH_SCORE_MARGIN}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:

@@ -751,6 +751,19 @@ def ingest_file(filename, data, use_ai=True, index=True):
         raise
 
 
+def trim_by_margin(hits, margin):
+    """(추가) 1위 점수에서 margin 이내인 결과만 남긴다. 순서는 그대로, 1위는 항상 남는다.
+
+    벡터 검색은 관련이 없어도 요청한 개수만큼 채워서 돌려주므로, 같은 문서의 다른 쪽이
+    줄줄이 따라 나온다. 평가 세트 22문항(2026-11-12)에서 폭 0.05는 정답을 하나도 잃지 않고
+    평균 결과 수를 5 → 2.6개로 줄였다. margin 이 0 이하거나 None 이면 거르지 않는다.
+    """
+    if not hits or not margin or margin <= 0:
+        return list(hits)
+    floor = hits[0]["score"] - margin
+    return [h for h in hits if h["score"] >= floor]
+
+
 def search_uploaded(query, limit=5, document_id=None):
     if not query.strip() or len(query) > 2000:
         raise ValueError("검색어는 1~2000자여야 합니다.")
