@@ -58,7 +58,7 @@
       "title": "설정 분리와 모델 선택",
       "subtitle": ".env 설정 한곳 모음 → 로컬 / OpenAI / Anthropic 제공자 → 외부 전송 보호 → 단위 테스트",
       "slug": "ch04_settings_model_selection",
-      "version": "v02",
+      "version": "v03",
       "source": "content/ch04.md",
       "tags": [
         "settings.py",

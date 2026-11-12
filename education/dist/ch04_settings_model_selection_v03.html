@@ -292,6 +292,12 @@ RAG 모드 + 외부 제공자 → 400 거절 (ALLOW_EXTERNAL_RAG=false 일 때)
   <td>문서 하나의 청크 수 한도</td>
   <td>—</td>
 </tr>
+<tr>
+  <td><code>CHAT_LIGHT_LEAK_FIX</code></td>
+  <td><code>true</code></td>
+  <td>채팅 답변에 한자 1자·일본어 가나 등이 조금 섞였을 때, 모델에게 한 번 고치게 하고 그 자리의 수정만 받아들임 (2026-11-13 추가, 제6장 문제 5)</td>
+  <td><code>false</code></td>
+</tr>
 </tbody>
 </table>
 <p><code>SEARCH_TERM_WEIGHT=0</code>이면 낱말 재순위와 낱말 후보 검색이 모두 꺼져 벡터 검색만으로 순위를 매기던 때와 같은 순위가 됩니다(단위 테스트와 실제 채점으로 확인). <code>ALLOW_EXTERNAL_RAG=false</code>(기본)는 이제 업로드한 문서의 내용이 외부 API로 나가는 것을 실제로 막습니다.</p>
@@ -381,7 +387,7 @@ OK
 </ul>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
 <footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v08  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v08.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v08.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}, {"id": "ch04", "number": 4, "title": "설정 분리와 모델 선택", "file": "ch04_settings_model_selection_v02.html"}, {"id": "ch05", "number": 5, "title": "공개 페이지와 로컬 운영", "file": "ch05_public_page_operations_v04.html"}, {"id": "ch06", "number": 6, "title": "검색 품질 평가와 개선", "file": "ch06_search_quality_evaluation_v05.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v08.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v08.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}, {"id": "ch04", "number": 4, "title": "설정 분리와 모델 선택", "file": "ch04_settings_model_selection_v03.html"}, {"id": "ch05", "number": 5, "title": "공개 페이지와 로컬 운영", "file": "ch05_public_page_operations_v04.html"}, {"id": "ch06", "number": 6, "title": "검색 품질 평가와 개선", "file": "ch06_search_quality_evaluation_v05.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;
