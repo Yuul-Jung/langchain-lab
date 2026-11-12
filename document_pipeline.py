@@ -151,6 +151,12 @@ def pdf_heading_lines(lines):
     return headings, listed
 
 
+def is_page_number_only(fragment):
+    """(추가) 쪽 번호만 있는 조각인지. 제목 앞에 찍힌 쪽 번호('21')가 따로 청크가 되는 것을 막는다."""
+    lines = [line.strip() for line in fragment.splitlines() if line.strip()]
+    return bool(lines) and all(re.fullmatch(r"\d{1,4}", line) for line in lines)
+
+
 def _parse_pdf(path):
     """Keep full original page text while extracting clearly delimited headings.
 
@@ -178,9 +184,9 @@ def _parse_pdf(path):
         for pos, start in enumerate(starts):
             end = starts[pos + 1] if pos + 1 < len(starts) else len(lines)
             fragment = "\n".join(lines[start:end]).strip()
-            if not fragment:
-                continue
             has_heading = start in candidates
+            if not fragment or (not has_heading and is_page_number_only(fragment)):
+                continue
             title = _clean(lines[start]) if has_heading else (
                 f"PDF {page_no}쪽 (목차)" if is_toc else f"PDF {page_no}쪽")
             item = _new_section(len(sections) + 1, title, fragment, page_no)

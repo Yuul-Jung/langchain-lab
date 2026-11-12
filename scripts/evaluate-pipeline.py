@@ -13,8 +13,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter
 from pathlib import Path
+
+# (추가) scripts/ 에서 실행해도 프로젝트 모듈을 찾도록 (다른 스크립트와 같은 방식)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from document_pipeline import (
     UPLOAD_DIR, extract_sections, get_document, list_documents,

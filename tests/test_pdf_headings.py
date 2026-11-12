@@ -1,7 +1,18 @@
 """PDF 번호 제목 판별: 목차·번호 목록 줄을 제목으로 쓰지 않는지 (서버·PDF 파일 없이 실행)."""
 import unittest
 
-from document_pipeline import pdf_heading_lines
+from document_pipeline import is_page_number_only, pdf_heading_lines
+
+
+class PageNumberOnlyTest(unittest.TestCase):
+    def test_page_number_fragment(self):
+        self.assertTrue(is_page_number_only("21"))
+        self.assertTrue(is_page_number_only("\n 21 \n"))
+
+    def test_text_fragment_is_kept(self):
+        self.assertFalse(is_page_number_only("21\n본문 문장"))
+        self.assertFalse(is_page_number_only("2024년 계획"))
+        self.assertFalse(is_page_number_only(""))
 
 
 class PdfHeadingLinesTest(unittest.TestCase):
