@@ -27,7 +27,7 @@
       "title": "문서 업로드와 지식 구조화",
       "subtitle": "원본 구조 추출 → 청크·임베딩 → 분류·학습 순서 제안 → 전용 인덱스 등록 → 진단·재추출(승인 유지) → 추출 적대적 검증",
       "slug": "ch02_document_ingestion",
-      "version": "v05",
+      "version": "v06",
       "source": "content/ch02.md",
       "tags": [
         "PDF·DOCX·HTML",
@@ -72,15 +72,16 @@
       "id": "ch05",
       "number": 5,
       "title": "공개 페이지와 로컬 운영",
-      "subtitle": "GitHub Pages 시작 페이지 → 실행 버튼(langchainlab://) → 상태 확인 → 업데이트 완료 판정 → 교재 게시",
+      "subtitle": "GitHub Pages 시작 페이지 → 실행 버튼(langchainlab://) → 상태 확인 → 업데이트 완료 판정 → 접근 제어 → 교재 게시",
       "slug": "ch05_public_page_operations",
-      "version": "v01",
+      "version": "v02",
       "source": "content/ch05.md",
       "tags": [
         "GitHub Pages",
         "setup·start·update",
         "/api/status",
-        "URL 실행기"
+        "URL 실행기",
+        "ACCESS_PASSWORD"
       ]
     },
     {
