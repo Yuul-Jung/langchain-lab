@@ -10,7 +10,7 @@ from document_pipeline import (
     ALLOWED_RELATIONS, MAX_BYTES, UPLOAD_DIR, _index_chunks, _write_catalog,
     extract_sections, get_document, ingest_file, list_documents, make_chunks,
     analyze_document, propose_relations, learning_sequence,
-    search_uploaded, trim_by_margin, IndexingFailure, diagnose_failure, DOCUMENT_INDEX,
+    search_uploaded, trim_by_margin, reextract_batch, reextract_preview_all, IndexingFailure, diagnose_failure, DOCUMENT_INDEX,
     reextract_document,
 )
 
@@ -72,6 +72,41 @@ def indexing_health():
         issue = diagnose_failure(exc, "embedding")
         result["embedding"] = {"ok": False, "code": issue.code, "hint": issue.hint}
     return result
+
+
+class BatchReextractRequest(BaseModel):
+    # 비우면 미리보기에서 "달라짐"으로 나온 문서 전부
+    document_ids: list[str] | None = Field(default=None, max_length=500)
+    keep_approvals: bool = True
+
+
+@router.get("/maintenance/reextract-preview")
+def reextract_preview_api():
+    """(추가) 읽기 전용: 다시 추출하면 달라지는 문서와, 그때 승인이 어떻게 되는지 미리 계산한다."""
+    documents = reextract_preview_all()
+    return {"documents": documents,
+            "changed": sum(1 for d in documents if d.get("changed")),
+            "errors": sum(1 for d in documents if d.get("error"))}
+
+
+@router.post("/maintenance/reextract-batch")
+def reextract_batch_api(body: BatchReextractRequest):
+    """(추가) 여러 문서를 차례로 다시 추출한다. 원본 파일은 그대로 두고 문서별 검색 청크만 새로 만든다."""
+    health = indexing_health()
+    if not (health["elasticsearch"]["ok"] and health["embedding"]["ok"]):
+        raise HTTPException(status_code=503, detail={
+            "code": "NOT_READY",
+            "hint": "검색 엔진 또는 임베딩 모델이 준비되지 않아 시작하지 않았습니다. 문서는 바뀌지 않았습니다.",
+        })
+    if body.document_ids is None:
+        ids = [d["document_id"] for d in reextract_preview_all() if d.get("changed") and not d.get("error")]
+    else:
+        ids = list(dict.fromkeys(body.document_ids))
+        for document_id in ids:
+            _load(document_id)
+    outcome = reextract_batch(ids, keep_approvals=body.keep_approvals)
+    done = sum(1 for r in outcome["results"] if r["ok"])
+    return {**outcome, "requested": len(ids), "done": done, "failed": len(outcome["results"]) - done}
 
 
 @router.get("/{document_id}")
@@ -157,11 +192,14 @@ def reindex_document(document_id: str):
 
 
 @router.post("/{document_id}/reextract")
-def reextract(document_id: str):
-    """(추가) 원본 파일은 그대로 두고, 다시 추출해 이 문서의 검색 청크만 새로 만든다."""
+def reextract(document_id: str, keep_approvals: bool = True):
+    """(추가) 원본 파일은 그대로 두고, 다시 추출해 이 문서의 검색 청크만 새로 만든다.
+
+    (변경) 유지할 수 있는 승인은 유지한다. ?keep_approvals=false 면 모두 검토 대기로 돌린다.
+    """
     _load(document_id)
     try:
-        result = reextract_document(document_id)
+        result = reextract_document(document_id, keep_approvals=keep_approvals)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="저장된 원본 파일을 찾지 못했습니다.")
     except IndexingFailure as exc:
@@ -174,7 +212,7 @@ def reextract(document_id: str):
     doc = result["document"]
     return {"document_id": document_id, "index_status": doc["index_status"],
             "section_count": doc["section_count"], "chunk_count": doc["chunk_count"],
-            "previous": result["previous"]}
+            "previous": result["previous"], "approvals": result["approvals"]}
 
 
 @router.post("/{document_id}/reanalyze")

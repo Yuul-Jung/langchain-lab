@@ -681,7 +681,83 @@ def delete_document_chunks(document_id):
                            query={"term": {"document_id": document_id}})
 
 
-def reextract_document(document_id):
+def chunks_digest(chunks):
+    """(추가) 청크 본문 전체의 지문. 색인된 내용과 새 추출 결과가 같은지 비교하는 데 쓴다."""
+    digest = hashlib.sha256()
+    for chunk in chunks:
+        digest.update(chunk["text"].encode("utf-8"))
+        digest.update(b"\x1e")
+    return digest.hexdigest()
+
+
+def section_signatures(sections):
+    """(추가) 절을 (쪽, 제목, 같은 쪽·제목 안에서의 순번)으로 나타낸다.
+
+    절 ID(s0001…)는 재추출하면 다른 절을 가리킬 수 있으므로, 승인을 옮길 때는 ID 대신 이 값을 쓴다.
+    """
+    seen = defaultdict(int)
+    out = {}
+    for section in sections:
+        key = (section.get("page"), section.get("title"))
+        out[section["id"]] = (key[0], key[1], seen[key])
+        seen[key] += 1
+    return out
+
+
+def carry_over_approvals(old_meta, sections, classification, relations, sequence):
+    """(추가) 재추출 뒤에도 유지할 수 있는 승인을 옮기고, 무엇을 유지·초기화했는지 돌려준다.
+
+    - 분류(주제·난이도·개념): 재추출은 분류 내용을 바꾸지 않으므로 승인을 유지한다.
+    - 학습 순서: 절 구성(쪽·제목·순서)과 순서가 모두 이전과 같을 때만 유지한다.
+    - 관계: 같은 종류의 관계가 같은 절(쪽·제목) 사이에 다시 제안되면 유지한다.
+    classification · relations · sequence 는 새로 만든 값이며 이 함수가 승인 상태를 고쳐 쓴다.
+    """
+    old_sig = section_signatures(old_meta.get("sections") or [])
+    new_sig = section_signatures(sections)
+    same_structure = list(old_sig.values()) == list(new_sig.values())
+    summary = {"same_structure": same_structure}
+
+    if (old_meta.get("classification") or {}).get("review_status") == "approved":
+        classification["review_status"] = "approved"
+        summary["classification"] = "kept"
+    else:
+        summary["classification"] = "not_approved"
+
+    old_sequence = old_meta.get("learning_sequence") or {}
+    if old_sequence.get("review_status") == "approved":
+        before = [old_sig.get(i) for i in old_sequence.get("section_ids", [])]
+        after = [new_sig.get(i) for i in sequence.get("section_ids", [])]
+        if same_structure and before == after:
+            sequence["review_status"] = "approved"
+            summary["learning_sequence"] = "kept"
+        else:
+            summary["learning_sequence"] = "reset"
+    else:
+        summary["learning_sequence"] = "not_approved"
+
+    approved = {(r.get("type"), old_sig.get(r.get("from")), old_sig.get(r.get("to")))
+                for r in old_meta.get("relations") or [] if r.get("review_status") == "approved"}
+    kept = 0
+    for relation in relations:
+        key = (relation.get("type"), new_sig.get(relation.get("from")), new_sig.get(relation.get("to")))
+        if relation.get("review_status") == "proposed" and key in approved:
+            relation["review_status"] = "approved"
+            kept += 1
+    summary["relations_kept"] = kept
+    summary["relations_reset"] = len(approved) - kept
+    return summary
+
+
+def _reset_summary(old_meta):
+    """승인을 유지하지 않고 모두 검토 대기로 돌릴 때의 요약."""
+    approved_relations = sum(1 for r in old_meta.get("relations") or [] if r.get("review_status") == "approved")
+    state = lambda block: "reset" if (old_meta.get(block) or {}).get("review_status") == "approved" else "not_approved"
+    return {"same_structure": None, "classification": state("classification"),
+            "learning_sequence": state("learning_sequence"),
+            "relations_kept": 0, "relations_reset": approved_relations}
+
+
+def reextract_document(document_id, keep_approvals=True):
     meta = get_document(document_id)
     stored = UPLOAD_DIR / f'{document_id}{meta["format"]}'
     if not stored.is_file():
@@ -694,11 +770,16 @@ def reextract_document(document_id):
     classification = dict(meta.get("classification") or {})
     classification["review_status"] = "proposed"
     relations = propose_relations(sections, classification.get("concepts", []))
+    sequence = learning_sequence(sections, relations)
+    # (변경) 유지할 수 있는 승인은 옮긴다. keep_approvals=False 면 이전처럼 모두 검토 대기로 돌린다.
+    approvals = (carry_over_approvals(meta, sections, classification, relations, sequence)
+                 if keep_approvals else _reset_summary(meta))
     meta.update({
         "section_count": len(sections), "chunk_count": len(chunks),
         "sections": [{k: v for k, v in sec.items() if k != "text"} for sec in sections],
         "classification": classification, "relations": relations,
-        "learning_sequence": learning_sequence(sections, relations),
+        "learning_sequence": sequence,
+        "chunks_digest": chunks_digest(chunks),
         "reextracted_at": _now(), "index_status": "pending",
     })
     meta.pop("structure_proposal", None)
@@ -719,7 +800,97 @@ def reextract_document(document_id):
     meta["index_status"] = "indexed"
     meta.pop("index_error", None)
     _write_catalog(meta)
-    return {"document": meta, "previous": previous}
+    return {"document": meta, "previous": previous, "approvals": approvals}
+
+
+def indexed_digest(document_id):
+    """(추가) 색인에 들어 있는 이 문서 청크의 (지문, 개수). 색인을 읽지 못하면 None."""
+    try:
+        es = es_client()
+        if not es.indices.exists(index=DOCUMENT_INDEX):
+            return None
+        found = es.search(index=DOCUMENT_INDEX, size=max(1000, MAX_CHUNKS),
+                          query={"term": {"document_id": document_id}},
+                          source=["text", "source_order", "chunk_id"])
+    except Exception:
+        return None
+    rows = sorted((h["_source"] for h in found["hits"]["hits"]),
+                  key=lambda r: (r.get("source_order") or 0, r.get("chunk_id") or ""))
+    return chunks_digest(rows), len(rows)
+
+
+def reextract_preview(document_id):
+    """(추가) 아무것도 바꾸지 않고, 다시 추출하면 무엇이 달라지는지 계산한다.
+
+    비교 기준은 실제 색인(가능하면) → 카탈로그에 저장한 지문 → 절 구성·청크 수 순서다.
+    """
+    meta = get_document(document_id)
+    info = {"document_id": document_id, "filename": meta.get("filename"),
+            "index_status": meta.get("index_status"),
+            "stored": {"section_count": meta.get("section_count"), "chunk_count": meta.get("chunk_count")}}
+    stored = UPLOAD_DIR / f'{document_id}{meta.get("format") or ""}'
+    if not stored.is_file():
+        info["error"] = "저장된 원본 파일을 찾지 못했습니다."
+        return info
+    try:
+        sections = extract_sections(stored)
+        chunks = make_chunks(sections)
+    except ValueError as exc:
+        info["error"] = str(exc)
+        return info
+    new_digest = chunks_digest(chunks)
+    indexed = indexed_digest(document_id)
+    if indexed is not None:
+        info["indexed_chunk_count"] = indexed[1]
+        changed, basis = indexed[0] != new_digest, "index"
+    elif meta.get("chunks_digest"):
+        changed, basis = meta["chunks_digest"] != new_digest, "catalog"
+    else:
+        same = (list(section_signatures(meta.get("sections") or []).values())
+                == list(section_signatures(sections).values()))
+        changed, basis = (not same) or meta.get("chunk_count") != len(chunks), "structure"
+    classification = dict(meta.get("classification") or {})
+    classification["review_status"] = "proposed"
+    relations = propose_relations(sections, classification.get("concepts", []))
+    sequence = learning_sequence(sections, relations)
+    info.update({
+        "changed": changed, "compared_with": basis,
+        "new": {"section_count": len(sections), "chunk_count": len(chunks)},
+        "approvals": carry_over_approvals(meta, sections, classification, relations, sequence),
+    })
+    return info
+
+
+def reextract_preview_all():
+    return [reextract_preview(doc["document_id"]) for doc in list_documents()]
+
+
+def reextract_batch(document_ids, keep_approvals=True):
+    """(추가) 여러 문서를 차례로 다시 추출한다. 색인 오류가 나면 거기서 멈춘다.
+
+    색인 서버나 임베딩 모델이 죽은 상태에서 계속 진행하면 남은 문서가 모두 실패로 바뀌므로,
+    첫 색인 오류에서 멈추고 나머지는 건드리지 않는다.
+    """
+    results, stopped = [], False
+    for document_id in document_ids:
+        try:
+            done = reextract_document(document_id, keep_approvals=keep_approvals)
+        except IndexingFailure as exc:
+            results.append({"document_id": document_id, "ok": False, "code": exc.code,
+                            "phase": exc.phase, "hint": exc.hint})
+            stopped = True
+            break
+        except (FileNotFoundError, ValueError) as exc:
+            results.append({"document_id": document_id, "ok": False, "code": "SOURCE",
+                            "hint": str(exc) if isinstance(exc, ValueError) else "저장된 원본 파일을 찾지 못했습니다."})
+            continue
+        doc = done["document"]
+        results.append({"document_id": document_id, "ok": True, "filename": doc.get("filename"),
+                        "index_status": doc["index_status"], "section_count": doc["section_count"],
+                        "chunk_count": doc["chunk_count"], "previous": done["previous"],
+                        "approvals": done["approvals"]})
+    return {"results": results, "stopped": stopped,
+            "remaining": len(document_ids) - len(results)}
 
 def ingest_file(filename, data, use_ai=True, index=True):
     """Validate + extract + infer + store. Caller owns HTTP multipart handling."""
@@ -757,6 +928,7 @@ def ingest_file(filename, data, use_ai=True, index=True):
             "sections": [{k: v for k, v in s.items() if k != "text"} for s in sections],
             "classification": classification,
             "relations": relations, "learning_sequence": order,
+            "chunks_digest": chunks_digest(chunks),
             "index_status": "pending" if index else "not_requested",
         }
         _write_catalog(meta)

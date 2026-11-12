@@ -34,7 +34,9 @@ input[type=text]{flex:1;min-width:200px;padding:11px;border:1px solid #ccc;borde
 <div class="flow"><strong>별도 Elasticsearch 인덱스</strong><small>langchain_documents_v1</small></div></section>
 <section><div class="row"><h2>04 · 등록된 문서</h2><button class="secondary" id="refresh" type="button">새로고침</button></div><div id="list" class="cards"></div></section>
 <section><h2>05 · 문서 구조와 분석 정보</h2><p class="hint">PDF에서 제목을 식별하지 못하면 페이지 단위로 표시합니다. 제목 추정은 검토 대상이며, 분류·학습 순서는 확정된 사실이 아닙니다.</p><div id="detail" class="detail">문서를 선택하면 상세 분석을 표시합니다.</div></section>
-<section><h2>06 · 벡터 검색</h2><form id="search" class="row"><input id="query" type="text" required placeholder="문서 검색 질문"><button type="submit">검색</button></form><div id="results" class="detail">검색 질의를 입력하세요.</div></section></main>
+<section><h2>06 · 벡터 검색</h2><form id="search" class="row"><input id="query" type="text" required placeholder="문서 검색 질문"><button type="submit">검색</button></form><div id="results" class="detail">검색 질의를 입력하세요.</div></section>
+<section><h2>07 · 추출 규칙 변경 반영</h2><p class="hint">추출 방식이 개선되어도 이미 색인된 문서에는 자동으로 반영되지 않습니다. <b>변경 미리보기</b>는 아무것도 바꾸지 않고, 문서마다 지금 색인과 새 추출 결과가 다른지 계산합니다. 다시 추출해도 원본 파일은 그대로이며, 분류 승인은 유지하고 학습 순서·관계 승인은 절 구성이 같을 때만 유지합니다. 달라졌다고 해서 다시 추출하는 것이 항상 이득은 아니므로, 다시 추출한 뒤에는 검색 결과를 확인하세요.</p>
+<div class="row"><button class="secondary" id="previewBtn" type="button">변경 미리보기</button><button id="batchBtn" type="button" disabled>달라진 문서 모두 다시 추출</button></div><div id="previewOut" class="detail" role="status">미리보기를 실행하세요.</div></section></main>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -84,11 +86,11 @@ btn.onclick=async()=>{btn.disabled=true;try{await call("/api/documents/"+d.docum
 {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({approve_classification:true,approve_learning_sequence:true,approved_relation_indices:checks.filter(x=>x.checked).map(x=>Number(x.value))})});await detail(id)}catch(e){alert(e.message)}finally{btn.disabled=false}};root.append(btn);
 // (추가) 원본 다시 추출·재색인: 추출 방식이 개선된 뒤 이미 색인된 문서에 반영 (원본 파일은 그대로)
 {const box=el("div");box.style.margin="14px 0";const btn=el("button","원본 다시 추출·재색인","secondary");
- const note=el("p","원본 파일은 그대로 두고 다시 추출해 이 문서의 검색 청크만 새로 만듭니다. 분류·학습 순서·관계 승인은 다시 검토 대기로 돌아갑니다.");note.className="hint";
+ const note=el("p","원본 파일은 그대로 두고 다시 추출해 이 문서의 검색 청크만 새로 만듭니다. 분류 승인은 유지하고, 학습 순서·관계 승인은 절 구성이 같을 때만 유지합니다.");note.className="hint";
  const out=el("p",window.lastReextract&&window.lastReextract.id===d.document_id?window.lastReextract.msg:"");out.setAttribute("role","status");out.id="reextractOut";
  btn.onclick=async()=>{btn.disabled=true;out.textContent="다시 추출·색인 중… (청크 수에 따라 수십 초~수 분)";let msg;
   try{const r=await call("/api/documents/"+encodeURIComponent(d.document_id)+"/reextract",{method:"POST"});
-   msg="완료: 절 "+r.previous.section_count+" → "+r.section_count+", 청크 "+r.previous.chunk_count+" → "+r.chunk_count+", 색인 "+r.index_status;}
+   msg="완료: 절 "+r.previous.section_count+" → "+r.section_count+", 청크 "+r.previous.chunk_count+" → "+r.chunk_count+", 색인 "+r.index_status+" · "+approvalText(r.approvals);}
   catch(e){msg="실패: "+e.message;}
   // 화면을 다시 그린 뒤에도 결과가 보이도록 기억해 둔다
   window.lastReextract={id:d.document_id,msg};btn.disabled=false;await refresh();await detail(id);};
@@ -113,5 +115,24 @@ root.append(card)}
 // (추가) 1위와 점수 차이가 커서 숨긴 결과 수 안내
 if(data.hidden){const note=el("p","관련도가 낮은 결과 "+data.hidden+"개는 숨겼습니다 (1위 점수와의 차이 "+data.margin+" 초과).");note.className="hint";root.append(note)}}catch(err){root.replaceChildren(el("p",err.message))}};
 $("healthBtn").onclick=async()=>{const b=$("healthBtn"),t=$("healthResult");b.disabled=true;t.textContent="연결 검사 중...";try{const d=await call("/api/documents/health/status");t.textContent="Elasticsearch: "+(d.elasticsearch.ok?"정상":d.elasticsearch.code+" · "+(d.elasticsearch.hint||"오류"))+"\nQwen3 임베딩: "+(d.embedding.ok?"정상":d.embedding.code+" · "+(d.embedding.hint||"오류"))+"\n검색 인덱스: "+d.document_index}catch(e){t.textContent="진단 실패: "+e.message}finally{b.disabled=false}};
+// (추가) 07 · 추출 규칙 변경 반영: 미리보기(읽기 전용) → 달라진 문서만 다시 추출
+function approvalText(a){if(!a)return"";const word={kept:"유지",reset:"검토 대기로 돌아감",not_approved:"승인 없음"};
+ let t="분류 승인: "+(word[a.classification]||"-")+" / 학습 순서 승인: "+(word[a.learning_sequence]||"-");
+ if(a.relations_kept||a.relations_reset)t+=" / 관계 승인: 유지 "+a.relations_kept+"개, 돌아감 "+a.relations_reset+"개";return t}
+function previewTable(rows,resultMode){const table=document.createElement("table");table.style.width="100%";table.style.borderCollapse="collapse";
+ const head=document.createElement("tr");for(const h of resultMode?["문서","결과","절","청크","승인"]:["문서","지금 색인과 비교","절","청크","다시 추출하면 승인은"]){const th=el("th",h);th.style.textAlign="left";th.style.padding="6px";th.scope="col";head.append(th)}table.append(head);
+ for(const d of rows){const tr=document.createElement("tr");const cell=t=>{const td=el("td",t);td.style.padding="6px";td.style.borderTop="1px solid #e2e8f0";td.style.verticalAlign="top";return td};
+  if(resultMode){tr.append(cell(d.filename||d.document_id),cell(d.ok?"완료 · "+d.index_status:"실패 · "+(d.code||"")+" "+(d.hint||"")),cell(d.ok?d.previous.section_count+" → "+d.section_count:"-"),cell(d.ok?d.previous.chunk_count+" → "+d.chunk_count:"-"),cell(d.ok?approvalText(d.approvals):"-"))}
+  else if(d.error){tr.append(cell(d.filename||d.document_id),cell("확인 불가: "+d.error),cell("-"),cell("-"),cell("-"))}
+  else{tr.append(cell(d.filename||d.document_id),cell(d.changed?"달라짐":"같음"),cell(d.stored.section_count+" → "+d.new.section_count),cell(d.stored.chunk_count+" → "+d.new.chunk_count),cell(d.changed?approvalText(d.approvals):"-"))}
+  table.append(tr)}return table}
+$("previewBtn").onclick=async()=>{const out=$("previewOut"),b=$("previewBtn");b.disabled=true;$("batchBtn").disabled=true;out.replaceChildren(el("p","문서를 다시 읽어 비교하는 중…"));
+ try{const data=await call("/api/documents/maintenance/reextract-preview");out.replaceChildren(el("p","문서 "+data.documents.length+"개 중 달라진 문서 "+data.changed+"개"+(data.errors?" · 확인하지 못한 문서 "+data.errors+"개":"")+". 이 미리보기는 아무것도 바꾸지 않았습니다."),previewTable(data.documents,false));$("batchBtn").disabled=!data.changed}
+ catch(e){out.replaceChildren(el("p","미리보기 실패: "+e.message))}finally{b.disabled=false}};
+$("batchBtn").onclick=async()=>{if(!confirm("달라진 문서를 모두 다시 추출합니다. 원본 파일은 그대로이고 문서별 검색 청크만 새로 만듭니다. 진행할까요?"))return;
+ const out=$("previewOut"),b=$("batchBtn");b.disabled=true;$("previewBtn").disabled=true;out.replaceChildren(el("p","다시 추출·색인 중… (문서 수와 크기에 따라 수십 초~수 분)"));
+ try{const data=await call("/api/documents/maintenance/reextract-batch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({})});
+  out.replaceChildren(el("p","완료 "+data.done+"개 · 실패 "+data.failed+"개"+(data.stopped?" · 색인 오류로 중단, 남은 문서 "+data.remaining+"개는 건드리지 않았습니다":"")),previewTable(data.results,true))}
+ catch(e){out.replaceChildren(el("p","실패: "+e.message))}finally{$("previewBtn").disabled=false;await refresh()}};
 $("refresh").onclick=refresh;refresh();
 </script></body></html>

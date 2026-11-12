@@ -28,7 +28,8 @@ class ReextractTests(unittest.TestCase):
         self.original = "# UART\nUART 수신 회로의 시작 비트 검출을 설명한다.\n## 오버샘플링\n비트 하나를 16배로 샘플링해 가운데 값을 읽는다."
         stored.write_text(self.original, encoding="utf-8")
 
-    def test_reextract_rebuilds_chunks_and_resets_review(self):
+    def test_reextract_rebuilds_chunks_and_keeps_classification_approval(self):
+        # (변경) 재추출은 분류 내용을 바꾸지 않으므로 분류 승인은 유지한다
         with patch.object(dp, "delete_document_chunks") as delete, \
              patch.object(dp, "_index_chunks") as index:
             result = dp.reextract_document(self.doc_id)
@@ -38,10 +39,20 @@ class ReextractTests(unittest.TestCase):
         self.assertEqual(result["previous"]["section_count"], 1)
         self.assertEqual(doc["section_count"], 2)
         self.assertEqual(doc["index_status"], "indexed")
-        self.assertEqual(doc["classification"]["review_status"], "proposed")
+        self.assertEqual(doc["classification"]["review_status"], "approved")
+        self.assertEqual(result["approvals"]["classification"], "kept")
+        self.assertFalse(result["approvals"]["same_structure"])
         self.assertIn("reextracted_at", doc)
         saved = dp.get_document(self.doc_id)
         self.assertEqual([s["title"] for s in saved["sections"]], ["UART", "오버샘플링"])
+        self.assertEqual(saved["chunks_digest"], dp.chunks_digest(dp.make_chunks(dp.extract_sections(
+            dp.UPLOAD_DIR / f"{self.doc_id}.md"))))
+
+    def test_reextract_can_still_reset_all_approvals(self):
+        with patch.object(dp, "delete_document_chunks"), patch.object(dp, "_index_chunks"):
+            result = dp.reextract_document(self.doc_id, keep_approvals=False)
+        self.assertEqual(result["document"]["classification"]["review_status"], "proposed")
+        self.assertEqual(result["approvals"]["classification"], "reset")
 
     def test_index_failure_is_recorded_and_source_kept(self):
         with patch.object(dp, "delete_document_chunks"), \
