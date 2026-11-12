@@ -28,9 +28,10 @@ ROOT = Path(__file__).resolve().parent
 UPLOAD_DIR = ROOT / "uploads" / "documents"
 CATALOG_DIR = ROOT / "data" / "document_catalog"
 DOCUMENT_INDEX = settings.ES_DOCUMENT_INDEX  # (변경) settings.py에서 읽음
-MAX_BYTES = 8 * 1024 * 1024
-MAX_SECTIONS = 150
-MAX_CHUNKS = 160
+# (변경) 업로드 한도는 settings.py(.env)에서 읽는다. 이전 고정값: 8MB · 절 150 · 청크 160
+MAX_BYTES = settings.UPLOAD_MAX_MB * 1024 * 1024
+MAX_SECTIONS = settings.UPLOAD_MAX_SECTIONS
+MAX_CHUNKS = settings.UPLOAD_MAX_CHUNKS
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".md", ".markdown", ".html", ".htm", ".docx"}
 TOPIC_RULES = {
     "FPGA / SoC": ("fpga", "verilog", "rtl", "axi", "microblaze", "vivado", "register map", "soc"),
@@ -224,7 +225,7 @@ def _parse_pdf(path):
                 item["provenance"] = "rule_inferred"
             sections.append(item)
             if len(sections) > MAX_SECTIONS:
-                raise ValueError("추출된 절이 최대 개수를 초과했습니다.")
+                raise ValueError(f"추출된 절이 최대 개수({MAX_SECTIONS}개)를 초과했습니다. 파일을 분할하여 등록하세요.")
     return sections
 
 
@@ -325,7 +326,7 @@ def extract_sections(path):
     if not sections or not any(len(s["text"].strip()) >= 10 for s in sections):
         raise ValueError("문서에서 검색 가능한 텍스트를 추출하지 못했습니다. 스캔 PDF는 별도 OCR이 필요합니다.")
     if len(sections) > MAX_SECTIONS:
-        raise ValueError("추출된 절이 최대 개수를 초과했습니다.")
+        raise ValueError(f"추출된 절이 최대 개수({MAX_SECTIONS}개)를 초과했습니다. 파일을 분할하여 등록하세요.")
     return _attach_hierarchy(sections)
 
 
@@ -362,7 +363,7 @@ def make_chunks(sections):
                 "text": fragment,
             })
             if len(chunks) > MAX_CHUNKS:
-                raise ValueError("문서가 너무 깁니다. 파일을 분할하여 등록하세요.")
+                raise ValueError(f"문서가 너무 깁니다(청크 {MAX_CHUNKS}개 초과). 파일을 분할하여 등록하세요.")
     return chunks
 
 
@@ -727,7 +728,7 @@ def ingest_file(filename, data, use_ai=True, index=True):
     if ext not in ALLOWED_EXTENSIONS or not name or name.startswith("."):
         raise ValueError("지원하지 않는 파일 형식 또는 파일명입니다.")
     if not data or len(data) > MAX_BYTES:
-        raise ValueError("빈 파일 또는 8MB를 초과하는 파일입니다.")
+        raise ValueError(f"빈 파일 또는 {settings.UPLOAD_MAX_MB}MB를 초과하는 파일입니다.")
     if b"\x00" in data[:4096] and ext in {".txt", ".md", ".markdown", ".html", ".htm"}:
         raise ValueError("텍스트 파일에 바이너리 데이터가 포함되었습니다.")
 

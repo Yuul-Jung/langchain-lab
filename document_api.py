@@ -26,7 +26,9 @@ class SearchRequest(BaseModel):
 class ReviewRequest(BaseModel):
     approve_classification: bool = False
     approve_learning_sequence: bool = False
-    approved_relation_indices: list[int] = Field(default_factory=list, max_length=150)
+    # (변경) 절 한도가 늘어난 만큼 승인할 수 있는 관계 수도 늘린다 (이전 고정값 150)
+    approved_relation_indices: list[int] = Field(
+        default_factory=list, max_length=settings.UPLOAD_MAX_SECTIONS * 5)
 
 
 def _load(document_id):
@@ -38,7 +40,10 @@ def _load(document_id):
 
 @router.get("")
 def documents_list():
-    return {"documents": list_documents()}
+    # (추가) 화면이 현재 업로드 한도를 보여 줄 수 있게 함께 돌려준다
+    return {"documents": list_documents(),
+            "limits": {"max_mb": settings.UPLOAD_MAX_MB, "max_sections": settings.UPLOAD_MAX_SECTIONS,
+                       "max_chunks": settings.UPLOAD_MAX_CHUNKS}}
 
 
 @router.get("/health/status")
@@ -84,7 +89,8 @@ async def upload_document(
     try:
         body = await file.read(MAX_BYTES + 1)
         if len(body) > MAX_BYTES:
-            raise HTTPException(status_code=413, detail="파일은 최대 8MB까지 허용됩니다.")
+            raise HTTPException(status_code=413,
+                                detail=f"파일은 최대 {settings.UPLOAD_MAX_MB}MB까지 허용됩니다.")
         try:
             return ingest_file(file.filename or "", body, use_ai=use_ai, index=index)
         except ValueError as exc:

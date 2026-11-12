@@ -51,6 +51,11 @@ EMBEDDING_DIMS = get_int("EMBEDDING_DIMS", 2560)
 # ---- Elasticsearch 인덱스
 ES_RAG_INDEX = get("ES_RAG_INDEX", "langchain_embedding_lab")
 ES_DOCUMENT_INDEX = get("ES_DOCUMENT_INDEX", "langchain_documents_v1")
+# (추가) 업로드 한도. 슬라이드형 PDF는 쪽마다 절이 하나라 183쪽 문서가 절 150개 한도에 걸렸다(2026-11-12).
+# 색인은 청크당 약 0.1초이므로 800청크면 1~2분 걸린다.
+UPLOAD_MAX_MB = get_int("UPLOAD_MAX_MB", 30)
+UPLOAD_MAX_SECTIONS = get_int("UPLOAD_MAX_SECTIONS", 600)
+UPLOAD_MAX_CHUNKS = get_int("UPLOAD_MAX_CHUNKS", 800)
 # (추가) 검색 결과 컷오프: 1위 점수에서 이 폭 안의 결과만 보여 준다 (0 이면 끔). 점수 범위는 0~1.
 try:
     SEARCH_SCORE_MARGIN = float(get("SEARCH_SCORE_MARGIN", "0.05"))
@@ -88,6 +93,8 @@ def describe() -> dict:
         "es_rag_index": ES_RAG_INDEX, "es_document_index": ES_DOCUMENT_INDEX,
         "chat_rag_source": CHAT_RAG_SOURCE, "search_score_margin": SEARCH_SCORE_MARGIN,
         "search_term_weight": SEARCH_TERM_WEIGHT,
+        "upload_max_mb": UPLOAD_MAX_MB, "upload_max_sections": UPLOAD_MAX_SECTIONS,
+        "upload_max_chunks": UPLOAD_MAX_CHUNKS,
         "llm_providers": LLM_PROVIDERS, "default_provider": DEFAULT_PROVIDER,
         "openai_configured": bool(OPENAI_API_KEY and OPENAI_MODEL),
         "anthropic_configured": bool(ANTHROPIC_API_KEY and ANTHROPIC_MODEL),

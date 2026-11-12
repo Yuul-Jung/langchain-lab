@@ -21,7 +21,7 @@ input[type=text]{flex:1;min-width:200px;padding:11px;border:1px solid #ccc;borde
 @media(max-width:650px){section{padding:16px}header{padding:20px}body{font-size:16px}}
 </style></head><body>
 <header><a href="/">← 채팅</a> · <a href="https://yuul-jung.github.io/langchain-lab/docs/ch02-document-ingestion.html" target="_blank" rel="noopener">제2장 학습안내서</a><h1>로컬 문서 구조화 관리</h1><p>원본 구조 · 자동 분류 · 학습 순서 · 지식 관계 · 검색 등록</p></header>
-<main><section><h2>01 · 자료 업로드</h2><p class="hint">PDF / DOCX / HTML / Markdown / TXT · 최대 8MB · 파일은 현재 PC의 비공개 로컬 폴더에 보관됩니다. 스캔 PDF는 미지원.</p>
+<main><section><h2>01 · 자료 업로드</h2><p class="hint">PDF / DOCX / HTML / Markdown / TXT · <span id="limits">최대 30MB</span> · 파일은 현재 PC의 비공개 로컬 폴더에 보관됩니다. 스캔 PDF는 미지원.</p>
 <form id="upload"><input type="file" id="file" accept=".pdf,.docx,.html,.htm,.md,.markdown,.txt" required>
 <div class="row"><label><input id="ai" type="checkbox" checked> 로컬 LLM 분류 제안</label>
 <label><input id="index" type="checkbox" checked> Elasticsearch 벡터 등록</label></div>
@@ -41,6 +41,7 @@ const $=id=>document.getElementById(id);
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=String(text);if(cls)n.className=cls;return n}
 async function call(url,opt){const r=await fetch(url,opt);const j=await r.json();if(!r.ok){const d=j.detail;throw Error(typeof d==="string"?d:(d&&typeof d==="object"?(String(d.code||"오류")+" · "+String(d.hint||d.message||"재시도 필요")):"요청 실패"))}return j}
 async function refresh(){const list=$("list");list.replaceChildren(el("p","조회 중..."));try{const data=await call("/api/documents");list.replaceChildren();
+if(data.limits)$("limits").textContent="최대 "+data.limits.max_mb+"MB · 절 "+data.limits.max_sections+"개 · 청크 "+data.limits.max_chunks+"개 (큰 문서는 색인에 1~2분)";
 if(!data.documents.length){list.append(el("p","등록된 문서가 없습니다."));return}
 for(const item of data.documents){const card=el("article",null,"card");card.append(el("h3",item.filename),el("small",item.uploaded_at));
 for(const value of [item.classification?.topic||"미분류","절 "+item.section_count,"청크 "+item.chunk_count,item.index_status])card.append(el("span",value,"badge"));if(item.index_error){const issue=el("p","색인 실패: "+item.index_error.code+" · "+item.index_error.hint);issue.style.color="#9c4d1e";card.append(issue)}

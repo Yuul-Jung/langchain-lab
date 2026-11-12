@@ -146,8 +146,14 @@ class PageSplitAdversarialTest(unittest.TestCase):
         self.assertEqual(titles(sections), ["PDF 1쪽 (목차)"])
 
     def test_b07_too_many_sections_is_refused_not_truncated(self):
-        with self.assertRaises(ValueError):
+        with patch.object(dp, "MAX_SECTIONS", 150), self.assertRaises(ValueError):
             parse_pages(*[f"{(n % 9) + 1}. 제목\n본문 {n}" for n in range(151)])
+
+    def test_b07b_slide_deck_of_183_pages_is_accepted_by_default(self):
+        # 수정 전: 절 한도 150 때문에 183쪽 슬라이드형 PDF가 업로드 거절됐다
+        sections = parse_pages(*[f"슬라이드 {n} 제목\n설명 문장" for n in range(183)])
+        self.assertEqual(len(sections), 183)
+        self.assertEqual(len(make_chunks(sections)), 183)
 
     def test_b08_crlf_line_endings(self):
         sections = parse_pages("머리\r\n1. 개요\r\n본문\r\n")
@@ -283,7 +289,7 @@ class ChunkAdversarialTest(unittest.TestCase):
 
     def test_e07_too_long_document_is_refused_not_truncated(self):
         section = {"id": "s0001", "source_order": 1, "title": "t", "page": 1, "text": "가" * 200000}
-        with self.assertRaises(ValueError):
+        with patch.object(dp, "MAX_CHUNKS", 160), self.assertRaises(ValueError):
             make_chunks([section])
 
     def test_e08_chunk_ids_repeat_across_documents(self):

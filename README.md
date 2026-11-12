@@ -126,7 +126,7 @@ GUI를 이미 설치해 사용 중이므로 LM Studio의 설정(`Ctrl+,`)에서 
 - API: `/api/documents`, `/api/documents/upload`, `/api/documents/search`, `/api/documents/{document_id}/review`
 - 처리 기능: PDF/DOCX/TXT/Markdown/HTML 구조 추출, 분류 제안, 원본·선수관계 분리, 추천 학습 순서, Elasticsearch 2,560차원 벡터 등록
 - 문서 원본: `uploads/documents/` (Git 추적 제외), 카탈로그: `data/document_catalog/` (Git 추적 제외)
-- 파일당 제한: 8MB, 최다 150개 절 및 160개 청크. 스캔 PDF OCR 미지원
+- 파일당 제한(기본값, `.env`에서 변경): 30MB, 최다 600개 절 및 800개 청크. 스캔 PDF OCR 미지원
 - AI 분류 실패 시 키워드 기반 임시 분류. 제안은 `review_status=proposed`로 저장하며 원본 순서를 덮어쓰지 않음
 
 ### 제2장 코드 반영
