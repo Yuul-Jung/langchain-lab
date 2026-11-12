@@ -16,6 +16,10 @@
     그중 정답 쪽의 비율. "관련 없는 쪽이 너무 많이 따라 나온다"를 재는 지표다.
 이 점수는 검색 단계만 본다. 답변 생성의 정확성은 채점하지 않는다.
 
+한 단어 검색: data/eval/keywords.txt (선택, 한 줄에 낱말 하나, # 은 주석)가 있으면
+  각 낱말로 검색해 결과 본문에 그 낱말이 실제로 들어 있는 비율을 함께 본다.
+  벡터 검색만 쓰면 한 단어 검색에서 그 낱말이 없는 쪽이 위로 올라오기 쉽다.
+
 출력에는 문서 본문·파일명을 넣지 않는다. 결과는 data/eval/results/ 에 저장하고
 직전 결과와 순위가 달라진 질문을 보여 준다.
 
@@ -37,6 +41,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 QUESTIONS = ROOT / "data" / "eval" / "questions.jsonl"
+KEYWORDS = ROOT / "data" / "eval" / "keywords.txt"
 RESULTS = ROOT / "data" / "eval" / "results"
 STATUSES = {"draft", "approved"}
 
@@ -109,6 +114,22 @@ def summarize(results, k):
     }
 
 
+def score_keyword(term, hits):
+    """한 단어 검색 채점: 결과 중 그 낱말이 본문(띄어쓰기·대소문자 무시)에 있는 비율."""
+    flat = ["".join((h.get("text") or "").split()).lower() for h in hits]
+    has = [term.lower() in t for t in flat]
+    return {"returned": len(hits), "containing": sum(has),
+            "top1_contains": bool(has) and has[0]}
+
+
+def summarize_keywords(rows):
+    n = len(rows)
+    return {"keywords": n,
+            "avg_results": round(sum(r["returned"] for r in rows) / n, 2),
+            "containing_rate": round(sum(r["containing"] / r["returned"] for r in rows if r["returned"]) / n, 3),
+            "top1_contains": round(sum(r["top1_contains"] for r in rows) / n, 3)}
+
+
 def compare(previous, results):
     """직전 결과와 비교해 순위가 바뀐 질문 목록 (id, 이전 순위, 지금 순위)."""
     before = {r["id"]: r["rank"] for r in previous.get("results", [])}
@@ -157,6 +178,14 @@ def main():
               f"{r['returned']}({r['relevant']})          {kw}")
     summary = summarize(results, args.k)
     print("\n요약:", json.dumps(summary, ensure_ascii=False))
+    keyword_summary = None
+    if KEYWORDS.is_file():
+        words = [w.strip() for w in KEYWORDS.read_text(encoding="utf-8").splitlines()
+                 if w.strip() and not w.lstrip().startswith("#")]
+        if words:
+            rows = [score_keyword(w, trim_by_margin(search_uploaded(w, limit=args.k), margin)) for w in words]
+            keyword_summary = summarize_keywords(rows)
+            print("한 단어 검색:", json.dumps(keyword_summary, ensure_ascii=False))
     drafts = sum(r["status"] == "draft" for r in results)
     if drafts:
         print(f"주의: {drafts}개 질문이 초안(draft)입니다. 사람이 정답·쪽을 확인하기 전 점수는 참고용입니다.")
@@ -171,7 +200,8 @@ def main():
     if not args.no_save:
         RESULTS.mkdir(parents=True, exist_ok=True)
         out = RESULTS / f"{datetime.now():%Y%m%d-%H%M%S}.json"
-        out.write_text(json.dumps({"summary": summary, "margin": margin, "results": results},
+        out.write_text(json.dumps({"summary": summary, "keyword_summary": keyword_summary,
+                                   "margin": margin, "results": results},
                                   ensure_ascii=False, indent=1), encoding="utf-8")
         print("결과 저장:", out.relative_to(ROOT))
     print("안전: 색인·문서를 바꾸지 않았고 문서 본문·파일명은 출력하지 않았습니다.")

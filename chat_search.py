@@ -22,6 +22,7 @@ def from_uploaded(hit: dict) -> dict:
         "id": hit.get("chunk_id") or hit.get("document_id", ""),
         "score": hit.get("score"),
         "text": hit.get("text", ""),
+        "snippet": hit.get("snippet"),
         "source": "documents",
         "document_id": hit.get("document_id"),
         "filename": hit.get("filename"),

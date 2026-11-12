@@ -79,6 +79,15 @@ class ScoreTest(unittest.TestCase):
         self.assertEqual(s["avg_results"], 1.33)
         self.assertEqual(s["precision"], 0.5)
 
+    def test_keyword_search_scoring(self):
+        rows = [
+            run_eval.score_keyword("산업안전", [hit(DOC_A, 8, "지역 산업 안전 교육"), hit(DOC_B, 15, "안전 표시")]),
+            run_eval.score_keyword("XADC", [hit(DOC_B, 2, "gpio 입력 설정")]),
+        ]
+        self.assertEqual((rows[0]["containing"], rows[0]["top1_contains"]), (1, True))
+        s = run_eval.summarize_keywords(rows)
+        self.assertEqual((s["avg_results"], s["containing_rate"], s["top1_contains"]), (1.5, 0.75, 1.0))
+
     def test_compare_lists_changed_ranks(self):
         prev = {"results": [{"id": "q1", "rank": 3}, {"id": "q2", "rank": 1}]}
         now = [{"id": "q1", "rank": 1}, {"id": "q2", "rank": 1}, {"id": "q3", "rank": None}]

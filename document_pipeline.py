@@ -764,6 +764,74 @@ def trim_by_margin(hits, margin):
     return [h for h in hits if h["score"] >= floor]
 
 
+# (추가) 낱말 포함 재순위 ---------------------------------------------------------------
+# 벡터 유사도만 쓰면 한 단어 검색에서 그 단어가 없는 쪽이나 짧은 표 조각이
+# 위로 올라온다. 질문의 낱말이 본문에 실제로 들어 있는 비율을 점수에 더해 순위를 다시 매긴다.
+_QUESTION_WORDS = {"어떻게", "무슨", "어느", "어떤", "얼마나", "얼마", "뭐야", "무엇",
+                   "있어", "해야", "이야", "대해"}
+SEARCH_POOL = 30      # 재순위 후보로 가져올 벡터 검색 결과 수
+SNIPPET_CHARS = 260   # 발췌 길이
+
+
+def query_terms(query):
+    """검색에 쓸 낱말 목록 (2글자 이상, 의문 표현 제외, 중복 제거)."""
+    out = []
+    # 영문·숫자와 한글을 따로 끊는다: 'QRS는' → 'QRS' (+ 1글자 '는' 은 버림), 'K700의' → 'K700'
+    for word in re.findall(r"[0-9A-Za-z_]+|[가-힣]+", query):
+        if len(word) >= 2 and word not in _QUESTION_WORDS and word not in out:
+            out.append(word)
+    return out
+
+
+def _term_forms(term):
+    """낱말과, 한글이면 조사·어미를 뗀 꼴('핀에' → '핀에', '핀' 은 2글자 미만이라 제외)."""
+    forms = [term.lower()]
+    if re.fullmatch(r"[가-힣]+", term):
+        forms += [term[:-cut] for cut in (1, 2) if len(term) - cut >= 2]
+    return forms
+
+
+def matched_terms(query, text):
+    """본문(띄어쓰기 무시, 대소문자 무시)에 들어 있는 질문 낱말."""
+    flat = re.sub(r"\s+", "", text).lower()
+    return [t for t in query_terms(query) if any(f in flat for f in _term_forms(t))]
+
+
+def make_snippet(text, terms, size=SNIPPET_CHARS):
+    """일치한 낱말이 처음 나오는 곳 주변을 잘라 보여 준다. 없으면 본문 앞부분."""
+    text = text.strip()
+    if len(text) <= size:
+        return text
+    start = None
+    for term in terms:
+        for form in _term_forms(term):
+            # PDF 추출 본문은 글자 사이에 공백이 끼어 있을 수 있어 공백을 허용해 찾는다
+            m = re.search(r"\s*".join(re.escape(ch) for ch in form), text, re.I)
+            if m and (start is None or m.start() < start):
+                start = m.start()
+            if m:
+                break
+    begin = max(0, (start or 0) - size // 3)
+    end = min(len(text), begin + size)
+    begin = max(0, end - size)
+    return ("… " if begin else "") + text[begin:end].strip() + (" …" if end < len(text) else "")
+
+
+def rerank_by_terms(hits, query, weight):
+    """벡터 점수에 (일치 낱말 비율 × weight)를 더해 다시 정렬한다. hits 의 score 는 벡터 점수."""
+    terms = query_terms(query)
+    out = []
+    for hit in hits:
+        found = matched_terms(query, hit.get("text", "")) if terms else []
+        coverage = len(found) / len(terms) if terms else 0.0
+        bonus = (weight or 0) * coverage
+        out.append({**hit, "vector_score": hit["score"], "term_coverage": round(coverage, 3),
+                    "matched_terms": found, "score": round(hit["score"] + bonus, 4),
+                    "snippet": make_snippet(hit.get("text", ""), found)})
+    out.sort(key=lambda h: -h["score"])
+    return out
+
+
 def search_uploaded(query, limit=5, document_id=None):
     if not query.strip() or len(query) > 2000:
         raise ValueError("검색어는 1~2000자여야 합니다.")
@@ -771,16 +839,19 @@ def search_uploaded(query, limit=5, document_id=None):
     if not es.indices.exists(index=DOCUMENT_INDEX):
         return []
     vector = embed_query(query)
+    # (변경) 후보를 넉넉히 가져와 낱말 포함 여부로 다시 정렬한 뒤 상위 limit 개를 돌려준다
+    pool = max(SEARCH_POOL, limit)
     knn = {"field": "embedding", "query_vector": vector,
-           "k": limit, "num_candidates": max(20, limit * 3)}
+           "k": pool, "num_candidates": max(150, pool * 3)}
     if document_id:
         _catalog_path(document_id)
         knn["filter"] = {"term": {"document_id": document_id}}
     response = es.search(
-        index=DOCUMENT_INDEX, size=limit, knn=knn,
+        index=DOCUMENT_INDEX, size=pool, knn=knn,
         source=["document_id", "chunk_id", "section_id", "filename",
                 "title", "page", "text", "source_order", "provenance"],
     )
-    return [{
+    hits = [{
         **hit["_source"], "score": round(hit["_score"], 4),
     } for hit in response["hits"]["hits"]]
+    return rerank_by_terms(hits, query, settings.SEARCH_TERM_WEIGHT)[:limit]

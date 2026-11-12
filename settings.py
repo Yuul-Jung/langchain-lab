@@ -56,6 +56,11 @@ try:
     SEARCH_SCORE_MARGIN = float(get("SEARCH_SCORE_MARGIN", "0.05"))
 except ValueError:
     SEARCH_SCORE_MARGIN = 0.05
+# (추가) 낱말 포함 재순위 가중치: 질문 낱말이 본문에 들어 있는 비율 × 이 값을 벡터 점수에 더한다 (0 이면 끔)
+try:
+    SEARCH_TERM_WEIGHT = float(get("SEARCH_TERM_WEIGHT", "0.10"))
+except ValueError:
+    SEARCH_TERM_WEIGHT = 0.10
 # (추가) 채팅 RAG 검색 대상: documents(업로드 문서, 기본) · lab(제1장 실습 문장) · both
 CHAT_RAG_SOURCE = get("CHAT_RAG_SOURCE", "documents").lower()
 
@@ -82,6 +87,7 @@ def describe() -> dict:
         "embedding_model": EMBEDDING_MODEL, "embedding_dims": EMBEDDING_DIMS,
         "es_rag_index": ES_RAG_INDEX, "es_document_index": ES_DOCUMENT_INDEX,
         "chat_rag_source": CHAT_RAG_SOURCE, "search_score_margin": SEARCH_SCORE_MARGIN,
+        "search_term_weight": SEARCH_TERM_WEIGHT,
         "llm_providers": LLM_PROVIDERS, "default_provider": DEFAULT_PROVIDER,
         "openai_configured": bool(OPENAI_API_KEY and OPENAI_MODEL),
         "anthropic_configured": bool(ANTHROPIC_API_KEY and ANTHROPIC_MODEL),

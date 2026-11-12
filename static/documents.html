@@ -102,7 +102,12 @@ $("search").onsubmit=async e=>{e.preventDefault();const root=$("results");root.r
 const data=await call("/api/documents/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:$("query").value,limit:5})});
 root.replaceChildren();if(!data.results.length){root.append(el("p","검색 결과 없음"));return}
 for(const hit of data.results){const card=el("article",null,"card");card.style.marginBottom="10px";
-card.append(el("h3",hit.filename+" · "+hit.title),el("small","점수 "+hit.score+" · 순서 "+hit.source_order+" · 페이지 "+(hit.page||"-")),el("p",hit.text));root.append(card)}
+// (변경) 점수 내역과 일치한 낱말을 보여 주고, 쪽 전체 대신 검색어 주변 발췌를 먼저 표시
+const terms=(hit.matched_terms||[]).length?" · 일치 낱말: "+hit.matched_terms.join(", "):" · 일치 낱말 없음";
+const detail=hit.vector_score!==undefined?" (벡터 "+hit.vector_score+" + 낱말 "+(hit.score-hit.vector_score).toFixed(4)+")":"";
+card.append(el("h3",hit.filename+" · "+hit.title),el("small","점수 "+hit.score+detail+" · 페이지 "+(hit.page||"-")+terms),el("p",hit.snippet||hit.text));
+if(hit.snippet&&hit.snippet!==hit.text){const more=document.createElement("details");more.append(el("summary","쪽 전체 보기 ("+hit.text.length+"자)"),el("p",hit.text));card.append(more)}
+root.append(card)}
 // (추가) 1위와 점수 차이가 커서 숨긴 결과 수 안내
 if(data.hidden){const note=el("p","관련도가 낮은 결과 "+data.hidden+"개는 숨겼습니다 (1위 점수와의 차이 "+data.margin+" 초과).");note.className="hint";root.append(note)}}catch(err){root.replaceChildren(el("p",err.message))}};
 $("healthBtn").onclick=async()=>{const b=$("healthBtn"),t=$("healthResult");b.disabled=true;t.textContent="연결 검사 중...";try{const d=await call("/api/documents/health/status");t.textContent="Elasticsearch: "+(d.elasticsearch.ok?"정상":d.elasticsearch.code+" · "+(d.elasticsearch.hint||"오류"))+"\nQwen3 임베딩: "+(d.embedding.ok?"정상":d.embedding.code+" · "+(d.embedding.hint||"오류"))+"\n검색 인덱스: "+d.document_index}catch(e){t.textContent="진단 실패: "+e.message}finally{b.disabled=false}};
