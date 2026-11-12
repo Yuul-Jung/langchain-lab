@@ -349,7 +349,7 @@ else if(sec&gt;=(isUpdate?300:180)){ /* 시간 초과 안내 */ }
 </tr>
 </tbody>
 </table>
-</section><section class="section" id="s06"><h2><span class="num">06</span>접근 제어: 이 PC 전용과 비밀번호 로그인</h2><p>지금까지 이 서비스의 보호 장치는 &quot;서버를 <code>127.0.0.1</code>에만 연다&quot; 하나였습니다. 다른 기기에서 쓰려는 계획(AI PC, 리버스 프록시)을 준비하면서 접근 제어를 넣었고(2026-11-12), 그 과정에서 <code>127.0.0.1</code> 전용 서버에도 있던 틈 두 개를 함께 막았습니다.</p>
+</section><section class="section" id="s06"><h2><span class="num">06</span>접근 제어: 이 PC 전용과 비밀번호 로그인</h2><p>지금까지 이 서비스의 보호 장치는 &quot;서버를 <code>127.0.0.1</code>에만 연다&quot; 하나였습니다. 다른 기기에서 쓰려는 계획(AI PC, 리버스 프록시)을 준비하면서 접근 제어를 넣었고(2026-11-12), 그 과정에서 <code>127.0.0.1</code> 전용 서버에도 있던 틈 세 개를 함께 막았습니다.</p>
 <table>
 <thead>
 <tr>
@@ -368,6 +368,11 @@ else if(sec&gt;=(isUpdate?300:180)){ /* 시간 초과 안내 */ }
   <td>다른 웹사이트가 내 서버에 쓰기 요청을 보냄</td>
   <td>악성 페이지가 내 브라우저로 업로드·재추출 요청을 보냄 (CSRF)</td>
   <td>변경을 일으키는 요청은 보낸 페이지의 주소(Origin)가 서버 주소와 같을 때만 허용</td>
+</tr>
+<tr>
+  <td>다른 웹사이트가 내 서버를 바쁘게 만듦</td>
+  <td>응답은 읽지 못해도, 무거운 읽기 요청(재추출 미리보기)을 뒤에서 반복 호출</td>
+  <td>다른 사이트의 페이지가 뒤에서 보내는 요청은 <code>/api/status</code>만 허용 (브라우저의 <code>Sec-Fetch-*</code> 표시로 판단)</td>
 </tr>
 </tbody>
 </table>
@@ -406,9 +411,19 @@ else if(sec&gt;=(isUpdate?300:180)){ /* 시간 초과 안내 */ }
   <td>거절 (403)</td>
   <td>거절 (403), 로그인한 상태여도</td>
 </tr>
+<tr>
+  <td>다른 웹사이트의 페이지가 뒤에서 보낸 요청 (<code>/api/status</code> 제외)</td>
+  <td>거절 (403)</td>
+  <td>거절 (403)</td>
+</tr>
+<tr>
+  <td>다른 웹사이트의 링크를 눌러 새 탭으로 열기</td>
+  <td>허용</td>
+  <td>로그인 규칙에 따름</td>
+</tr>
 </tbody>
 </table>
-<p><strong>파일</strong> <code>access_control.py</code> · 원본 발췌 · 단위 테스트 30개 통과</p>
+<p><strong>파일</strong> <code>access_control.py</code> · 원본 발췌 · 단위 테스트 36개 통과</p>
 <div class="codeblock"><div class="codebar"><span>python</span></div><pre><code>def same_origin(origin_header: str | None, host_header: str | None, allowed_hosts=()) -&gt; bool:
     &quot;&quot;&quot;Origin 이 없거나(브라우저가 아님) 이 서버의 주소와 같으면 True.&quot;&quot;&quot;
     if origin_header is None:
@@ -419,15 +434,31 @@ else if(sec&gt;=(isUpdate?300:180)){ /* 시간 초과 안내 */ }
     return origin_host == host_name(host_header) or origin_host in {h.lower() for h in allowed_hosts}
 
 
+def cross_site_background(path: str, fetch_site: str | None, fetch_mode: str | None,
+                          fetch_dest: str | None) -&gt; bool:
+    &quot;&quot;&quot;다른 사이트의 페이지가 뒤에서 보낸 요청인지 (새 탭·창으로 여는 것은 아님).
+
+    Sec-Fetch-* 가 없는 요청(curl, 오래된 브라우저)은 판단하지 않는다.
+    &quot;&quot;&quot;
+    if (fetch_site or &quot;&quot;).lower() != &quot;cross-site&quot; or path in CROSS_SITE_PATHS:
+        return False
+    top_level_navigation = (fetch_mode or &quot;&quot;).lower() == &quot;navigate&quot; and (fetch_dest or &quot;&quot;).lower() == &quot;document&quot;
+    return not top_level_navigation
+
+
 def decide(*, path: str, client_host: str | None, host_header: str | None,
            password_set: bool, authenticated: bool,
            require_loopback_auth: bool = False, allowed_hosts=(),
-           method: str = &quot;GET&quot;, origin_header: str | None = None) -&gt; str:
+           method: str = &quot;GET&quot;, origin_header: str | None = None,
+           fetch_site: str | None = None, fetch_mode: str | None = None,
+           fetch_dest: str | None = None) -&gt; str:
     &quot;&quot;&quot;요청을 어떻게 처리할지: allow · login(로그인 페이지로) · unauthorized(401) · forbidden · bad_host · bad_origin(403).
 
     순서가 중요하다. 로그인 없이 통과시키는 경우(루프백 신뢰)에만 Host 를 검사한다.
     &quot;&quot;&quot;
     if method.upper() in UNSAFE_METHODS and not same_origin(origin_header, host_header, allowed_hosts):
+        return &quot;bad_origin&quot;
+    if cross_site_background(path, fetch_site, fetch_mode, fetch_dest):
         return &quot;bad_origin&quot;
     local = is_loopback(client_host)
     if not password_set:
@@ -519,12 +550,20 @@ curl -s http://127.0.0.1:8000/api/status | python3 -m json.tool | grep access_mo
   <td>200 · 204</td>
 </tr>
 <tr>
+  <td>공개 시작 페이지의 링크로 채팅·문서 관리·연결 진단을 새 탭에 열기</td>
+  <td>200</td>
+</tr>
+<tr>
   <td>주소 이름 <code>evil.example</code></td>
   <td>403</td>
 </tr>
 <tr>
   <td>Origin <code>https://evil.example</code>인 POST</td>
   <td>403</td>
+</tr>
+<tr>
+  <td>다른 사이트가 뒤에서 미리보기를 호출 / iframe으로 문서 화면을 넣음</td>
+  <td>403 / 403</td>
 </tr>
 </tbody>
 </table>
@@ -576,7 +615,8 @@ curl -s http://127.0.0.1:8000/api/status | python3 -m json.tool | grep access_mo
 <ul>
 <li>사용자별 계정이 아니라 비밀번호 하나를 함께 쓰는 방식입니다. 문서별 접근 권한은 없습니다.</li>
 <li>같은 PC에 리버스 프록시를 두고 <code>AUTH_REQUIRE_LOOPBACK=true</code>로 하면 <code>scripts/</code>의 점검 명령도 로그인이 필요해지는데, 스크립트의 로그인 처리는 만들지 않았습니다.</li>
-<li>요청 횟수 제한은 로그인에만 있습니다. 업로드·채팅의 사용량 제한은 없습니다.</li>
+<li>요청 횟수 제한은 로그인에만 있습니다. 업로드·채팅의 사용량 제한은 없습니다. 리버스 프록시 뒤에서는 모든 사용자가 같은 주소로 보이므로, 한 사람이 5번 틀리면 모두의 로그인이 5분 동안 막힙니다.</li>
+<li><code>Sec-Fetch-*</code> 표시가 없는 오래된 브라우저에서는 세 번째 보호가 동작하지 않습니다.</li>
 </ul>
 </section><section class="section" id="s07"><h2><span class="num">07</span>공개 페이지 버튼별 점검</h2><p>실측 (2026-11-12, 사용자 PC의 Chrome):</p>
 <table>
@@ -763,7 +803,7 @@ cd education &amp;&amp; ../.venv/bin/python build.py
 </ul>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
 <footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v08  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v08.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v08.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}, {"id": "ch04", "number": 4, "title": "설정 분리와 모델 선택", "file": "ch04_settings_model_selection_v02.html"}, {"id": "ch05", "number": 5, "title": "공개 페이지와 로컬 운영", "file": "ch05_public_page_operations_v03.html"}, {"id": "ch06", "number": 6, "title": "검색 품질 평가와 개선", "file": "ch06_search_quality_evaluation_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v08.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v08.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}, {"id": "ch04", "number": 4, "title": "설정 분리와 모델 선택", "file": "ch04_settings_model_selection_v02.html"}, {"id": "ch05", "number": 5, "title": "공개 페이지와 로컬 운영", "file": "ch05_public_page_operations_v04.html"}, {"id": "ch06", "number": 6, "title": "검색 품질 평가와 개선", "file": "ch06_search_quality_evaluation_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;

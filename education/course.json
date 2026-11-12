@@ -74,7 +74,7 @@
       "title": "공개 페이지와 로컬 운영",
       "subtitle": "GitHub Pages 시작 페이지 → 실행 버튼 → 상태 확인 → 업데이트 완료 판정 → 접근 제어 → 다른 PC로 옮길 준비 → 교재 게시",
       "slug": "ch05_public_page_operations",
-      "version": "v03",
+      "version": "v04",
       "source": "content/ch05.md",
       "tags": [
         "GitHub Pages",
