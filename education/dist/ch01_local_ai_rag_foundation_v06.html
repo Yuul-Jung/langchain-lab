@@ -8,6 +8,7 @@
 /* (추가) langchain-lab: 좁은 화면에서 표 안의 긴 코드·식별자가 페이지 가로 넘침을 만들지 않도록 줄바꿈 허용 */
 .section td,.section th{overflow-wrap:anywhere}
 .section td code,.section th code{word-break:break-all}
+.section p code,.section li code{overflow-wrap:anywhere;word-break:break-all}
 </style></head><body data-chapter="ch01">
 <button type="button" class="mobile-menu" id="mobile-menu" aria-controls="course-nav" aria-expanded="false">☰ 장·목차</button><div class="shade" id="shade"></div>
 <header class="hero"><div class="hero-inner"><p class="kicker">LANGCHAIN LAB · CHAPTER 01</p><h1>제01장 · 로컬 AI/RAG 기반 구축</h1><p>LM Studio 모델 → LangChain 호출 → 임베딩 → Elasticsearch 벡터 검색 → FastAPI 웹 → GitHub 배포</p><div class="chips"><span class="chip">LM Studio</span><span class="chip">LangChain</span><span class="chip">Elasticsearch 9</span><span class="chip">FastAPI</span><span class="chip">systemd</span></div></div></header>
@@ -411,7 +412,12 @@ cd ~/langchain_web &amp;&amp; bash scripts/update-local.sh
 <tr>
   <td><code>setup-local.sh</code></td>
   <td>처음 PC 기본 세팅</td>
-  <td>가짜 프로그램으로 두 시나리오(처음·재실행) 통과, 실제 PC 실행은 미검증</td>
+  <td>통과 (가짜 프로그램 두 시나리오 + 실제 PC 7단계 모두 정상)</td>
+</tr>
+<tr>
+  <td>▶ 로컬 서비스 시작</td>
+  <td><code>langchainlab://start</code> → 터미널에서 <code>start-local.sh</code></td>
+  <td>통과 (실행기 로그 <code>실행: start</code>, 페이지 자동 확인 &quot;시작 완료 4초&quot;)</td>
 </tr>
 </tbody>
 </table>
@@ -424,14 +430,81 @@ cd ~/langchain_web
 # education/course.json + content/ch0N.md → education/dist/*.html
 cd education &amp;&amp; ../.venv/bin/python build.py
 </code></pre></div>
-<p>실측 출력 (2026-11-12, 제1장 v05 개정 후):</p>
+<p>실측 출력 (2026-11-12, 제1장 v06 개정 후):</p>
 <div class="codeblock"><div class="codebar"><span>text</span></div><pre><code>생성 완료: 4 개 HTML 파일
-  …/education/dist/ch01_local_ai_rag_foundation_v05.html
+  …/education/dist/ch01_local_ai_rag_foundation_v06.html
   …/education/dist/ch02_document_ingestion_v01.html
   …/education/dist/ch03_vlm_ocr_recovery_v03.html
   …/education/dist/index.html
 </code></pre></div>
 <p>장을 고치면 <code>course.json</code>에서 그 장의 <code>version</code>을 <code>v02</code>로 올립니다. 생성기는 <code>dist/</code>의 이전 버전 파일을 지웁니다.</p>
+<h3>공개 페이지 버튼으로 내 PC에서 실행</h3>
+<p>웹페이지는 브라우저 보안 때문에 PC 프로그램을 직접 실행할 수 없습니다. 그래서 기본 세팅 6단계가 현재 사용자 계정에 <code>langchainlab://</code> <strong>링크 처리기</strong>를 한 번 등록합니다. 그 뒤로는 공개 페이지 버튼으로 실행합니다.</p>
+<div class="codeblock"><div class="codebar"><span>text</span></div><pre><code>공개 페이지 버튼 (href=&quot;langchainlab://start&quot;)
+   ↓  Chrome 확인창 &quot;xdg-open 열기&quot; → 허용
+Ubuntu 링크 처리기 (~/.local/share/applications/langchainlab-launcher.desktop)
+   ↓
+scripts/url-launcher.sh  ── 허용 목록: start · update · setup
+   ↓
+터미널 창에서 start-local.sh / update-local.sh / setup-local.sh 실행
+   ↓  (동시에) 공개 페이지가 4초마다 /api/status 확인 → &quot;완료: 모두 정상입니다&quot;
+</code></pre></div>
+<table>
+<thead>
+<tr>
+  <th>버튼</th>
+  <th>실행 스크립트</th>
+  <th>하는 일</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>▶ 로컬 서비스 시작</td>
+  <td><code>start-local.sh</code></td>
+  <td>FastAPI·LM Studio 서버 시작, 채팅·임베딩 모델 로드</td>
+</tr>
+<tr>
+  <td>⟳ 최신 버전으로 업데이트</td>
+  <td><code>update-local.sh</code></td>
+  <td>GitHub 최신 코드, 테스트, 서비스 재시작</td>
+</tr>
+<tr>
+  <td>⚙ 기본 세팅 다시 실행</td>
+  <td><code>setup-local.sh</code></td>
+  <td>전체 점검·세팅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>파일</strong> <code>scripts/url-launcher.sh</code> · 원본 발췌 · 주입 시험 통과</p>
+<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code>url=&quot;${1:-}&quot;
+# langchainlab://start , langchainlab://start/ , langchainlab:start 모두 허용
+action=&quot;${url#langchainlab:}&quot;
+action=&quot;${action#//}&quot;
+action=&quot;${action%%[/?#]*}&quot;
+
+case &quot;$action&quot; in
+  start)  script=&quot;start-local.sh&quot;;  title=&quot;LangChain Lab · 서비스 시작&quot; ;;
+  update) script=&quot;update-local.sh&quot;; title=&quot;LangChain Lab · 업데이트&quot; ;;
+  setup)  script=&quot;setup-local.sh&quot;;  title=&quot;LangChain Lab · 기본 세팅&quot; ;;
+  *)
+    printf '%s 거부된 요청: %q\n' &quot;$(date '+%F %T')&quot; &quot;$url&quot; &gt;&gt;&quot;$LOG&quot;
+    ...
+    exit 2
+    ;;
+esac
+</code></pre></div>
+<p><strong>코드 풀이</strong></p>
+<ul>
+<li>링크 주소는 어느 웹사이트에서나 만들 수 있으므로 <strong>동작 이름 세 개만</strong> 받습니다. 주소의 나머지(경로·인자·쿼리)는 쓰지 않고 셸에 넘기지 않습니다.</li>
+<li><code>langchainlab://start;touch …</code>, <code>langchainlab://$(…)</code>, 다른 사이트 주소 등 주입 시도 9종을 시험해 모두 거부되고 <code>~/.local/state/langchain-lab/launcher.log</code>에 기록되는 것을 확인했습니다.</li>
+<li>실행 전에 Chrome이 반드시 확인창을 띄웁니다. &quot;항상 허용&quot;에 체크하면 이 사이트에서는 다음부터 묻지 않습니다.</li>
+<li>해제: <code>rm ~/.local/share/applications/langchainlab-launcher.desktop</code></li>
+</ul>
+<p>실측 기록 (2026-11-12):</p>
+<div class="codeblock"><div class="codebar"><span>text</span></div><pre><code>$ tail -3 ~/.local/state/langchain-lab/launcher.log
+2026-11-12 16:49:57 실행: start
+2026-11-12 16:51:28 실행: start
+</code></pre></div>
 <h3>공개 페이지에서 내 PC 상태 확인</h3>
 <p>공개 시작 페이지의 <strong>③ 로컬 프로그램 상태 확인</strong> 버튼은 브라우저에서 <code>http://127.0.0.1:8000/api/status</code>에 상태만 묻습니다. 서비스가 실행 중인 바로 그 PC의 브라우저에서만 동작하고, Chrome이 &quot;로컬 네트워크 기기 접근&quot;을 물으면 허용합니다.</p>
 <p><strong>파일</strong> <code>local_status.py</code> · 원본 발췌 · 단위 테스트 통과</p>
@@ -641,9 +714,14 @@ sources: motor_hot 0.8531 · motor_temp 0.8146 · weather 0.6654
   <td>통과</td>
 </tr>
 <tr>
-  <td>처음 PC 기본 세팅 <code>setup-local.sh</code></td>
-  <td>가짜 프로그램 시나리오 통과</td>
-  <td>미검증 (실제 PC)</td>
+  <td>기본 세팅 <code>setup-local.sh</code> (실제 PC)</td>
+  <td>7단계 모두 [정상], 최종 상태 5개 ✅ (2026-11-12)</td>
+  <td>통과</td>
+</tr>
+<tr>
+  <td>공개 페이지 실행 버튼</td>
+  <td>▶ 클릭 → Chrome 확인 → 실행기 로그 <code>실행: start</code> 기록, 페이지 &quot;시작 완료&quot; (2026-11-12)</td>
+  <td>통과</td>
 </tr>
 <tr>
   <td>비전·채팅 모델 동시 로드</td>
@@ -661,8 +739,8 @@ sources: motor_hot 0.8531 · motor_temp 0.8146 · weather 0.6654
 <li>다음 장에서는 PDF·DOCX·HTML 문서를 업로드해 구조를 추출하고 전용 인덱스에 등록합니다.</li>
 </ul>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
-<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v05  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v05.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v06  · 실습 결과는 실제 환경에서 검증</footer>
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v06.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;

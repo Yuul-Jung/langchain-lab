@@ -181,7 +181,7 @@ systemctl --user restart langchain-lab
 - [제작 규칙](https://github.com/Yuul-Jung/rule_md/blob/main/web/education-html/STANDARD.md)
 - [다른 저장소 적용 안내](https://github.com/Yuul-Jung/rule_md/blob/main/web/education-html/INTEGRATION.md)
 - [기준 디자인 사례](https://github.com/Yuul-Jung/ai-agent-engineering)
-- 적용 기준 커밋: `rule_md@38f7b0a` (`build.py`, `assets/` 복사). `assets/site.css` 끝에 모바일 표 넘침 방지 규칙 3줄을 `(추가)` 표시로 덧붙였습니다.
+- 적용 기준 커밋: `rule_md@38f7b0a` (`build.py`, `assets/` 복사). `assets/site.css` 끝에 모바일 가로 넘침 방지 규칙(표·문단 속 긴 코드 줄바꿈)을 `(추가)` 표시로 덧붙였습니다.
 
 ```bash
 # 교재 수정 후 다시 생성 (mistune 은 교재 생성에만 필요, 서비스 실행과 무관)

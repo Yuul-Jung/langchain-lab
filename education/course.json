@@ -3,7 +3,7 @@
   "site_subtitle": "LM Studio · LangChain · Elasticsearch · FastAPI · Qwen3-VL",
   "site_description": "Ubuntu 노트북 한 대에서 로컬 언어 모델, 임베딩, 벡터 검색, 문서 구조화, 페이지 이미지 분석까지 단계별로 구축하고, 실제로 성공한 결과와 아직 검증하지 않은 부분을 구분해 기록한 실습 교재입니다.",
   "course_code": "LANGCHAIN LAB",
-  "version": "v05",
+  "version": "v06",
   "chapters": [
     {
       "id": "ch01",
@@ -11,7 +11,7 @@
       "title": "로컬 AI/RAG 기반 구축",
       "subtitle": "LM Studio 모델 → LangChain 호출 → 임베딩 → Elasticsearch 벡터 검색 → FastAPI 웹 → GitHub 배포",
       "slug": "ch01_local_ai_rag_foundation",
-      "version": "v05",
+      "version": "v06",
       "source": "content/ch01.md",
       "tags": [
         "LM Studio",

@@ -3,3 +3,4 @@
 /* (추가) langchain-lab: 좁은 화면에서 표 안의 긴 코드·식별자가 페이지 가로 넘침을 만들지 않도록 줄바꿈 허용 */
 .section td,.section th{overflow-wrap:anywhere}
 .section td code,.section th code{word-break:break-all}
+.section p code,.section li code{overflow-wrap:anywhere;word-break:break-all}
