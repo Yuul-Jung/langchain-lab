@@ -53,6 +53,16 @@ cd ~/langchain_web && git pull --ff-only origin main
 
 ## Ubuntu 최초 설정 (한 번만)
 
+**한 줄 기본 세팅 (권장, 다시 실행해도 안전):**
+
+```bash
+[ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; bash ~/langchain_web/scripts/setup-local.sh
+```
+
+필수 프로그램·CA 인증서 확인 → `.env` 생성 → `update-local.sh` → LM Studio 모델 준비 → 최종 상태 출력까지 진행합니다. 아래는 같은 과정을 수동으로 하는 방법입니다.
+
+### 수동 설정
+
 LM Studio에서 Local Server를 시작하고 DeepSeek와 Qwen3-Embedding 모델을 사용할 수 있도록 설정합니다.
 
 ```bash

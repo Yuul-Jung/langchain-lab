@@ -330,13 +330,17 @@ http://127.0.0.1:8000/                          (내 PC 에서만)
    ├─ /                   일반 채팅 / RAG 채팅
    └─ /documents          문서 관리자 (제2장)
 </code></pre></div>
-<p>공개 페이지의 <strong>명령 복사</strong> 버튼이 주는 두 명령:</p>
-<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># 최초 설정 또는 소스 업데이트 (필요할 때만)
-cd ~/langchain_web &amp;&amp; bash scripts/update-local.sh
+<p>공개 페이지의 <strong>명령 복사</strong> 버튼이 주는 세 명령:</p>
+<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># ① 처음 한 번: 기본 세팅 (프로젝트가 없으면 내려받고, 있으면 그대로 사용 · 다시 실행해도 안전)
+[ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; bash ~/langchain_web/scripts/setup-local.sh
 
 # 평소 실행 (매번 이 명령 하나)
 cd ~/langchain_web &amp;&amp; bash scripts/start-local.sh
+
+# 소스 업데이트 (GitHub에 새 버전이 올라왔을 때)
+cd ~/langchain_web &amp;&amp; bash scripts/update-local.sh
 </code></pre></div>
+<p>미리 필요한 것은 <strong>LM Studio</strong>(DeepSeek-R1-Distill-Qwen-14B, Qwen3-Embedding-4B 내려받기)와 <strong>Elasticsearch 9</strong> 설치입니다. 이 둘은 관리자 권한과 대용량 내려받기가 필요해 스크립트가 대신 설치하지 않고, 빠졌으면 무엇이 빠졌는지와 조치 명령을 알려 줍니다.</p>
 <table>
 <thead>
 <tr>
@@ -346,6 +350,11 @@ cd ~/langchain_web &amp;&amp; bash scripts/start-local.sh
 </tr>
 </thead>
 <tbody>
+<tr>
+  <td><code>setup-local.sh</code></td>
+  <td>① 필수 프로그램(git·python3·venv·systemd·lms·9200 포트) ② CA 인증서 ③ <code>.env</code> 없으면 비밀번호 입력 ④ <code>update-local.sh</code> ⑤ LM Studio 서버 시작, 임베딩·채팅 모델이 안 올라가 있으면 로드 ⑥ <code>/api/status</code> 최종 상태 출력</td>
+  <td><code>sudo</code> 자동 실행, 기존 <code>.env</code> 덮어쓰기, 이미 올라간 모델 내리기</td>
+</tr>
 <tr>
   <td><code>update-local.sh</code></td>
   <td>① <code>git pull --ff-only</code> ② 가상환경 확인 ③ 패키지 설치 ④ 구문 검사 ⑤ 오프라인 단위 테스트 ⑥ 서비스 재시작 ⑦ 문서 API·연결 진단</td>
@@ -358,6 +367,54 @@ cd ~/langchain_web &amp;&amp; bash scripts/start-local.sh
 </tr>
 </tbody>
 </table>
+<h3>공개 페이지 버튼별 점검 (2026-11-12, 사용자 PC의 Chrome)</h3>
+<table>
+<thead>
+<tr>
+  <th>버튼·링크</th>
+  <th>하는 일</th>
+  <th>결과</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>명령 복사 ×3</td>
+  <td>기본 세팅 · 평소 실행 · 업데이트 명령 복사</td>
+  <td>통과 (화면 표시 명령과 복사 내용 일치)</td>
+</tr>
+<tr>
+  <td>③ 상태 확인</td>
+  <td>내 PC <code>/api/status</code> 조회</td>
+  <td>통과 (5개 항목 ✅)</td>
+</tr>
+<tr>
+  <td>② 로컬 AI 채팅 열기</td>
+  <td>새 탭으로 <code>127.0.0.1:8000</code></td>
+  <td>통과</td>
+</tr>
+<tr>
+  <td>└ 채팅 화면: RAG 모드 → 질문 입력 → 전송</td>
+  <td>검색 근거 3건 + 한국어 답변</td>
+  <td>통과 (첫 시도 1회는 &quot;다른 언어 혼용&quot; 안내로 대체, 같은 질문 재시도 3회는 정상)</td>
+</tr>
+<tr>
+  <td>PDF 문서 관리자 → 연결 진단 실행</td>
+  <td>Elasticsearch·임베딩 진단</td>
+  <td>통과 (둘 다 정상)</td>
+</tr>
+<tr>
+  <td>교육과정·기존 교재·CSS 링크 ×6</td>
+  <td>같은 사이트의 학습 자료</td>
+  <td>통과 (모두 200)</td>
+</tr>
+<tr>
+  <td><code>setup-local.sh</code></td>
+  <td>처음 PC 기본 세팅</td>
+  <td>가짜 프로그램으로 두 시나리오(처음·재실행) 통과, 실제 PC 실행은 미검증</td>
+</tr>
+</tbody>
+</table>
+<p><strong>관찰</strong> — DeepSeek-R1 14B는 같은 질문에도 드물게 다른 언어가 섞인 답을 냅니다. 서버는 한 번 한국어로 다시 쓰게 하고, 그래도 섞이면 사실을 지어내지 않도록 안내 문구로 대체합니다. 이때는 같은 질문을 다시 보내면 됩니다. 문서 관리자에는 11월 10일 <code>failed</code> 상태로 남은 문서가 있어, 제2장의 <strong>구조 보기 → 벡터 등록 재시도</strong>로 정리합니다.</p>
 <p><strong>교재 생성</strong> — 이 교재는 <a href="https://github.com/Yuul-Jung/rule_md/tree/main/web/education-html">Yuul-Jung 교육용 HTML 표준</a>의 생성기로 만듭니다. 원고는 Markdown이고, 생성된 HTML에 이미지·스타일·스크립트가 모두 들어 있어 파일 하나로 열립니다.</p>
 <div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># 교재 생성 도구 설치 (교재를 고칠 때만 필요)
 cd ~/langchain_web
@@ -366,9 +423,9 @@ cd ~/langchain_web
 # education/course.json + content/ch0N.md → education/dist/*.html
 cd education &amp;&amp; ../.venv/bin/python build.py
 </code></pre></div>
-<p>실측 출력 (2026-11-12, 제1·3장 v03 개정 후):</p>
+<p>실측 출력 (2026-11-12, 제1장 v04 개정 후):</p>
 <div class="codeblock"><div class="codebar"><span>text</span></div><pre><code>생성 완료: 4 개 HTML 파일
-  …/education/dist/ch01_local_ai_rag_foundation_v03.html
+  …/education/dist/ch01_local_ai_rag_foundation_v04.html
   …/education/dist/ch02_document_ingestion_v01.html
   …/education/dist/ch03_vlm_ocr_recovery_v03.html
   …/education/dist/index.html
@@ -579,8 +636,13 @@ sources: motor_hot 0.8531 · motor_temp 0.8146 · weather 0.6654
 </tr>
 <tr>
   <td>GitHub Pages 실행 게이트</td>
-  <td>공개 페이지 ③ 상태 확인 → 내 PC 5개 항목 모두 ✅ (2026-11-12, Chrome)</td>
+  <td>공개 페이지 ③ 상태 확인 → 내 PC 5개 항목 모두 ✅, 버튼·링크 전체 점검 (2026-11-12, Chrome)</td>
   <td>통과</td>
+</tr>
+<tr>
+  <td>처음 PC 기본 세팅 <code>setup-local.sh</code></td>
+  <td>가짜 프로그램 시나리오 통과</td>
+  <td>미검증 (실제 PC)</td>
 </tr>
 <tr>
   <td>비전·채팅 모델 동시 로드</td>
@@ -598,8 +660,8 @@ sources: motor_hot 0.8531 · motor_temp 0.8146 · weather 0.6654
 <li>다음 장에서는 PDF·DOCX·HTML 문서를 업로드해 구조를 추출하고 전용 인덱스에 등록합니다.</li>
 </ul>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
-<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v03  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v03.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v04  · 실습 결과는 실제 환경에서 검증</footer>
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v04.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;

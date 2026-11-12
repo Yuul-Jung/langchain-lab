@@ -223,6 +223,7 @@ def chat(body: ChatRequest):
         raise HTTPException(status_code=502, detail="LM Studio 모델 응답 실패. " + hint) from exc
     return {
         "model": CHAT_MODEL, "mode": body.mode,
-        "answer": answer,
+        # (변경) DeepSeek-R1 답변 앞의 빈 줄(추론 블록 뒤 개행)이 채팅 말풍선에 공백으로 보이지 않게 정리
+        "answer": answer.strip(),
         "sources": sources,
     }
