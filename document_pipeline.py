@@ -63,6 +63,37 @@ def _clean(value):
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
+# (추가) 일부 한글 PDF는 띄어쓰기 글리프의 ToUnicode 표가 잘못되어 pypdf가 공백을
+# 엉뚱한 한자 한 글자(예: '堺')로 읽는다. 문서 전체에서 같은 한자 하나가 반복해서
+# 한글과 한글 사이에만 끼어 있으면 공백이 깨진 것으로 보고 되돌린다.
+# 진짜 한자 표기('(株)', '研究')는 한글 사이에 반복되지 않으므로 바꾸지 않는다.
+_HAN = re.compile(r"[\u4e00-\u9fff]")
+_HANGUL = re.compile(r"[\uac00-\ud7a3]")
+
+
+def broken_space_glyphs(text, min_count=5, min_ratio=0.6):
+    """공백이 깨진 것으로 보이는 한자 집합."""
+    counts = defaultdict(int)
+    between_hangul = defaultdict(int)
+    for i, ch in enumerate(text):
+        if not _HAN.match(ch):
+            continue
+        counts[ch] += 1
+        if 0 < i < len(text) - 1 and _HANGUL.match(text[i - 1]) and _HANGUL.match(text[i + 1]):
+            between_hangul[ch] += 1
+    return {ch for ch, n in counts.items()
+            if n >= min_count and between_hangul[ch] / n >= min_ratio}
+
+
+def repair_broken_spaces(texts):
+    """페이지 텍스트 목록에서 깨진 공백 한자를 공백으로 바꾼다. (수정본, 바꾼 글자) 반환."""
+    glyphs = broken_space_glyphs("\n".join(texts))
+    if not glyphs:
+        return list(texts), set()
+    table = {ord(ch): " " for ch in glyphs}
+    return [t.translate(table) for t in texts], glyphs
+
+
 def _new_section(number, title, text, page=None, level=1, parent=None):
     return {
         "id": f"s{number:04d}", "source_order": number, "title": _clean(title)[:MAX_HEADING],
@@ -85,8 +116,11 @@ def _parse_pdf(path):
         r"^(?:[1-9][0-9]?\.\s+[^\n]{2,65}|"
         r"제\s*[1-9][0-9]?\s*[장절]\s*[^\n]{2,65})$"
     )
-    for page_no, page in enumerate(reader.pages, 1):
-        text = (page.extract_text() or "").strip()
+    # (변경) 문서 전체를 먼저 읽어 깨진 공백 한자를 판별·복원한 뒤 페이지별로 처리한다.
+    page_texts, _ = repair_broken_spaces(
+        [(page.extract_text() or "").strip() for page in reader.pages]
+    )
+    for page_no, text in enumerate(page_texts, 1):
         if not text:
             continue
         lines = text.splitlines()

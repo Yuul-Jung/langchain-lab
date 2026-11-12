@@ -12,6 +12,7 @@ on:
       - 'vlm_ocr.py'
       - 'local_status.py'
       - 'tests/test_local_status.py'
+      - 'tests/test_pdf_text_repair.py'
       - 'index.html'
       - 'scripts/**'
       - 'tests/test_vlm_ocr.py'
