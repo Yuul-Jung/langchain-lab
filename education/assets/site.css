@@ -4,3 +4,6 @@
 .section td,.section th{overflow-wrap:anywhere}
 .section td code,.section th code{word-break:break-all}
 .section p code,.section li code{overflow-wrap:anywhere;word-break:break-all}
+
+/* (추가) langchain-lab v07: 구조도 SVG 그림을 본문 폭에 맞춰 표시 */
+.section img{display:block;max-width:100%;height:auto;margin:18px auto}

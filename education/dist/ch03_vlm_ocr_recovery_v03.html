@@ -9,6 +9,9 @@
 .section td,.section th{overflow-wrap:anywhere}
 .section td code,.section th code{word-break:break-all}
 .section p code,.section li code{overflow-wrap:anywhere;word-break:break-all}
+
+/* (추가) langchain-lab v07: 구조도 SVG 그림을 본문 폭에 맞춰 표시 */
+.section img{display:block;max-width:100%;height:auto;margin:18px auto}
 </style></head><body data-chapter="ch03">
 <button type="button" class="mobile-menu" id="mobile-menu" aria-controls="course-nav" aria-expanded="false">☰ 장·목차</button><div class="shade" id="shade"></div>
 <header class="hero"><div class="hero-inner"><p class="kicker">LANGCHAIN LAB · CHAPTER 03</p><h1>제03장 · 페이지 이미지 VLM 분석과 OCR 대조</h1><p>300dpi 페이지 → Tesseract OCR · Qwen3-VL → 식별자 대조 → 사람 검토</p><div class="chips"><span class="chip">Qwen3-VL 4B</span><span class="chip">Tesseract</span><span class="chip">HTTP 400 진단</span><span class="chip">OCR 대조</span></div></div></header>
@@ -450,8 +453,8 @@ echo 'H4sI…' | base64 -d | gunzip &gt; script.py &amp;&amp; python3 -m py_comp
 제2장 파이프라인 연결 — 보정된 텍스트를 langchain_documents_v1 에 페이지 출처와 함께 색인
 </code></pre></div>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
-<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v06  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v06.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v07  · 실습 결과는 실제 환경에서 검증</footer>
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v07.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v02.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}, {"id": "ch04", "number": 4, "title": "설정 분리와 모델 선택", "file": "ch04_settings_model_selection_v01.html"}, {"id": "ch05", "number": 5, "title": "공개 페이지와 로컬 운영", "file": "ch05_public_page_operations_v01.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;

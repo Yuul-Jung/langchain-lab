@@ -14,6 +14,8 @@ p{color:#52647c;margin:7px 0 14px}
 .card{background:white;border:1px solid #dbe4ef;border-radius:20px;padding:25px;display:flex;flex-direction:column}
 .card.featured{background:#eaf2ff;border-color:#d4e2f7}
 .card p{flex:1;font-size:17px}
+/* (추가) 좁은 화면(320px)에서 카드가 화면 밖으로 넘치지 않도록 축소·줄바꿈 허용 */
+.cards>.card{min-width:0}.card h3,.card p,.card .label{overflow-wrap:anywhere}
 .label{font-size:15px;font-weight:800;color:#315d96}
 a.button{display:inline-block;align-self:flex-start;padding:12px 19px;background:#245db1;color:white;text-decoration:none;border-radius:11px;font-size:17px;font-weight:700;margin-top:10px}
 a.button.secondary{background:#edf3fc;color:#24518e;border:1px solid #d6e3f5}
@@ -108,12 +110,14 @@ footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:1
 </section>
 <p class="hint">로컬 주소가 열리지 않으면 먼저 실행 명령의 진단 결과를 확인하세요. 외부 GitHub Pages에서는 운영체제 보안상 로컬 서비스를 직접 시작할 수 없습니다. 상태 확인(③)은 서비스가 실행 중인 PC의 브라우저에서만 동작합니다.</p>
 </section>
-<h2>학습 교재 바로가기</h2><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">교육과정 · 제1~3장 · 표준 HTML 교재</div><h3>로컬 AI/RAG 시스템 구축 실습 — 기반 구축 · 문서 구조화 · 페이지 이미지 VLM·OCR</h3><p>LM Studio·LangChain·Elasticsearch·FastAPI 구축부터 문서 업로드·색인, Qwen3-VL과 Tesseract OCR 대조까지 실제 성공 결과와 미검증 항목을 구분해 정리한 연속 교재입니다.</p><a class="button" href="education/dist/index.html">교육과정 열기 →</a></article></section><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">CHAPTER 02 · 신규 실습</div><h3>문서 업로드 · 자동 분류 · 학습 순서 · 지식 관계 생성</h3><p>제1장 구축 과정을 확장한 제2장 학습안내서입니다. 원본 구조 추출부터 Elasticsearch 인덱싱까지 코드·출력·풀이·구조도로 구성했습니다.</p><a class="button" href="docs/ch02-document-ingestion.html">제2장 학습안내서 열기 →</a></article></section><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">신규 · 샘플 기준 심화 개정판</div><h3>로컬 AI/RAG 구축 실습 — 코드 · 실행 결과 · 풀이 · 구조도</h3><p>손글씨 숫자 학습 HTML 샘플의 구성 밀도를 기준으로 전체 과정을 15절로 재작성했습니다. 9개의 코드 실습과 10개의 구조도를 포함합니다.</p><a class="button" href="docs/learning-guide-detailed.html">심화 실습 교재 열기 →</a></article></section>
-<section class="cards">
-<article class="card featured"><div class="label">01 · 디자인 표준</div><h3>블록다이어그램 표준 템플릿 + 구조도 6종</h3><p>시스템 구성도, RAG 흐름도, 벡터 검색, 서버 자동 시작, 오류 진단, PDF 등록 구조도를 제공합니다.</p><a class="button" href="docs/diagram-style-guide.html">구조도 교재 열기 →</a></article>
-<article class="card"><div class="label">02 · 구축 과정</div><h3>LM Studio + LangChain + Elasticsearch 실습 교재</h3><p>개발 환경부터 임베딩, HTTPS 인증, 벡터 검색, FastAPI 채팅, 오류 해결까지 실제 검증 과정을 정리합니다.</p><a class="button" href="docs/learning-guide.html">전체 실습 교재 열기 →</a></article>
-<article class="card"><div class="label">03 · 재사용 도구</div><h3>공통 CSS 디자인 시스템</h3><p>다른 HTML 문서에도 동일한 색상·글꼴·박스 배치를 적용할 수 있는 스타일 소스입니다.</p><a class="button secondary" href="docs/diagram-components.css">공통 CSS 보기 →</a></article>
-<article class="card"><div class="label">04 · 소스코드</div><h3>GitHub 개발 프로젝트</h3><p>FastAPI, LangChain, RAG 검색, 자동 실행 스크립트 등 실제 소스 파일을 확인할 수 있습니다.</p><a class="button secondary" href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소 열기 →</a></article>
+<h2>학습 교재 바로가기</h2><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">교육과정 · 목차 + 제1~5장 · 표준 HTML 교재 v07</div><h3>로컬 AI/RAG 시스템 구축 실습 — 기반 구축 · 문서 구조화 · VLM·OCR · 모델 선택 · 운영</h3><p>LM Studio·LangChain·Elasticsearch·FastAPI 구축부터 문서 업로드·색인, Qwen3-VL과 OCR 대조, 설정 분리와 대형 LLM API 선택, 공개 페이지 운영까지 실제 성공 결과와 미검증 항목을 구분해 정리한 연속 교재입니다.</p><a class="button" href="education/dist/index.html">교육과정 목차 열기 →</a></article></section>
+<section class="cards" style="margin-bottom:20px">
+<article class="card"><div class="label">CHAPTER 01</div><h3>로컬 AI/RAG 기반 구축</h3><p>LM Studio · LangChain · 임베딩 · Elasticsearch 벡터 검색 · FastAPI RAG 웹 · systemd</p><a class="button secondary" href="education/dist/ch01_local_ai_rag_foundation_v07.html">제1장 열기 →</a></article>
+<article class="card"><div class="label">CHAPTER 02</div><h3>문서 업로드와 지식 구조화</h3><p>원본 구조 추출 · 청크·임베딩 · 분류·학습 순서 · 재추출·띄어쓰기 복원</p><a class="button secondary" href="education/dist/ch02_document_ingestion_v02.html">제2장 열기 →</a></article>
+<article class="card"><div class="label">CHAPTER 03</div><h3>페이지 이미지 VLM 분석과 OCR 대조</h3><p>Qwen3-VL · Tesseract · HTTP 400 진단 · 식별자 대조</p><a class="button secondary" href="education/dist/ch03_vlm_ocr_recovery_v03.html">제3장 열기 →</a></article>
+<article class="card"><div class="label">CHAPTER 04</div><h3>설정 분리와 모델 선택</h3><p>.env 설정 · 로컬 / OpenAI / Anthropic · 외부 전송 보호</p><a class="button secondary" href="education/dist/ch04_settings_model_selection_v01.html">제4장 열기 →</a></article>
+<article class="card"><div class="label">CHAPTER 05</div><h3>공개 페이지와 로컬 운영</h3><p>실행 버튼 · 상태 확인 · 업데이트 완료 판정 · 교재 게시</p><a class="button secondary" href="education/dist/ch05_public_page_operations_v01.html">제5장 열기 →</a></article>
+<article class="card"><div class="label">소스코드</div><h3>GitHub 개발 프로젝트</h3><p>FastAPI, LangChain, RAG 검색, 자동 실행 스크립트 등 실제 소스 파일을 확인할 수 있습니다.</p><a class="button secondary" href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소 열기 →</a></article>
 </section>
 <h2>현재 시스템 구성</h2>
 <section class="diagram"><div class="node"><strong>HTML + JavaScript</strong><span>사용자 화면</span></div><div class="arrow">↕</div>
@@ -124,7 +128,7 @@ footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:1
 <h2>로컬 AI 채팅</h2>
 <div class="card"><h3>FastAPI + LangChain 웹 채팅</h3><p>로컬 AI 모델과 서버가 실행 중인 컴퓨터에서만 이용할 수 있습니다. GitHub Pages는 학습자료를 제공하며, Python 모델 서버를 대신 실행하지 않습니다.</p><a class="button secondary" href="http://127.0.0.1:8000">로컬 AI 채팅 열기 →</a></div>
 <div class="note"><strong>안내:</strong> 공개 페이지는 내 PC 프로그램을 몰래 실행하지 않습니다. 실행 버튼은 기본 세팅으로 등록한 실행기를 통해, Chrome 확인창에서 허용한 경우에만 시작·업데이트·세팅 세 동작을 실행합니다. AI 서버가 꺼져 있어도 GitHub 학습 자료는 열립니다.</div>
-<footer>LangChain Lab · 학습자료 / 디자인 표준 v1.1 · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소</a></footer>
+<footer>LangChain Lab · 교육과정 v07 (rule_md 교육용 HTML 표준) · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소</a></footer>
 </main><script>
 "use strict";
 async function copyText(text){

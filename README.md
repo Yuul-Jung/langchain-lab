@@ -116,26 +116,12 @@ GUI를 이미 설치해 사용 중이므로 LM Studio의 설정(`Ctrl+,`)에서 
 
 ## 학습용 HTML 교재
 
-- [전체 구축 과정·블록다이어그램·검증 및 문제 해결](docs/learning-guide.html)
-- GitHub Pages 배포 링크: https://yuul-jung.github.io/langchain-lab/docs/learning-guide.html
-
-교재는 실제 성공 단계와 검증 대기 단계를 구별하여 정리했습니다.
-
-## 교육용 블록다이어그램 표준 템플릿
-
-- [표준 스타일 가이드 + 구조도 6종](docs/diagram-style-guide.html)
-- [공통 CSS 디자인 토큰](docs/diagram-components.css)
-- [기존 LangChain 구축 학습 교재](docs/learning-guide.html)
-
-GitHub Pages: https://yuul-jung.github.io/langchain-lab/docs/diagram-style-guide.html
-
-구조도는 HTML/CSS로 작성되어 텍스트와 박스를 수정할 수 있으며, 인쇄/PDF 저장도 지원합니다.
+교재는 아래 "교육과정" 절의 표준 HTML 교재(목차 + 제1~5장) 하나로 통합했습니다. 예전 `docs/*.html` 교재(구축 가이드 2종, 제2장 안내서, 구조도 디자인 표준)의 주소로 들어오면 표준 교재의 해당 장으로 자동 이동합니다. 예전 구조도 6종은 SVG 그림(`education/assets/diagrams/`)으로 다시 그려 제1·2장에 넣었고, 예전 원본은 Git 기록에 남아 있습니다.
 
 
 ## 제2장 — 로컬 문서 업로드·구조화 (v2.0 학습 과정)
 
-- [제2장 HTML 학습안내서](docs/ch02-document-ingestion.html)
-- [제1장 HTML 학습안내서](docs/learning-guide-detailed.html)
+- 교재: [교육과정 목차](education/dist/index.html)의 제2장
 - 로컬 웹 문서 관리자: http://127.0.0.1:8000/documents
 - API: `/api/documents`, `/api/documents/upload`, `/api/documents/search`, `/api/documents/{document_id}/review`
 - 처리 기능: PDF/DOCX/TXT/Markdown/HTML 구조 추출, 분류 제안, 원본·선수관계 분리, 추천 학습 순서, Elasticsearch 2,560차원 벡터 등록
@@ -169,12 +155,12 @@ systemctl --user restart langchain-lab
 
 **보안:** 로컬 개발 환경 전용입니다. `.env`와 업로드 원본은 Git에 추가하지 마세요. 외부 네트워크에 노출하지 마세요. 업로드를 통한 스크립트 실행을 허용하지 않지만, 불신 파일에 대한 완전한 악성 파일 검사나 멀티유저 인증은 구현되지 않았습니다.
 
-## 📘 교육과정 제1~3장 (표준 HTML 교재)
+## 📘 교육과정 목차 + 제1~5장 (표준 HTML 교재 v07)
 
 - GitHub Pages: https://yuul-jung.github.io/langchain-lab/education/dist/index.html
-- [교육과정 첫 화면](education/dist/index.html)에서 제1~3장으로 이동합니다. 장별 파일명은 `chNN_주제_vNN.html`이며 개정할 때마다 버전이 올라가므로 직접 링크하지 않습니다.
-- 원고: `education/content/ch01~03.md`, 장 목록·버전: `education/course.json`
-- 기존 `docs/*.html` 교재는 변경하지 않고 보존합니다.
+- 구성: 제1장 기반 구축 · 제2장 문서 구조화 · 제3장 VLM·OCR · 제4장 설정 분리와 모델 선택 · 제5장 공개 페이지와 로컬 운영
+- 원고: `education/content/ch01~05.md`, 장 목록·버전: `education/course.json`, 구조도: `education/assets/diagrams/`
+- 장별 파일명은 `chNN_주제_vNN.html`이며 개정할 때마다 버전이 올라갑니다. 시작 페이지(`index.html`)와 예전 주소 이동 페이지(`docs/*.html`)는 장별 파일에 직접 연결하므로, **버전을 올리면 그 링크도 함께 고칩니다.** 끊긴 링크는 GitHub 자동 검사의 `scripts/check-links.py` 단계가 실패로 알려 줍니다.
 
 이 저장소의 교육자료(웹페이지·강의 HTML)는 [Yuul-Jung 교육용 HTML 공통 표준](https://github.com/Yuul-Jung/rule_md/tree/main/web/education-html)을 적용합니다.
 
