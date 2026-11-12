@@ -71,7 +71,8 @@ $("form").addEventListener("submit",async e=>{
   result.textContent=data.answer||"응답 없음";
   history=[...messages,{role:"assistant",content:data.answer||""}];
   if(mode==="rag"&&data.sources?.length){
-   const text=data.sources.map((s,i)=>"["+(i+1)+"] 점수 "+s.score+" · "+s.text).join("\n");
+   // (변경) 문서명·쪽 번호 표시, 긴 근거는 앞 300자만
+   const text=data.sources.map((s,i)=>{const where=(s.filename||s.title||"문서")+(s.page?" · p."+s.page:"");const body=s.text.length>300?s.text.slice(0,300)+"…":s.text;return "["+(i+1)+"] "+where+" · 점수 "+s.score+"\n"+body;}).join("\n\n");
    append("sources","검색 근거\n"+text);
   }
  }catch(err){result.textContent="오류: "+err.message}
