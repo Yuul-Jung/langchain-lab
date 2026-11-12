@@ -187,7 +187,7 @@ class MaintenanceApiTest(unittest.TestCase):
         import app
         import document_api
         self.api = document_api
-        self.client = TestClient(app.app)
+        self.client = TestClient(app.app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000))
         self.ready = {"elasticsearch": {"ok": True}, "embedding": {"ok": True}}
 
     def test_preview_route_counts_changed_and_errors(self):

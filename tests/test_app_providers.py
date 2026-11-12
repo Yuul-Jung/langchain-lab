@@ -11,7 +11,7 @@ class AppProviderTests(unittest.TestCase):
         from fastapi.testclient import TestClient
         import app
         self.app, self.mock = app, mock
-        self.client = TestClient(app.app)
+        self.client = TestClient(app.app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000))
 
     def test_models_lists_providers_without_keys(self):
         with self.mock.patch.object(self.app, "available_models", return_value=["deepseek-r1-distill-qwen-14b"]):

@@ -74,7 +74,7 @@ class ChatRagEndpointTest(unittest.TestCase):
              mock.patch.object(app, "search_documents", return_value=list(LAB_HITS)) as lab, \
              mock.patch.object(app.settings, "CHAT_RAG_SOURCE", "documents"), \
              mock.patch.object(app, "make_chat", return_value=llm):
-            r = TestClient(app.app).post("/api/chat", json={
+            r = TestClient(app.app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000)).post("/api/chat", json={
                 "mode": "rag", "provider": "local",
                 "messages": [{"role": "user", "content": "KEY 핀은?"}]})
         self.assertEqual(r.status_code, 200, r.text)

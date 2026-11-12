@@ -51,6 +51,18 @@ EMBEDDING_DIMS = get_int("EMBEDDING_DIMS", 2560)
 # ---- Elasticsearch 인덱스
 ES_RAG_INDEX = get("ES_RAG_INDEX", "langchain_embedding_lab")
 ES_DOCUMENT_INDEX = get("ES_DOCUMENT_INDEX", "langchain_documents_v1")
+# (추가) 접근 제어 (access_control.py). ACCESS_PASSWORD 를 비우면 이 PC 에서만 쓸 수 있다.
+ACCESS_PASSWORD = get("ACCESS_PASSWORD")
+SESSION_HOURS = get_int("SESSION_HOURS", 12)
+# 비우면 서버를 시작할 때마다 새로 만든다 (재시작하면 다시 로그인)
+SESSION_SECRET = get("SESSION_SECRET")
+# 같은 PC 에 리버스 프록시를 두면 모든 요청이 이 PC 에서 온 것으로 보이므로 true 로 바꾼다
+AUTH_REQUIRE_LOOPBACK = get("AUTH_REQUIRE_LOOPBACK", "false").lower() in ("1", "true", "yes")
+# HTTPS(리버스 프록시)로만 접속할 때 true: 세션 쿠키를 HTTPS 에서만 보낸다
+AUTH_COOKIE_SECURE = get("AUTH_COOKIE_SECURE", "false").lower() in ("1", "true", "yes")
+# 이 PC 에서 로그인 없이 쓸 때 허용할 추가 주소 이름 (기본: 127.0.0.1, localhost)
+ALLOWED_HOSTS = get_list("ALLOWED_HOSTS", "")
+
 # (추가) 업로드 한도. 슬라이드형 PDF는 쪽마다 절이 하나라 183쪽 문서가 절 150개 한도에 걸렸다(2026-11-12).
 # 색인은 청크당 약 0.1초이므로 800청크면 1~2분 걸린다.
 UPLOAD_MAX_MB = get_int("UPLOAD_MAX_MB", 30)
@@ -93,6 +105,7 @@ def describe() -> dict:
         "es_rag_index": ES_RAG_INDEX, "es_document_index": ES_DOCUMENT_INDEX,
         "chat_rag_source": CHAT_RAG_SOURCE, "search_score_margin": SEARCH_SCORE_MARGIN,
         "search_term_weight": SEARCH_TERM_WEIGHT,
+        "access_mode": "password" if ACCESS_PASSWORD else "local-only",
         "upload_max_mb": UPLOAD_MAX_MB, "upload_max_sections": UPLOAD_MAX_SECTIONS,
         "upload_max_chunks": UPLOAD_MAX_CHUNKS,
         "llm_providers": LLM_PROVIDERS, "default_provider": DEFAULT_PROVIDER,

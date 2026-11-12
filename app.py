@@ -1,19 +1,22 @@
 """Local LangChain + Elasticsearch RAG web service. Loopback only."""
 import os
 import re
+import secrets
+from urllib.parse import quote
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import requests
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, Field
 from rag_search import EMBEDDING_MODEL, INDEX, es_client, search_documents
 from document_api import router as document_router
 from document_pipeline import DOCUMENT_INDEX, search_uploaded, trim_by_margin
 from chat_search import format_context, search_for_chat
 import settings
+import access_control
 from llm_providers import make_chat, providers, resolve
 from local_status import (build_status, chat_failure_hint, cors_headers,
                           fetch_model_states)
@@ -53,6 +56,83 @@ async def public_status_cors(request: Request, call_next):
     if headers:
         response.headers.update(headers)
     return response
+
+# (추가) 접근 제어: 기본은 이 PC 전용, ACCESS_PASSWORD 를 넣으면 다른 기기에서 로그인 (access_control.py)
+# 나중에 등록한 미들웨어가 바깥쪽에서 먼저 실행되므로, 모든 요청이 여기를 먼저 지난다.
+_SESSION_SECRET = (settings.SESSION_SECRET or secrets.token_hex(32)).encode()
+_LOGIN_LIMITER = access_control.LoginLimiter()
+_ACCESS_MESSAGES = {
+    "forbidden": "접속 비밀번호가 설정되지 않아 서버가 실행 중인 PC에서만 사용할 수 있습니다. (.env 의 ACCESS_PASSWORD)",
+    "bad_host": "허용되지 않은 주소 이름으로 들어온 요청입니다. 127.0.0.1 또는 localhost 로 접속하세요. (.env 의 ALLOWED_HOSTS)",
+    "bad_origin": "다른 웹사이트에서 보낸 변경 요청은 받지 않습니다.",
+    "unauthorized": "로그인이 필요합니다.",
+}
+
+
+def _session_token(request: Request):
+    header = request.headers.get("authorization", "")
+    if header.lower().startswith("bearer "):
+        return header[7:].strip()
+    return request.cookies.get(access_control.SESSION_COOKIE)
+
+
+@app.middleware("http")
+async def access_guard(request: Request, call_next):
+    verdict = access_control.decide(
+        path=request.url.path,
+        client_host=request.client.host if request.client else None,
+        host_header=request.headers.get("host"),
+        password_set=bool(settings.ACCESS_PASSWORD),
+        authenticated=access_control.token_valid(_session_token(request), _SESSION_SECRET),
+        require_loopback_auth=settings.AUTH_REQUIRE_LOOPBACK,
+        allowed_hosts=settings.ALLOWED_HOSTS,
+        method=request.method, origin_header=request.headers.get("origin"),
+    )
+    if verdict == "allow":
+        return await call_next(request)
+    if verdict == "login":
+        return RedirectResponse("/login?next=" + quote(request.url.path, safe="/"), status_code=303)
+    return JSONResponse(status_code=401 if verdict == "unauthorized" else 403,
+                        content={"detail": _ACCESS_MESSAGES[verdict]})
+
+
+class LoginRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=200)
+
+
+@app.get("/login")
+def login_page():
+    return FileResponse(ROOT / "static" / "login.html")
+
+
+@app.post("/api/login")
+def login(body: LoginRequest, request: Request):
+    if not settings.ACCESS_PASSWORD:
+        raise HTTPException(status_code=400, detail="접속 비밀번호가 설정되지 않았습니다. 이 PC에서는 로그인 없이 사용합니다.")
+    client = request.client.host if request.client else "unknown"
+    wait = _LOGIN_LIMITER.retry_after(client)
+    if wait:
+        raise HTTPException(status_code=429, headers={"Retry-After": str(wait)},
+                            detail=f"로그인 시도가 너무 많습니다. {wait}초 뒤에 다시 시도하세요.")
+    if not access_control.password_matches(body.password, settings.ACCESS_PASSWORD):
+        _LOGIN_LIMITER.record_failure(client)
+        raise HTTPException(status_code=401, detail="비밀번호가 맞지 않습니다.")
+    _LOGIN_LIMITER.reset(client)
+    seconds = settings.SESSION_HOURS * 3600
+    token = access_control.make_token(_SESSION_SECRET, settings.SESSION_HOURS)
+    response = JSONResponse({"ok": True, "token": token, "expires_in": seconds})
+    # HttpOnly: 페이지의 스크립트가 읽지 못함 · SameSite=Strict: 다른 사이트에서 보낸 요청에는 실리지 않음
+    response.set_cookie(access_control.SESSION_COOKIE, token, max_age=seconds, httponly=True,
+                        samesite="strict", secure=settings.AUTH_COOKIE_SECURE, path="/")
+    return response
+
+
+@app.post("/api/logout")
+def logout():
+    response = JSONResponse({"ok": True})
+    response.delete_cookie(access_control.SESSION_COOKIE, path="/")
+    return response
+
 
 @app.get("/documents")
 def documents_page():
@@ -163,6 +243,8 @@ def local_status():
     status = build_status(fetch_model_states(LM_STUDIO_URL), chat_model=CHAT_MODEL,
                           embedding_model=EMBEDDING_MODEL, es_ok=es_ok, es_version=es_version)
     status["version"] = APP_VERSION
+    # (추가) 접근 방식 표시: local-only(이 PC 전용) · password(다른 기기는 로그인). 비밀값은 넣지 않는다.
+    status["access_mode"] = "password" if settings.ACCESS_PASSWORD else "local-only"
     return status
 
 def _search_uploaded_trimmed(query, limit=4):

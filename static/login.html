@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>LangChain Lab 로그인</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:#0f172a;font-family:system-ui,"Noto Sans KR",sans-serif;line-height:1.6}
+main{max-width:420px;margin:12vh auto;padding:28px 24px;background:#fff;border:1px solid #cbd5e1;border-radius:14px}
+h1{font-size:20px;margin:0 0 6px}p{margin:0 0 16px;color:#475569;font-size:14px}
+label{display:block;font-weight:600;margin-bottom:6px}
+input{width:100%;padding:11px 12px;border:1px solid #94a3b8;border-radius:9px;font:inherit}
+button{margin-top:14px;width:100%;padding:11px;border:0;border-radius:9px;background:#1d4ed8;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button:disabled{opacity:.55}input:focus-visible,button:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+#message{margin-top:12px;color:#b91c1c;font-size:14px;min-height:1.6em}
+</style></head><body><main>
+<h1>LangChain Lab 로그인</h1>
+<p>이 서비스는 접속 비밀번호가 설정되어 있습니다. 서버가 실행 중인 PC가 아닌 기기에서는 로그인해야 합니다.</p>
+<form id="form"><label for="password">접속 비밀번호</label>
+<input id="password" type="password" autocomplete="current-password" required autofocus>
+<button id="submit" type="submit">로그인</button></form>
+<div id="message" role="alert"></div>
+</main><script>
+"use strict";
+// 로그인 뒤 돌아갈 주소: 이 사이트 안의 경로만 허용한다
+function safeNext(){const n=new URLSearchParams(location.search).get("next")||"/";return(n.startsWith("/")&&!n.startsWith("//")&&!n.includes("\\"))?n:"/"}
+document.getElementById("form").addEventListener("submit",async e=>{e.preventDefault();
+ const button=document.getElementById("submit"),message=document.getElementById("message");button.disabled=true;message.textContent="";
+ try{const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:document.getElementById("password").value})});
+  const data=await r.json().catch(()=>({}));
+  if(r.ok){location.replace(safeNext());return}
+  message.textContent=typeof data.detail==="string"?data.detail:"로그인하지 못했습니다.";}
+ catch(err){message.textContent="서버에 연결하지 못했습니다.";}
+ button.disabled=false;});
+</script></body></html>

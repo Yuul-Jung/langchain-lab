@@ -81,7 +81,7 @@ class AppEndpointTests(unittest.TestCase):
         from fastapi.testclient import TestClient
         import app
         self.app = app
-        self.client = TestClient(app.app)
+        self.client = TestClient(app.app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000))
 
     def test_status_endpoint_with_cors(self):
         es = mock.Mock()

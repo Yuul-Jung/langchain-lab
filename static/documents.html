@@ -41,7 +41,7 @@ input[type=text]{flex:1;min-width:200px;padding:11px;border:1px solid #ccc;borde
 "use strict";
 const $=id=>document.getElementById(id);
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==null&&text!==undefined)n.textContent=String(text);if(cls)n.className=cls;return n}
-async function call(url,opt){const r=await fetch(url,opt);const j=await r.json();if(!r.ok){const d=j.detail;throw Error(typeof d==="string"?d:(d&&typeof d==="object"?(String(d.code||"오류")+" · "+String(d.hint||d.message||"재시도 필요")):"요청 실패"))}return j}
+async function call(url,opt){const r=await fetch(url,opt);if(r.status===401){location.href="/login?next="+encodeURIComponent(location.pathname);throw Error("로그인이 필요합니다.")}const j=await r.json();if(!r.ok){const d=j.detail;throw Error(typeof d==="string"?d:(d&&typeof d==="object"?(String(d.code||"오류")+" · "+String(d.hint||d.message||"재시도 필요")):"요청 실패"))}return j}
 async function refresh(){const list=$("list");list.replaceChildren(el("p","조회 중..."));try{const data=await call("/api/documents");list.replaceChildren();
 if(data.limits)$("limits").textContent="최대 "+data.limits.max_mb+"MB · 절 "+data.limits.max_sections+"개 · 청크 "+data.limits.max_chunks+"개 (큰 문서는 색인에 1~2분)";
 if(!data.documents.length){list.append(el("p","등록된 문서가 없습니다."));return}

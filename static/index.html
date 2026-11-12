@@ -31,12 +31,14 @@ form{display:flex;gap:9px}textarea{flex:1;min-width:0;resize:none}footer small{d
 <small>현재 PC에서만 접속하는 개발용 서비스입니다. 대화 기록은 아직 영구 저장하지 않습니다.</small></footer>
 </main><script>
 "use strict";
+// (추가) 로그인 세션이 만료되어 401 이 오면 로그인 페이지로 보낸다
+async function api(url,opt){const r=await fetch(url,opt);if(r.status===401){location.href="/login?next="+encodeURIComponent(location.pathname)}return r}
 const $=id=>document.getElementById(id), chat=$("chat");let history=[],busy=false;
 function append(cls,value){const node=document.createElement("div");node.className=cls;node.textContent=value;chat.appendChild(node);chat.scrollTop=chat.scrollHeight;return node}
 async function check(){
  $("status").textContent="연결 확인 중...";
  try{
-  const [a,b]=await Promise.all([fetch("/api/models"),fetch("/api/rag/status")]);
+  const [a,b]=await Promise.all([api("/api/models"),api("/api/rag/status")]);
   if(!a.ok)throw Error("LM Studio 연결 불가");
   const model=await a.json(),rag=await b.json();
   fillProviders(model);
@@ -66,7 +68,7 @@ $("form").addEventListener("submit",async e=>{
  append("msg user",content);$("question").value="";const result=append("msg assistant","답변 생성 중...");
  busy=true;$("send").disabled=true;$("clear").disabled=true;$("mode").disabled=true;$("provider").disabled=true;
  try{
-  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages,mode,provider:$("provider").value||null})});
+  const r=await api("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages,mode,provider:$("provider").value||null})});
   const data=await r.json();if(!r.ok)throw Error(data.detail||"API 오류");
   result.textContent=data.answer||"응답 없음";
   history=[...messages,{role:"assistant",content:data.answer||""}];
