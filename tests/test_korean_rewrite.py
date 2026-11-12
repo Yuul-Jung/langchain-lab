@@ -219,6 +219,13 @@ class ChatRewriteEndpointTest(unittest.TestCase):
         self.assertEqual((data["rewrite"], calls), ("kept", 2))
         self.assertEqual(data["answer"], "가점은 최대 8점입니다 [자료 1]. 답案: 8점")
 
+    def test_the_fix_can_be_switched_off_in_settings(self):
+        import app
+        with mock.patch.object(app.settings, "CHAT_LIGHT_LEAK_FIX", False):
+            data, calls = self.ask(["점수는 최대 8점입니다 [자료 1]. 답案: 8점"])
+        self.assertEqual((data["rewrite"], calls), ("none", 1))
+        self.assertIn("답案", data["answer"])
+
     def test_requested_foreign_text_is_left_alone(self):
         # 사용자가 일본어를 요청했으면 가나는 혼입이 아니다. 뒤따르는 짧은 질문에서도 마찬가지다.
         talk = [{"role": "user", "content": "문서의 인사말을 일본어로 알려 줘"},

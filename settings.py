@@ -80,6 +80,8 @@ except ValueError:
     SEARCH_TERM_WEIGHT = 0.15
 # (추가) 채팅 RAG 검색 대상: documents(업로드 문서, 기본) · lab(제1장 실습 문장) · both
 CHAT_RAG_SOURCE = get("CHAT_RAG_SOURCE", "documents").lower()
+# (추가) 채팅 답변에 한자 1자·가나 등이 섞였을 때 모델에게 한 번 고치게 할지 (기본 켬, false 면 이전처럼 그대로 보냄)
+CHAT_LIGHT_LEAK_FIX = get("CHAT_LIGHT_LEAK_FIX", "true").lower() in ("1", "true", "yes")
 
 # ---- 공개 시작 페이지가 /api/status 를 읽을 수 있는 출처
 STATUS_ALLOWED_ORIGINS = frozenset(get_list("STATUS_ALLOWED_ORIGINS", "https://yuul-jung.github.io"))
@@ -105,6 +107,7 @@ def describe() -> dict:
         "es_rag_index": ES_RAG_INDEX, "es_document_index": ES_DOCUMENT_INDEX,
         "chat_rag_source": CHAT_RAG_SOURCE, "search_score_margin": SEARCH_SCORE_MARGIN,
         "search_term_weight": SEARCH_TERM_WEIGHT,
+        "chat_light_leak_fix": CHAT_LIGHT_LEAK_FIX,
         "access_mode": "password" if ACCESS_PASSWORD else "local-only",
         "upload_max_mb": UPLOAD_MAX_MB, "upload_max_sections": UPLOAD_MAX_SECTIONS,
         "upload_max_chunks": UPLOAD_MAX_CHUNKS,

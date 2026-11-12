@@ -88,15 +88,16 @@
       "id": "ch06",
       "number": 6,
       "title": "검색 품질 평가와 개선",
-      "subtitle": "평가 세트·채점 도구 → 채팅 검색 대상 → 점수 컷오프 → 낱말 포함 재순위 → 낱말 후보 → 처음 보는 문서 검증",
+      "subtitle": "평가 세트·채점 도구 → 채팅 검색 대상 → 점수 컷오프 → 낱말 포함 재순위 → 낱말 후보 → 처음 보는 문서 검증 → 답변 확인·외국 문자 교정",
       "slug": "ch06_search_quality_evaluation",
-      "version": "v03",
+      "version": "v04",
       "source": "content/ch06.md",
       "tags": [
         "hit@1 · MRR · 정밀도",
         "SEARCH_SCORE_MARGIN",
         "SEARCH_TERM_WEIGHT",
-        "처음 보는 문서 검증"
+        "처음 보는 문서 검증",
+        "답변 확인"
       ]
     }
   ]

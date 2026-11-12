@@ -457,7 +457,7 @@ def chat(body: ChatRequest):
                     "답변에서 다른 언어가 혼용되어 정확한 한국어 결과를 만들지 못했습니다. "
                     "질문을 다시 입력하거나 다른 한국어 지원 모델을 선택해 주세요."
                 )
-        elif not asks_foreign_text(asked):
+        elif settings.CHAT_LIGHT_LEAK_FIX and not asks_foreign_text(asked):
             # (추가) 가벼운 혼입(한자 1자, 가나, 태국 문자 등): 한 번 고치게 하고 그 자리의 수정만 받아들임
             answer, rewrite_state = fix_light_leak(
                 answer, allowed_text,
