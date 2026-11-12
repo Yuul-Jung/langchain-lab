@@ -155,6 +155,43 @@ systemctl --user restart langchain-lab
 
 **보안:** 로컬 개발 환경 전용입니다. `.env`와 업로드 원본은 Git에 추가하지 마세요. 외부 네트워크에 노출하지 마세요. 업로드를 통한 스크립트 실행을 허용하지 않지만, 불신 파일에 대한 완전한 악성 파일 검사나 멀티유저 인증은 구현되지 않았습니다.
 
+## 📘 교육과정 제1~3장 (표준 HTML 교재)
+
+- GitHub Pages: https://yuul-jung.github.io/langchain-lab/education/dist/index.html
+- [제1장 로컬 AI/RAG 기반 구축](education/dist/ch01_local_ai_rag_foundation_v01.html) · [제2장 문서 업로드와 지식 구조화](education/dist/ch02_document_ingestion_v01.html) · [제3장 페이지 이미지 VLM 분석과 OCR 대조](education/dist/ch03_vlm_ocr_recovery_v01.html)
+- 원고: `education/content/ch01~03.md`, 장 목록·버전: `education/course.json`
+- 기존 `docs/*.html` 교재는 변경하지 않고 보존합니다.
+
+이 저장소의 교육자료(웹페이지·강의 HTML)는 [Yuul-Jung 교육용 HTML 공통 표준](https://github.com/Yuul-Jung/rule_md/tree/main/web/education-html)을 적용합니다.
+
+- [제작 규칙](https://github.com/Yuul-Jung/rule_md/blob/main/web/education-html/STANDARD.md)
+- [다른 저장소 적용 안내](https://github.com/Yuul-Jung/rule_md/blob/main/web/education-html/INTEGRATION.md)
+- [기준 디자인 사례](https://github.com/Yuul-Jung/ai-agent-engineering)
+- 적용 기준 커밋: `rule_md@38f7b0a` (`build.py`, `assets/` 복사). `assets/site.css` 끝에 모바일 표 넘침 방지 규칙 3줄을 `(추가)` 표시로 덧붙였습니다.
+
+```bash
+# 교재 수정 후 다시 생성 (mistune 은 교재 생성에만 필요, 서비스 실행과 무관)
+cd ~/langchain_web
+.venv/bin/python -m pip install mistune
+cd education && ../.venv/bin/python build.py
+```
+
+장 내용을 고치면 `course.json`에서 해당 장의 `version`을 `v02`로 올린 뒤 생성합니다. 생성기가 `dist/`의 이전 버전 파일을 정리합니다.
+
+## 제3장 — 페이지 이미지 VLM 분석·OCR 대조
+
+텍스트 레이어가 없는 PDF 페이지(300dpi PNG)를 LM Studio `qwen3-vl-4b`로 요약하고, Tesseract OCR(psm3·psm6) 원문과 영문 식별자를 대조합니다. 작업 자료는 저장소 밖 `~/pdf_recovery_work/`에 두며, 페이지 이미지·OCR 텍스트·VLM 요약은 커밋하지 않습니다.
+
+```bash
+# 사전 조건: 이미지 1장 ≈ 4,000 토큰 → 기본 컨텍스트 4096으로는 HTTP 400
+lms unload qwen3-vl-4b && lms load qwen3-vl-4b --context-length 16384
+
+cd ~/langchain_web && git pull --ff-only origin main
+.venv/bin/python scripts/vlm-analyze-pages.py 115 116 117   # → vlm_result/page_XXXX_v02.json
+.venv/bin/python scripts/compare-ocr-vlm.py 115 116 117     # → vlm_result/compare_ocr_vlm.md
+.venv/bin/python -m unittest discover -s tests -p 'test_vlm_ocr.py' -v
+```
+
 ## 한 번에 업데이트·검증·실행 (권장)
 
 우분투의 **프로젝트 폴더가 이미 존재하는 경우**, 다음 명령 **한 줄**로 최신 소스 다운로드, Python 가상환경 확인, 필수 패키지 설치, 구문 및 오프라인 단위 테스트, FastAPI 서비스 재시작, /documents API 진단까지 처리합니다.
