@@ -85,7 +85,7 @@ def chat_failure_hint(states, chat_model: str) -> str:
 def build_status(states, *, chat_model: str, embedding_model: str,
                  es_ok: bool | None, es_version: str | None = None) -> dict:
     """구성 요소별 상태(ok/warn/error)와 조치 명령 목록."""
-    comps = [{"name": "FastAPI", "level": "ok", "detail": "127.0.0.1:8000 응답"}]
+    comps = [{"name": "FastAPI", "level": "ok", "detail": "응답"}]
     advice = []
 
     if states is None:

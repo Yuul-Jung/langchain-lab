@@ -20,6 +20,20 @@ ROOT = Path(__file__).resolve().parent
 # (변경) .env 의 값이 실제로 반영되도록 settings.py에서 읽는다
 LM_STUDIO_URL = settings.LM_STUDIO_URL
 CHAT_MODEL = settings.CHAT_MODEL
+
+
+def _app_version():
+    """(추가) 실행 중인 코드의 Git 커밋 번호. 업데이트가 실제로 반영됐는지 화면에서 확인하는 데 쓴다."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
+                             capture_output=True, text=True, timeout=3)
+        return out.stdout.strip() or "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
+APP_VERSION = _app_version()
 app = FastAPI(title="LangChain Lab")
 app.include_router(document_router)
 
@@ -140,8 +154,10 @@ def local_status():
         es_ok = True
     except Exception:
         pass
-    return build_status(fetch_model_states(LM_STUDIO_URL), chat_model=CHAT_MODEL,
-                        embedding_model=EMBEDDING_MODEL, es_ok=es_ok, es_version=es_version)
+    status = build_status(fetch_model_states(LM_STUDIO_URL), chat_model=CHAT_MODEL,
+                          embedding_model=EMBEDDING_MODEL, es_ok=es_ok, es_version=es_version)
+    status["version"] = APP_VERSION
+    return status
 
 @app.post("/api/chat")
 def chat(body: ChatRequest):

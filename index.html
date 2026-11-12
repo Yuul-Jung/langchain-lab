@@ -136,7 +136,7 @@ for(const button of document.querySelectorAll("[data-copy]")){
  button.addEventListener("click",()=>copyText(document.getElementById(button.dataset.copy)?.textContent||""));
 }
 // (추가) 로컬 프로그램 상태 확인: 응답 값은 textContent로만 넣어 HTML로 해석하지 않는다.
-const ICON={ok:"✅",warn:"⚠️",error:"❌"};
+const ICON={ok:"✅",warn:"⚠️",error:"❌"};let lastVersion=null;
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function commandRow(cmd){
  const row=el("div",undefined,"command");row.append(el("code",cmd));
@@ -153,8 +153,9 @@ async function checkLocal(){
  try{
   const r=await fetch("http://127.0.0.1:8000/api/status",{signal:ctrl.signal,cache:"no-store"});
   if(!r.ok)throw new Error("HTTP "+r.status);
-  const st=await r.json();list.replaceChildren();
+  const st=await r.json();list.replaceChildren();lastVersion=st.version||"";
   for(const c of st.components||[]){const li=el("li");li.append(el("span",ICON[c.level]||"•"),el("strong",c.name),el("span",c.detail));list.append(li);}
+  if(st.version){const li=el("li");li.append(el("span","ℹ️"),el("strong","실행 버전"),el("span",st.version));list.append(li);}
   showAdvice(st.advice&&st.advice.length?st.advice:[{text:st.overall==="ok"?"모두 정상입니다. 아래 ② 로컬 AI 채팅을 열어 사용하세요.":"표시된 항목을 확인하세요."}]);
   return st.overall==="ok";
  }catch(e){
@@ -171,16 +172,20 @@ document.getElementById("checkBtn").addEventListener("click",()=>checkLocal());
 // (추가) 실행 버튼을 누른 뒤 상태가 정상이 될 때까지 4초마다 자동 확인 (최대 3분)
 let pollTimer=null;
 for(const a of document.querySelectorAll("[data-poll]")){
- a.addEventListener("click",()=>{
+ a.addEventListener("click",async()=>{
   if(pollTimer)clearInterval(pollTimer);
-  const label=a.dataset.poll==="update"?"업데이트":"시작";
+  if(a.dataset.poll==="update"&&lastVersion===null)await checkLocal();  // 누르기 전 버전 기억
+  const isUpdate=a.dataset.poll==="update";const label=isUpdate?"업데이트":"시작";
+  // (변경) 업데이트는 실행 버전(커밋 번호)이 실제로 바뀌어야 완료로 본다
+  const before=lastVersion;
   const state=document.getElementById("pollState");const t0=Date.now();
   state.textContent=label+" 요청을 보냈습니다. 터미널 창을 확인하세요. 상태를 자동으로 확인합니다…";
   pollTimer=setInterval(async()=>{
    const sec=Math.round((Date.now()-t0)/1000);
    const ok=await checkLocal();
-   if(ok){clearInterval(pollTimer);pollTimer=null;state.textContent=label+" 완료: 모두 정상입니다 ("+sec+"초).";}
-   else if(sec>=180){clearInterval(pollTimer);pollTimer=null;state.textContent="3분 안에 정상 상태가 되지 않았습니다. 터미널 창의 메시지와 아래 ③ 안내를 확인하세요.";}
+   const changed=!isUpdate||(lastVersion&&lastVersion!==before);
+   if(ok&&changed){clearInterval(pollTimer);pollTimer=null;state.textContent=label+" 완료: 모두 정상입니다 ("+sec+"초)"+(isUpdate?" · 버전 "+(before||"이전")+" → "+lastVersion:"")+".";}
+   else if(sec>=(isUpdate?300:180)){clearInterval(pollTimer);pollTimer=null;state.textContent=(isUpdate?"5분 안에 새 버전이 실행되지 않았습니다. Chrome 확인창에서 '열기'를 눌렀는지, 터미널 창에 오류가 있는지 확인하세요.":"3분 안에 정상 상태가 되지 않았습니다. 터미널 창의 메시지와 아래 ③ 안내를 확인하세요.");}
    else state.textContent=label+" 진행 중… "+sec+"초 (터미널 창에서 진행 상황 확인)";
   },4000);
  });
