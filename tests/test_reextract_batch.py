@@ -160,6 +160,28 @@ class PreviewAndBatchTest(unittest.TestCase):
             info = dp.reextract_preview(self.ids[0])
         self.assertEqual((info["changed"], info["changed_parts"]), (True, ["제목"]))
 
+    def test_preview_flags_documents_missing_from_the_index(self):
+        # 새 PC 로 옮긴 직후: 문서 목록과 원본은 있는데 색인에는 이 문서의 청크가 없다
+        empty = (dp.chunks_digest([]), 0, dp.titles_digest([]))
+        with patch.object(dp, "indexed_digest", return_value=empty):
+            info = dp.reextract_preview(self.ids[0])
+        self.assertEqual((info["changed"], info["changed_parts"], info["indexed_chunk_count"]), (True, ["색인 없음"], 0))
+        # 원본에서 나오는 본문이 그사이 달라졌다면 그것도 함께 알려 준다
+        self.grow(self.ids[0])
+        with patch.object(dp, "indexed_digest", return_value=empty):
+            self.assertEqual(dp.reextract_preview(self.ids[0])["changed_parts"], ["색인 없음", "본문", "제목"])
+
+    def test_missing_index_is_not_confused_with_an_unreachable_server(self):
+        class NoIndex:
+            class indices:
+                @staticmethod
+                def exists(index):
+                    return False
+        with patch.object(dp, "es_client", return_value=NoIndex()):
+            self.assertEqual(dp.indexed_digest(self.ids[0])[1], 0)
+        with patch.object(dp, "es_client", side_effect=RuntimeError("연결 실패")):
+            self.assertIsNone(dp.indexed_digest(self.ids[0]))
+
     def test_preview_falls_back_to_catalog_digest_then_structure(self):
         with patch.object(dp, "indexed_digest", return_value=None):
             self.assertEqual((dp.reextract_preview(self.ids[0])["changed"], dp.reextract_preview(self.ids[0])["compared_with"]),

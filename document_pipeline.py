@@ -858,11 +858,14 @@ def reextract_document(document_id, keep_approvals=True):
 
 
 def indexed_digest(document_id):
-    """(추가) 색인에 들어 있는 이 문서 청크의 (본문 지문, 개수, 제목 지문). 색인을 읽지 못하면 None."""
+    """(추가) 색인에 들어 있는 이 문서 청크의 (본문 지문, 개수, 제목 지문). 색인 서버에 닿지 못하면 None.
+
+    색인이 아직 없거나 이 문서의 청크가 하나도 없으면 개수 0 을 돌려준다(새 PC 로 옮긴 직후 등).
+    """
     try:
         es = es_client()
         if not es.indices.exists(index=DOCUMENT_INDEX):
-            return None
+            return chunks_digest([]), 0, titles_digest([])
         found = es.search(index=DOCUMENT_INDEX, size=max(1000, MAX_CHUNKS),
                           query={"term": {"document_id": document_id}},
                           source=["text", "source_order", "chunk_id", "title", "page"])
@@ -897,15 +900,23 @@ def reextract_preview(document_id):
                    == list(section_signatures(sections).values()))
     indexed = indexed_digest(document_id)
     # (변경) 본문과 제목을 따로 비교해, 무엇이 달라졌는지 알려 준다
-    if indexed is not None:
+    missing = False
+    if indexed is not None and indexed[1] == 0:
+        # 색인에 이 문서가 없다: 새 PC 로 옮겼거나 색인을 잃은 경우. 본문 비교는 카탈로그의 지문으로 한다.
+        info["indexed_chunk_count"] = 0
+        missing, basis = True, "index"
+        text_changed = bool(meta.get("chunks_digest")) and meta["chunks_digest"] != new_digest
+        titles_changed = not same_titles
+    elif indexed is not None:
         info["indexed_chunk_count"] = indexed[1]
         text_changed, titles_changed, basis = indexed[0] != new_digest, indexed[2] != titles_digest(chunks), "index"
     elif meta.get("chunks_digest"):
         text_changed, titles_changed, basis = meta["chunks_digest"] != new_digest, not same_titles, "catalog"
     else:
         text_changed, titles_changed, basis = meta.get("chunk_count") != len(chunks), not same_titles, "structure"
-    changed = text_changed or titles_changed
-    info["changed_parts"] = [name for name, flag in (("본문", text_changed), ("제목", titles_changed)) if flag]
+    changed = missing or text_changed or titles_changed
+    info["changed_parts"] = [name for name, flag in (("색인 없음", missing), ("본문", text_changed),
+                                                     ("제목", titles_changed)) if flag]
     classification = dict(meta.get("classification") or {})
     classification["review_status"] = "proposed"
     relations = propose_relations(sections, classification.get("concepts", []))
