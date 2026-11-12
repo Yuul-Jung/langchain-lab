@@ -11,6 +11,8 @@ import requests
 from dotenv import dotenv_values
 from elasticsearch import Elasticsearch
 
+import settings
+
 ENV_FILE = Path(__file__).resolve().parent / ".env"
 
 # The local .env is the canonical credential source for this single-user service.
@@ -31,9 +33,11 @@ def es_settings():
     }
 
 
-INDEX = os.getenv("ES_RAG_INDEX", "langchain_embedding_lab")
-EMBEDDING_MODEL = "text-embedding-qwen3-embedding-4b"
-LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
+# (변경) 주소·모델·인덱스는 settings.py에서 읽는다 (.env → 환경변수 → 기본값)
+INDEX = settings.ES_RAG_INDEX
+EMBEDDING_MODEL = settings.EMBEDDING_MODEL
+EMBEDDING_DIMS = settings.EMBEDDING_DIMS
+LM_STUDIO_URL = settings.LM_STUDIO_URL
 
 
 def es_client():
@@ -58,8 +62,8 @@ def embed_query(query: str):
     )
     response.raise_for_status()
     vector = response.json()["data"][0]["embedding"]
-    if len(vector) != 2560:
-        raise RuntimeError("임베딩 벡터 차원이 2560이 아닙니다.")
+    if len(vector) != EMBEDDING_DIMS:
+        raise RuntimeError(f"임베딩 벡터 차원이 {EMBEDDING_DIMS}이 아닙니다.")
     return vector
 
 
@@ -72,7 +76,7 @@ def search_documents(query: str, limit: int = 3):
     mapping = es.indices.get_mapping(index=INDEX)
     properties = mapping[INDEX]["mappings"].get("properties", {})
     field = properties.get("embedding", {})
-    if field.get("type") != "dense_vector" or field.get("dims") != 2560:
+    if field.get("type") != "dense_vector" or field.get("dims") != EMBEDDING_DIMS:
         raise RuntimeError("인덱스의 임베딩 매핑이 호환되지 않습니다.")
 
     vector = embed_query(query)

@@ -5,11 +5,13 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
+import settings
 from document_pipeline import (
     ALLOWED_RELATIONS, MAX_BYTES, UPLOAD_DIR, _index_chunks, _write_catalog,
     extract_sections, get_document, ingest_file, list_documents, make_chunks,
     analyze_document, propose_relations, learning_sequence,
     search_uploaded, IndexingFailure, diagnose_failure, DOCUMENT_INDEX,
+    reextract_document,
 )
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -58,8 +60,8 @@ def indexing_health():
     try:
         values = embed_query("문서 색인 연결 진단")
         result["embedding"] = {
-            "ok": len(values) == 2560,
-            "code": "READY" if len(values) == 2560 else "EMBEDDING_DIMENSION",
+            "ok": len(values) == settings.EMBEDDING_DIMS,
+            "code": "READY" if len(values) == settings.EMBEDDING_DIMS else "EMBEDDING_DIMENSION",
         }
     except Exception as exc:
         issue = diagnose_failure(exc, "embedding")
@@ -142,6 +144,27 @@ def reindex_document(document_id: str):
             "code": issue.code, "phase": issue.phase, "hint": issue.hint,
             "message": "기존 원본 파일과 분석 결과는 보존됩니다.",
         }) from exc
+
+
+@router.post("/{document_id}/reextract")
+def reextract(document_id: str):
+    """(추가) 원본 파일은 그대로 두고, 다시 추출해 이 문서의 검색 청크만 새로 만든다."""
+    _load(document_id)
+    try:
+        result = reextract_document(document_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="저장된 원본 파일을 찾지 못했습니다.")
+    except IndexingFailure as exc:
+        raise HTTPException(status_code=503, detail={
+            "code": exc.code, "phase": exc.phase, "hint": exc.hint,
+            "message": "원본 파일은 보존됩니다. 원인을 고친 뒤 '벡터 등록 재시도'를 누르세요.",
+        }) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    doc = result["document"]
+    return {"document_id": document_id, "index_status": doc["index_status"],
+            "section_count": doc["section_count"], "chunk_count": doc["chunk_count"],
+            "previous": result["previous"]}
 
 
 @router.post("/{document_id}/reanalyze")

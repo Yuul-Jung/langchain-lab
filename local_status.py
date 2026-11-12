@@ -9,15 +9,13 @@
 """
 from __future__ import annotations
 
-import os
-
 import requests
 
+import settings
+
 STATUS_PATH = "/api/status"
-ALLOWED_STATUS_ORIGINS = frozenset(
-    o.strip() for o in os.getenv("STATUS_ALLOWED_ORIGINS", "https://yuul-jung.github.io").split(",")
-    if o.strip()
-)
+# (변경) settings.py에서 읽음 (.env 의 STATUS_ALLOWED_ORIGINS)
+ALLOWED_STATUS_ORIGINS = settings.STATUS_ALLOWED_ORIGINS
 
 
 def cors_headers(path: str, origin: str | None, method: str,
@@ -72,7 +70,8 @@ def memory_blockers(states, chat_model: str) -> list[str]:
 def chat_failure_hint(states, chat_model: str) -> str:
     """채팅 요청 실패 시 사용자에게 보여줄 원인·조치 한 줄."""
     if states is None:
-        return "LM Studio 서버(127.0.0.1:1234)에 연결할 수 없습니다. lms server start 로 시작하세요."
+        return (f"LM Studio 서버({lmstudio_root(settings.LM_STUDIO_URL).split('//')[-1]})에 연결할 수 없습니다. "
+                "lms server start 로 시작하세요.")
     if _find(states, chat_model) is None:
         return f"LM Studio에 {chat_model} 모델이 없습니다. 모델 ID를 확인하세요."
     blockers = memory_blockers(states, chat_model)
@@ -90,7 +89,8 @@ def build_status(states, *, chat_model: str, embedding_model: str,
     advice = []
 
     if states is None:
-        comps.append({"name": "LM Studio", "level": "error", "detail": "127.0.0.1:1234 연결 실패"})
+        comps.append({"name": "LM Studio", "level": "error",
+                      "detail": f"{lmstudio_root(settings.LM_STUDIO_URL).split('//')[-1]} 연결 실패"})
         advice.append({"text": "LM Studio 서버를 시작하세요.", "command": "lms server start"})
     else:
         loaded = [m["id"] for m in states if m["state"] == "loaded"]

@@ -21,10 +21,11 @@ form{display:flex;gap:9px}textarea{flex:1;min-width:0;resize:none}footer small{d
 <header><h1>LangChain Lab</h1><small>FastAPI · LM Studio · Elasticsearch (로컬 통합 서비스)</small>
 <div class="toolbar"><label for="mode">응답 모드</label>
 <select id="mode"><option value="chat">일반 채팅</option><option value="rag">RAG 문서 검색</option></select>
+<label for="provider">모델</label><select id="provider"><option value="">기본 모델</option></select>
 <a href="/documents" style="display:inline-block;padding:10px 14px;border-radius:9px;background:#34445d;color:white;text-decoration:none;font-size:15px">문서 업로드·관리</a>
 <button id="check" class="secondary" type="button">연결 상태</button>
 <button id="clear" class="secondary" type="button">새 대화</button></div>
-<div id="status" role="status">서비스 상태 확인 중...</div></header>
+<div id="status" role="status">서비스 상태 확인 중...</div><div id="providerNote" role="note" style="font-size:12px;color:#fcd34d;margin-top:4px"></div></header>
 <section id="chat" aria-live="polite"><div class="msg assistant">질문을 입력하세요. 문서 검색은 RAG 모드를 선택합니다.</div></section>
 <footer><form id="form"><textarea id="question" rows="2" required placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈"></textarea><button id="send" type="submit">전송</button></form>
 <small>현재 PC에서만 접속하는 개발용 서비스입니다. 대화 기록은 아직 영구 저장하지 않습니다.</small></footer>
@@ -38,17 +39,34 @@ async function check(){
   const [a,b]=await Promise.all([fetch("/api/models"),fetch("/api/rag/status")]);
   if(!a.ok)throw Error("LM Studio 연결 불가");
   const model=await a.json(),rag=await b.json();
+  fillProviders(model);
   $("status").textContent="LLM: "+model.chat_model+" · Elasticsearch: "+(rag.connected?(rag.index_exists?"연결됨":"인덱스 없음"):("연결되지 않음 · "+(rag.reason||"설정 확인 필요")));
  }catch(e){$("status").textContent="서버 상태 확인 실패: "+e.message}
 }
+// (추가) 모델 제공자 목록: 키·모델이 설정된 것만 선택 가능, 이유는 마우스를 올리면 보임
+function fillProviders(model){
+ const sel=$("provider"),keep=sel.value;sel.replaceChildren();
+ for(const p of model.providers||[]){
+  const o=document.createElement("option");o.value=p.id;
+  o.textContent=p.label+(p.model?" · "+p.model:"")+(p.ready?"":" (미설정)");
+  o.disabled=!p.ready;if(!p.ready)o.title=p.reason||"";o.dataset.external=p.external?"1":"";
+  sel.appendChild(o);
+ }
+ sel.value=keep||model.default_provider||"local";providerNote();
+}
+function providerNote(){
+ const o=$("provider").selectedOptions[0];
+ $("providerNote").textContent=o&&o.dataset.external?"외부 API 모델입니다. 질문 내용이 해당 회사 서버로 전송됩니다.":"";
+}
+$("provider").addEventListener("change",providerNote);
 $("form").addEventListener("submit",async e=>{
  e.preventDefault();if(busy||!$("question").value.trim())return;
  const content=$("question").value.trim(),mode=$("mode").value;
  const messages=[...history,{role:"user",content}];
  append("msg user",content);$("question").value="";const result=append("msg assistant","답변 생성 중...");
- busy=true;$("send").disabled=true;$("clear").disabled=true;$("mode").disabled=true;
+ busy=true;$("send").disabled=true;$("clear").disabled=true;$("mode").disabled=true;$("provider").disabled=true;
  try{
-  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages,mode})});
+  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages,mode,provider:$("provider").value||null})});
   const data=await r.json();if(!r.ok)throw Error(data.detail||"API 오류");
   result.textContent=data.answer||"응답 없음";
   history=[...messages,{role:"assistant",content:data.answer||""}];
@@ -57,7 +75,7 @@ $("form").addEventListener("submit",async e=>{
    append("sources","검색 근거\n"+text);
   }
  }catch(err){result.textContent="오류: "+err.message}
- finally{busy=false;$("send").disabled=false;$("clear").disabled=false;$("mode").disabled=false;chat.scrollTop=chat.scrollHeight}
+ finally{busy=false;$("send").disabled=false;$("clear").disabled=false;$("mode").disabled=false;$("provider").disabled=false;chat.scrollTop=chat.scrollHeight}
 });
 $("question").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("form").requestSubmit()}});
 $("mode").addEventListener("change",()=>{history=[];chat.replaceChildren();append("msg assistant","모드를 전환했습니다. 새 대화를 시작합니다.")});

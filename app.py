@@ -8,16 +8,18 @@ from zoneinfo import ZoneInfo
 import requests
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 from rag_search import EMBEDDING_MODEL, INDEX, es_client, search_documents
 from document_api import router as document_router
+import settings
+from llm_providers import make_chat, providers, resolve
 from local_status import (build_status, chat_failure_hint, cors_headers,
                           fetch_model_states)
 
 ROOT = Path(__file__).resolve().parent
-LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
-CHAT_MODEL = os.getenv("CHAT_MODEL", "deepseek-r1-distill-qwen-14b")
+# (변경) .env 의 값이 실제로 반영되도록 settings.py에서 읽는다
+LM_STUDIO_URL = settings.LM_STUDIO_URL
+CHAT_MODEL = settings.CHAT_MODEL
 app = FastAPI(title="LangChain Lab")
 app.include_router(document_router)
 
@@ -47,6 +49,8 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[Message] = Field(min_length=1, max_length=20)
     mode: str = "chat"
+    # (추가) 채팅 모델 제공자: local · openai · anthropic. 비우면 .env 의 DEFAULT_PROVIDER
+    provider: str | None = Field(default=None, max_length=32)
 
 def available_models():
     try:
@@ -103,7 +107,10 @@ def home():
 
 @app.get("/api/models")
 def models():
-    return {"models": available_models(), "chat_model": CHAT_MODEL}
+    # (변경) 채팅 화면이 모델 제공자를 고를 수 있게 목록을 함께 준다 (API 키는 포함하지 않음)
+    return {"models": available_models(), "chat_model": CHAT_MODEL,
+            "providers": [p.public() for p in providers()],
+            "default_provider": settings.DEFAULT_PROVIDER}
 
 @app.get("/api/rag/status")
 def rag_status():
@@ -153,7 +160,12 @@ def chat(body: ChatRequest):
         if result is not None:
             return {"model": "system-policy", "mode": "chat", "answer": result, "sources": []}
 
-    if CHAT_MODEL not in available_models():
+    # (변경) 제공자 선택: 쓸 수 없거나, 업로드 문서를 외부로 보내게 되면 이유와 함께 거절
+    try:
+        provider = resolve(body.provider, body.mode)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if provider.id == "local" and CHAT_MODEL not in available_models():
         raise HTTPException(status_code=503, detail="DeepSeek 대화 모델을 사용할 수 없습니다.")
 
     now = datetime.now(ZoneInfo("Asia/Seoul"))
@@ -176,7 +188,7 @@ def chat(body: ChatRequest):
                 detail="RAG 검색 실패. Elasticsearch 인증과 Qwen3 임베딩 상태를 확인하세요.",
             ) from exc
         if not sources:
-            return {"model": CHAT_MODEL, "mode": "rag",
+            return {"model": provider.model, "provider": provider.id, "mode": "rag",
                     "answer": "검색된 근거 문서가 없습니다.", "sources": []}
         docs = "\n".join(
             f"[자료 {i}] {source['text']}" for i, source in enumerate(sources, 1)
@@ -193,11 +205,7 @@ def chat(body: ChatRequest):
         for m in body.messages
     ]
     try:
-        llm = ChatOpenAI(
-            model=CHAT_MODEL, base_url=LM_STUDIO_URL,
-            api_key="lm-studio", temperature=0,
-            timeout=180, use_responses_api=False,
-        )
+        llm = make_chat(provider)  # (변경) 선택한 제공자의 채팅 모델
         answer = llm.invoke(messages).content
         answer = answer if isinstance(answer, str) else str(answer)
         if needs_korean_rewrite(answer):
@@ -219,10 +227,15 @@ def chat(body: ChatRequest):
                 )
     except Exception as exc:
         # (변경) 실패 원인 안내 추가: 다른 모델이 메모리를 차지해 채팅 모델 로드가 실패하는 경우 등
-        hint = chat_failure_hint(fetch_model_states(LM_STUDIO_URL), CHAT_MODEL)
-        raise HTTPException(status_code=502, detail="LM Studio 모델 응답 실패. " + hint) from exc
+        if provider.id == "local":
+            hint = chat_failure_hint(fetch_model_states(LM_STUDIO_URL), CHAT_MODEL)
+            raise HTTPException(status_code=502, detail="LM Studio 모델 응답 실패. " + hint) from exc
+        # 외부 API 오류 본문에는 계정 정보가 섞일 수 있어 그대로 보여 주지 않는다
+        raise HTTPException(status_code=502, detail=(
+            f"{provider.label} 응답 실패. API 키·모델 이름·네트워크·사용 한도를 확인하세요."
+        )) from exc
     return {
-        "model": CHAT_MODEL, "mode": body.mode,
+        "model": provider.model, "provider": provider.id, "mode": body.mode,
         # (변경) DeepSeek-R1 답변 앞의 빈 줄(추론 블록 뒤 개행)이 채팅 말풍선에 공백으로 보이지 않게 정리
         "answer": answer.strip(),
         "sources": sources,

@@ -30,7 +30,7 @@ step 3 "필요한 라이브러리 설치"
 "$PYTHON" -m pip install -r requirements.txt || fail "패키지 설치 실패. 네트워크·의존성 충돌 확인 필요."
 
 step 4 "Python 구문 및 파일 확인"
-"$PYTHON" -m compileall -q app.py document_api.py document_pipeline.py rag_search.py local_status.py vlm_ocr.py ||
+"$PYTHON" -m compileall -q app.py document_api.py document_pipeline.py rag_search.py local_status.py vlm_ocr.py settings.py llm_providers.py ||
     fail "Python 구문 오류가 있습니다. 서버를 재시작하지 않습니다."
 [[ -f static/documents.html ]] || fail "static/documents.html이 없습니다."
 

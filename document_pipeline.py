@@ -22,11 +22,12 @@ from fastapi import HTTPException
 from pypdf import PdfReader
 
 from rag_search import LM_STUDIO_URL, embed_query, es_client
+import settings
 
 ROOT = Path(__file__).resolve().parent
 UPLOAD_DIR = ROOT / "uploads" / "documents"
 CATALOG_DIR = ROOT / "data" / "document_catalog"
-DOCUMENT_INDEX = os.getenv("ES_DOCUMENT_INDEX", "langchain_documents_v1")
+DOCUMENT_INDEX = settings.ES_DOCUMENT_INDEX  # (변경) settings.py에서 읽음
 MAX_BYTES = 8 * 1024 * 1024
 MAX_SECTIONS = 150
 MAX_CHUNKS = 160
@@ -478,7 +479,7 @@ def _ensure_index(es):
     if es.indices.exists(index=DOCUMENT_INDEX):
         props = es.indices.get_mapping(index=DOCUMENT_INDEX)[DOCUMENT_INDEX]["mappings"]["properties"]
         field = props.get("embedding", {})
-        if field.get("type") != "dense_vector" or field.get("dims") != 2560:
+        if field.get("type") != "dense_vector" or field.get("dims") != settings.EMBEDDING_DIMS:
             raise RuntimeError("기존 문서 인덱스의 벡터 매핑이 호환되지 않습니다.")
         return
     es.indices.create(index=DOCUMENT_INDEX, mappings={"properties": {
@@ -495,7 +496,7 @@ def _ensure_index(es):
         "topic_review_status": {"type": "keyword"},
         "provenance": {"type": "keyword"},
         "uploaded_at": {"type": "date"},
-        "embedding": {"type": "dense_vector", "dims": 2560, "index": True,
+        "embedding": {"type": "dense_vector", "dims": settings.EMBEDDING_DIMS, "index": True,
                       "similarity": "cosine"},
     }})
 
@@ -519,8 +520,8 @@ def diagnose_failure(exc, phase):
             return IndexingFailure("ES_PASSWORD_MISSING", phase, "로컬 .env의 ES_PASSWORD 설정을 확인하세요.")
         if "CA 인증서" in message:
             return IndexingFailure("ES_CA_MISSING", phase, "CA 인증서 경로와 파일 읽기 권한을 확인하세요.")
-        if "벡터 차원" in message or "차원이 2560" in message:
-            return IndexingFailure("EMBEDDING_DIMENSION", phase, "임베딩 모델 ID와 2560차원 설정을 확인하세요.")
+        if "벡터 차원" in message or "차원이" in message:
+            return IndexingFailure("EMBEDDING_DIMENSION", phase, f"임베딩 모델 ID와 {settings.EMBEDDING_DIMS}차원 설정을 확인하세요.")
         if "호환되지" in message:
             return IndexingFailure("INDEX_MAPPING", phase, "기존 문서 인덱스 매핑을 확인하세요. 자동 삭제하지 않습니다.")
     if isinstance(exc, requests.Timeout):
@@ -587,6 +588,59 @@ def _index_chunks(meta, chunks):
                 pass
         raise failure from exc
 
+
+
+# (추가) 이미 색인된 문서를 원본에서 다시 추출·색인한다.
+# 추출 방식이 개선됐을 때(예: PDF 깨진 공백 복원) 기존 문서에 반영하기 위한 기능이다.
+# 원본 파일은 바꾸지 않고, 이 문서의 검색 청크만 지운 뒤 새로 만든다.
+# 구조가 바뀌므로 분류·학습 순서·관계 승인은 모두 다시 "검토 대기(proposed)"가 된다.
+def delete_document_chunks(document_id):
+    """검색 인덱스에서 이 문서의 청크만 삭제 (다른 문서·제1장 인덱스는 건드리지 않음)."""
+    es = es_client()
+    if es.indices.exists(index=DOCUMENT_INDEX):
+        es.delete_by_query(index=DOCUMENT_INDEX, refresh=True, conflicts="proceed",
+                           query={"term": {"document_id": document_id}})
+
+
+def reextract_document(document_id):
+    meta = get_document(document_id)
+    stored = UPLOAD_DIR / f'{document_id}{meta["format"]}'
+    if not stored.is_file():
+        raise FileNotFoundError(document_id)
+    sections = extract_sections(stored)
+    chunks = make_chunks(sections)
+    previous = {"section_count": meta.get("section_count"),
+                "chunk_count": meta.get("chunk_count"),
+                "index_status": meta.get("index_status")}
+    classification = dict(meta.get("classification") or {})
+    classification["review_status"] = "proposed"
+    relations = propose_relations(sections, classification.get("concepts", []))
+    meta.update({
+        "section_count": len(sections), "chunk_count": len(chunks),
+        "sections": [{k: v for k, v in sec.items() if k != "text"} for sec in sections],
+        "classification": classification, "relations": relations,
+        "learning_sequence": learning_sequence(sections, relations),
+        "reextracted_at": _now(), "index_status": "pending",
+    })
+    meta.pop("structure_proposal", None)
+    meta.pop("structure_review_status", None)
+    _write_catalog(meta)
+    try:
+        try:
+            delete_document_chunks(document_id)
+        except Exception as exc:
+            raise diagnose_failure(exc, "delete_old_chunks") from exc
+        _index_chunks(meta, chunks)
+    except IndexingFailure as exc:
+        meta["index_status"] = "failed"
+        meta["index_error"] = {"code": exc.code, "phase": exc.phase, "hint": exc.hint,
+                               "checked_at": _now()}
+        _write_catalog(meta)
+        raise
+    meta["index_status"] = "indexed"
+    meta.pop("index_error", None)
+    _write_catalog(meta)
+    return {"document": meta, "previous": previous}
 
 def ingest_file(filename, data, use_ai=True, index=True):
     """Validate + extract + infer + store. Caller owns HTTP multipart handling."""
