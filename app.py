@@ -6,18 +6,35 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import requests
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, Response
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
-from rag_search import INDEX, es_client, search_documents
+from rag_search import EMBEDDING_MODEL, INDEX, es_client, search_documents
 from document_api import router as document_router
+from local_status import (build_status, chat_failure_hint, cors_headers,
+                          fetch_model_states)
 
 ROOT = Path(__file__).resolve().parent
 LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
 CHAT_MODEL = os.getenv("CHAT_MODEL", "deepseek-r1-distill-qwen-14b")
 app = FastAPI(title="LangChain Lab")
 app.include_router(document_router)
+
+
+# (추가) 공개 시작 페이지(GitHub Pages)가 /api/status 하나만 GET으로 읽을 수 있게 한다.
+@app.middleware("http")
+async def public_status_cors(request: Request, call_next):
+    headers = cors_headers(
+        request.url.path, request.headers.get("origin"), request.method,
+        request.headers.get("access-control-request-private-network") == "true",
+    )
+    if request.method == "OPTIONS" and headers is not None:
+        return Response(status_code=204, headers=headers)
+    response = await call_next(request)
+    if headers:
+        response.headers.update(headers)
+    return response
 
 @app.get("/documents")
 def documents_page():
@@ -107,6 +124,18 @@ def rag_status():
         return {"connected": False, "index": INDEX,
                 "index_exists": False, "reason": "서버 인증 또는 연결 확인 필요"}
 
+# (추가) 읽기 전용 상태 요약: 모델 로드 상태·Elasticsearch 연결·조치 명령
+@app.get("/api/status")
+def local_status():
+    es_ok, es_version = False, None
+    try:
+        es_version = es_client().info()["version"]["number"]
+        es_ok = True
+    except Exception:
+        pass
+    return build_status(fetch_model_states(LM_STUDIO_URL), chat_model=CHAT_MODEL,
+                        embedding_model=EMBEDDING_MODEL, es_ok=es_ok, es_version=es_version)
+
 @app.post("/api/chat")
 def chat(body: ChatRequest):
     if body.mode not in ("chat", "rag"):
@@ -189,7 +218,9 @@ def chat(body: ChatRequest):
                     "질문을 다시 입력하거나 다른 한국어 지원 모델을 선택해 주세요."
                 )
     except Exception as exc:
-        raise HTTPException(status_code=502, detail="LM Studio 모델 응답 실패") from exc
+        # (변경) 실패 원인 안내 추가: 다른 모델이 메모리를 차지해 채팅 모델 로드가 실패하는 경우 등
+        hint = chat_failure_hint(fetch_model_states(LM_STUDIO_URL), CHAT_MODEL)
+        raise HTTPException(status_code=502, detail="LM Studio 모델 응답 실패. " + hint) from exc
     return {
         "model": CHAT_MODEL, "mode": body.mode,
         "answer": answer,

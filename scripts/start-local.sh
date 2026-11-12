@@ -58,6 +58,12 @@ printf '\n서비스 상태\n'
 check_port 8000 'FastAPI' || true
 check_port 9200 'Elasticsearch' || true
 check_port 1234 'LM Studio' || true
+# (추가) 로드된 모델 표시: 비전 모델이 메모리를 차지하면 채팅 모델 로드가 실패할 수 있음
+if port_open 1234 && command -v lms >/dev/null 2>&1; then
+    printf '\n로드된 모델 (lms ps)\n'
+    lms ps 2>/dev/null || echo '  [안내] lms ps 실행 실패'
+    echo '  채팅 응답이 실패하면 공개 시작 페이지의 "③ 로컬 프로그램 상태 확인"에서 조치 명령을 확인하세요.'
+fi
 
 if port_open 8000; then
     echo

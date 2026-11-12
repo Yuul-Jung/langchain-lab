@@ -42,6 +42,20 @@ footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:1
 .launch a.secondary{background:#eaf2ff;color:#24518e}
 #copyState{font-size:14px;color:#24518e;min-height:1.5em}
 @media(max-width:800px){.steps{grid-template-columns:1fr}.setup{padding:19px}}
+
+/* (추가) 로컬 프로그램 상태 확인 패널 */
+.status-box{border:1px solid #cfdcee;border-radius:16px;background:#f8fbff;padding:18px 20px;margin:18px 0}
+.status-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.status-head button{border:0;border-radius:10px;background:#1f5fbf;color:#fff;font:inherit;font-size:16px;padding:8px 16px;cursor:pointer}
+.status-head button:disabled{opacity:.6;cursor:wait}
+.status-head button:focus-visible,.advice button:focus-visible{outline:3px solid #ffb020;outline-offset:2px}
+#statusList{list-style:none;padding:0;margin:12px 0 0}
+#statusList li{display:grid;grid-template-columns:28px 130px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid #e3eaf4;font-size:16px}
+#statusList li span:last-child{color:#52647c;overflow-wrap:anywhere}
+.advice{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:#fff7e6;border:1px solid #f1d8a6;font-size:16px}
+.advice p{margin:0 0 8px;color:#6b4a0e}
+.advice .command{margin:6px 0 0}
+@media(max-width:640px){#statusList li{grid-template-columns:24px 1fr}#statusList li span:last-child{grid-column:2}}
 </style></head><body><main>
 <section class="hero"><div class="eyebrow">LOCAL AI · LANGCHAIN · ELASTICSEARCH</div>
 <h1>로컬 AI/RAG 시스템<br>학습자료 라이브러리</h1>
@@ -67,7 +81,13 @@ footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:1
  <a class="secondary" href="http://127.0.0.1:8000/documents" target="_blank" rel="noopener">PDF 문서 관리자</a>
  <a class="secondary" href="http://127.0.0.1:8000/api/documents/health/status" target="_blank" rel="noopener">연결 진단 결과</a>
 </div>
-<p class="hint">로컬 주소가 열리지 않으면 먼저 실행 명령의 진단 결과를 확인하세요. 외부 GitHub Pages에서는 운영체제 보안상 로컬 서비스를 직접 시작하거나 정상 작동 여부를 확정할 수 없습니다.</p>
+<section class="status-box" aria-labelledby="statusTitle">
+ <div class="status-head"><strong id="statusTitle">③ 로컬 프로그램 상태 확인</strong><button type="button" id="checkBtn">상태 확인</button></div>
+ <p class="hint">내 PC의 <code>127.0.0.1:8000/api/status</code>에 상태만 묻습니다(읽기 전용). Chrome이 <b>로컬 네트워크 기기 접근</b> 허용을 물으면 허용하세요. 채팅·문서 내용은 이 페이지로 전송되지 않습니다.</p>
+ <ul id="statusList" aria-live="polite"></ul>
+ <div id="adviceBox"></div>
+</section>
+<p class="hint">로컬 주소가 열리지 않으면 먼저 실행 명령의 진단 결과를 확인하세요. 외부 GitHub Pages에서는 운영체제 보안상 로컬 서비스를 직접 시작할 수 없습니다. 상태 확인(③)은 서비스가 실행 중인 PC의 브라우저에서만 동작합니다.</p>
 </section>
 <h2>학습 교재 바로가기</h2><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">교육과정 · 제1~3장 · 표준 HTML 교재</div><h3>로컬 AI/RAG 시스템 구축 실습 — 기반 구축 · 문서 구조화 · 페이지 이미지 VLM·OCR</h3><p>LM Studio·LangChain·Elasticsearch·FastAPI 구축부터 문서 업로드·색인, Qwen3-VL과 Tesseract OCR 대조까지 실제 성공 결과와 미검증 항목을 구분해 정리한 연속 교재입니다.</p><a class="button" href="education/dist/index.html">교육과정 열기 →</a></article></section><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">CHAPTER 02 · 신규 실습</div><h3>문서 업로드 · 자동 분류 · 학습 순서 · 지식 관계 생성</h3><p>제1장 구축 과정을 확장한 제2장 학습안내서입니다. 원본 구조 추출부터 Elasticsearch 인덱싱까지 코드·출력·풀이·구조도로 구성했습니다.</p><a class="button" href="docs/ch02-document-ingestion.html">제2장 학습안내서 열기 →</a></article></section><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">신규 · 샘플 기준 심화 개정판</div><h3>로컬 AI/RAG 구축 실습 — 코드 · 실행 결과 · 풀이 · 구조도</h3><p>손글씨 숫자 학습 HTML 샘플의 구성 밀도를 기준으로 전체 과정을 15절로 재작성했습니다. 9개의 코드 실습과 10개의 구조도를 포함합니다.</p><a class="button" href="docs/learning-guide-detailed.html">심화 실습 교재 열기 →</a></article></section>
 <section class="cards">
@@ -88,13 +108,43 @@ footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:1
 <footer>LangChain Lab · 학습자료 / 디자인 표준 v1.1 · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소</a></footer>
 </main><script>
 "use strict";
-for(const button of document.querySelectorAll("[data-copy]")){
- button.addEventListener("click",async()=>{
-  const node=document.getElementById(button.dataset.copy);
-  const text=node?.textContent||"";
-  const status=document.getElementById("copyState");
-  try{await navigator.clipboard.writeText(text);status.textContent="명령을 복사했습니다. Ubuntu 터미널에 붙여넣어 실행하세요.";}
-  catch{status.textContent="자동 복사가 차단되었습니다. 명령어를 직접 선택해 복사하세요."; }
- });
+async function copyText(text){
+ const status=document.getElementById("copyState");
+ try{await navigator.clipboard.writeText(text);status.textContent="명령을 복사했습니다. Ubuntu 터미널에 붙여넣어 실행하세요.";}
+ catch{status.textContent="자동 복사가 차단되었습니다. 명령어를 직접 선택해 복사하세요.";}
 }
+for(const button of document.querySelectorAll("[data-copy]")){
+ button.addEventListener("click",()=>copyText(document.getElementById(button.dataset.copy)?.textContent||""));
+}
+// (추가) 로컬 프로그램 상태 확인: 응답 값은 textContent로만 넣어 HTML로 해석하지 않는다.
+const ICON={ok:"✅",warn:"⚠️",error:"❌"};
+function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+function commandRow(cmd){
+ const row=el("div",undefined,"command");row.append(el("code",cmd));
+ const b=el("button","명령 복사");b.type="button";b.addEventListener("click",()=>copyText(cmd));row.append(b);return row;
+}
+function showAdvice(items){
+ const box=document.getElementById("adviceBox");box.replaceChildren();
+ for(const a of items){const d=el("div",undefined,"advice");d.append(el("p",a.text));if(a.command)d.append(commandRow(a.command));box.append(d);}
+}
+async function checkLocal(){
+ const btn=document.getElementById("checkBtn"),list=document.getElementById("statusList");
+ btn.disabled=true;btn.textContent="확인 중…";list.replaceChildren(el("li","127.0.0.1:8000 에 요청 중…"));showAdvice([]);
+ const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),15000);
+ try{
+  const r=await fetch("http://127.0.0.1:8000/api/status",{signal:ctrl.signal,cache:"no-store"});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const st=await r.json();list.replaceChildren();
+  for(const c of st.components||[]){const li=el("li");li.append(el("span",ICON[c.level]||"•"),el("strong",c.name),el("span",c.detail));list.append(li);}
+  showAdvice(st.advice&&st.advice.length?st.advice:[{text:st.overall==="ok"?"모두 정상입니다. 아래 ② 로컬 AI 채팅을 열어 사용하세요.":"표시된 항목을 확인하세요."}]);
+ }catch(e){
+  list.replaceChildren(el("li","❌ 로컬 서비스에 연결하지 못했습니다 ("+(e.name==="AbortError"?"15초 시간 초과":"응답 없음")+")"));
+  showAdvice([
+   {text:"1) 로컬 서비스가 꺼져 있으면 시작하세요.",command:"cd ~/langchain_web && bash scripts/start-local.sh"},
+   {text:"2) 상태 확인 기능이 없는 이전 버전이면 업데이트하세요 (2026-11-12 이후 버전 필요).",command:"cd ~/langchain_web && bash scripts/update-local.sh"},
+   {text:"3) 브라우저가 로컬 접근을 막았을 수 있습니다. 주소창 왼쪽 사이트 정보 → 사이트 설정에서 '로컬 네트워크 액세스'를 허용한 뒤 다시 누르세요. 이 확인은 서비스가 실행 중인 바로 그 PC의 브라우저에서만 동작합니다."}
+  ]);
+ }finally{clearTimeout(timer);btn.disabled=false;btn.textContent="다시 확인";}
+}
+document.getElementById("checkBtn").addEventListener("click",checkLocal);
 </script></body></html>
