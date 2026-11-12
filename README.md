@@ -158,7 +158,7 @@ systemctl --user restart langchain-lab
 ## 📘 교육과정 제1~3장 (표준 HTML 교재)
 
 - GitHub Pages: https://yuul-jung.github.io/langchain-lab/education/dist/index.html
-- [제1장 로컬 AI/RAG 기반 구축](education/dist/ch01_local_ai_rag_foundation_v01.html) · [제2장 문서 업로드와 지식 구조화](education/dist/ch02_document_ingestion_v01.html) · [제3장 페이지 이미지 VLM 분석과 OCR 대조](education/dist/ch03_vlm_ocr_recovery_v01.html)
+- [교육과정 첫 화면](education/dist/index.html)에서 제1~3장으로 이동합니다. 장별 파일명은 `chNN_주제_vNN.html`이며 개정할 때마다 버전이 올라가므로 직접 링크하지 않습니다.
 - 원고: `education/content/ch01~03.md`, 장 목록·버전: `education/course.json`
 - 기존 `docs/*.html` 교재는 변경하지 않고 보존합니다.
 
