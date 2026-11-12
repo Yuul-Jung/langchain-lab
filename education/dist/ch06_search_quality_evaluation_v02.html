@@ -661,13 +661,24 @@ def merge_candidates(vector_hits, lexical_hits):
   <td>효과 없이 복잡도만 늘어납니다.</td>
 </tr>
 <tr>
+  <td>임베딩할 때 파일 이름을 본문 앞에 붙이기</td>
+  <td>설정을 정한 문서: 정답 포함 0.955 → 1.000 / 처음 보는 문서: 정답 포함 0.929 → 0.893, 정밀도 0.652 → 0.617</td>
+  <td>같은 문서의 쪽들이 서로 더 비슷해집니다. 처음 보는 문서에서 나빠졌습니다.</td>
+</tr>
+<tr>
+  <td>파일 이름 + 문서 첫머리를 붙이기</td>
+  <td>설정을 정한 문서: 정답 쪽 1위 0.818 → 0.727</td>
+  <td>모든 지표가 같거나 나빠졌습니다.</td>
+</tr>
+<tr>
   <td>벡터 순위와 키워드 순위 합치기 (RRF)</td>
   <td>수치가 비정상</td>
   <td>실험 코드가 문서가 다른 청크를 같은 것으로 합쳤습니다. 결과를 무효로 처리했습니다.</td>
 </tr>
 </tbody>
 </table>
-<p>마지막 줄은 실험 자체의 오류입니다. 벡터 비중을 높였는데 오히려 나빠지는 수치를 보고 의심했고, 청크 ID가 문서마다 반복된다는 것을 확인했습니다. <strong>이상한 수치는 결론으로 쓰기 전에 실험 코드부터 의심합니다.</strong></p>
+<p>파일 이름을 붙이는 실험은 문서 16개(1,190청크)를 모두 지금 규칙으로 다시 나눈 상태를 가정하고 메모리 안에서 쟀습니다. 문서를 찾는 능력은 좋아지지만 쪽을 가려내는 능력이 떨어지는, 서로 반대 방향의 효과입니다.</p>
+<p>표의 마지막 줄은 실험 자체의 오류입니다. 벡터 비중을 높였는데 오히려 나빠지는 수치를 보고 의심했고, 청크 ID가 문서마다 반복된다는 것을 확인했습니다. <strong>이상한 수치는 결론으로 쓰기 전에 실험 코드부터 의심합니다.</strong></p>
 </section><section class="section" id="s10"><h2><span class="num">10</span>검증 결과와 남은 한계</h2><table>
 <thead>
 <tr>
@@ -741,7 +752,7 @@ def merge_candidates(vector_hits, lexical_hits):
 </ul>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
 <footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v08  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v08.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v06.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}, {"id": "ch04", "number": 4, "title": "설정 분리와 모델 선택", "file": "ch04_settings_model_selection_v02.html"}, {"id": "ch05", "number": 5, "title": "공개 페이지와 로컬 운영", "file": "ch05_public_page_operations_v02.html"}, {"id": "ch06", "number": 6, "title": "검색 품질 평가와 개선", "file": "ch06_search_quality_evaluation_v01.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v08.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v07.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}, {"id": "ch04", "number": 4, "title": "설정 분리와 모델 선택", "file": "ch04_settings_model_selection_v02.html"}, {"id": "ch05", "number": 5, "title": "공개 페이지와 로컬 운영", "file": "ch05_public_page_operations_v02.html"}, {"id": "ch06", "number": 6, "title": "검색 품질 평가와 개선", "file": "ch06_search_quality_evaluation_v02.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;

@@ -155,6 +155,14 @@ systemctl --user restart langchain-lab
 
 **보안:** 로컬 개발 환경 전용입니다. `.env`와 업로드 원본은 Git에 추가하지 마세요. 외부 네트워크에 노출하지 마세요. 업로드를 통한 스크립트 실행을 허용하지 않지만, 불신 파일에 대한 완전한 악성 파일 검사나 멀티유저 인증은 구현되지 않았습니다.
 
+## 2026-11-12에 추가된 기능 (요약)
+
+- **검색 품질:** 낱말 포함 재순위, 낱말 후보, 점수 컷오프, 평가 도구 `scripts/run-eval.py` — 교육과정 제6장
+- **추출 규칙 변경 반영:** 문서 관리 화면 "07 · 추출 규칙 변경 반영"에서 미리보기(읽기 전용) 후 선택한 문서를 다시 추출. 아직 유효한 승인은 유지 — 제2장
+- **접근 제어:** 기본은 서버가 실행 중인 PC 전용. `.env`의 `ACCESS_PASSWORD`를 넣으면 다른 기기는 `/login`에서 로그인 — 제5장
+- **업로드 한도:** 30MB · 절 600개 · 청크 800개 (`.env`의 `UPLOAD_MAX_*`) — 제2장
+- **링크 검사:** `scripts/check-links.py` (GitHub 자동 검사에 포함)
+
 ## 📘 교육과정 목차 + 제1~6장 (표준 HTML 교재 v08)
 
 - GitHub Pages: https://yuul-jung.github.io/langchain-lab/education/dist/index.html
