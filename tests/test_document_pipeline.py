@@ -19,27 +19,38 @@ class DocumentPipelineTests(unittest.TestCase):
         self.addCleanup(self.patch_upload.stop)
         self.addCleanup(self.patch_catalog.stop)
 
-    def test_pdf_detects_clear_headings_without_losing_original_text(self):
+    def _parse_one_page(self, text):
         class Page:
             def extract_text(self):
-                return "머리말 설명\n1. 과정 개요\n교육 목적 설명\n2. 과정 내용\n실습과 평가"
+                return text
 
         class Reader:
             is_encrypted = False
             pages = [Page()]
 
         with patch.object(dp, "PdfReader", return_value=Reader()):
-            sections = dp._parse_pdf(self.base / "input.pdf")
-        self.assertEqual(len(sections), 3)
-        self.assertEqual(sections[0]["title"], "PDF 1쪽")
-        self.assertEqual(sections[1]["title"], "1. 과정 개요")
-        self.assertEqual(sections[2]["title"], "2. 과정 내용")
-        self.assertEqual(sections[1]["provenance"], "rule_inferred")
+            return dp._parse_pdf(self.base / "input.pdf")
+
+    def test_pdf_detects_clear_headings_without_losing_original_text(self):
+        # (변경) 쪽 맨 위의 짧은 머리 줄은 혼자 절이 되지 않고 바로 아래 절 앞에 붙는다
+        original = "머리말 설명\n1. 과정 개요\n교육 목적 설명\n2. 과정 내용\n실습과 평가"
+        sections = self._parse_one_page(original)
+        self.assertEqual([s["title"] for s in sections], ["1. 과정 개요", "2. 과정 내용"])
+        self.assertEqual(sections[0]["text"], "머리말 설명\n1. 과정 개요\n교육 목적 설명")
+        self.assertEqual(sections[0]["provenance"], "rule_inferred")
+        self.assertEqual("\n".join(s["text"] for s in sections), original)
+
+    def test_pdf_long_lead_text_stays_its_own_section(self):
+        lead = "이 문서는 실습 절차 전체를 설명하는 긴 머리말이다. " * 3
+        original = lead.strip() + "\n1. 과정 개요\n교육 목적 설명"
+        sections = self._parse_one_page(original)
+        self.assertEqual([s["title"] for s in sections], ["PDF 1쪽", "1. 과정 개요"])
         self.assertEqual(sections[0]["provenance"], "source_extracted")
-        self.assertEqual(
-            "\n".join(s["text"] for s in sections),
-            "머리말 설명\n1. 과정 개요\n교육 목적 설명\n2. 과정 내용\n실습과 평가",
-        )
+        self.assertEqual("\n".join(s["text"] for s in sections), original)
+
+    def test_pdf_short_page_without_headings_is_kept(self):
+        sections = self._parse_one_page("표지 한 줄")
+        self.assertEqual([(s["title"], s["text"]) for s in sections], [("PDF 1쪽", "표지 한 줄")])
 
     def test_md_structure_and_hierarchy(self):
         source = self.base / "example.md"

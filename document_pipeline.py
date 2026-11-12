@@ -151,6 +151,9 @@ def pdf_heading_lines(lines):
     return headings, listed
 
 
+SHORT_LEAD_CHARS = 80  # 이보다 짧은 쪽 머리 조각은 다음 절에 붙인다
+
+
 def is_page_number_only(fragment):
     """(추가) 쪽 번호만 있는 조각인지. 제목 앞에 찍힌 쪽 번호('21')가 따로 청크가 되는 것을 막는다."""
     lines = [line.strip() for line in fragment.splitlines() if line.strip()]
@@ -181,12 +184,21 @@ def _parse_pdf(path):
         is_toc = len(listed) >= 5 and len(listed) * 2 >= nonempty
         starts = [0] + [i for i in candidates if i > 0]
         starts = sorted(set(starts))
+        lead = ""
         for pos, start in enumerate(starts):
             end = starts[pos + 1] if pos + 1 < len(starts) else len(lines)
             fragment = "\n".join(lines[start:end]).strip()
             has_heading = start in candidates
             if not fragment or (not has_heading and is_page_number_only(fragment)):
                 continue
+            # (추가) 쪽 맨 위의 짧은 머리 줄(쪽 제목 등)은 혼자 청크가 되면 내용 없이 검색 1위에
+            # 오르므로, 바로 아래 절의 본문 앞에 붙인다. 원문 순서와 글자는 그대로다.
+            if (pos == 0 and not has_heading and len(starts) > 1
+                    and len(fragment) < SHORT_LEAD_CHARS):
+                lead = fragment
+                continue
+            if lead:
+                fragment, lead = lead + "\n" + fragment, ""
             title = _clean(lines[start]) if has_heading else (
                 f"PDF {page_no}쪽 (목차)" if is_toc else f"PDF {page_no}쪽")
             item = _new_section(len(sections) + 1, title, fragment, page_no)
