@@ -771,6 +771,9 @@ _QUESTION_WORDS = {"어떻게", "무슨", "어느", "어떤", "얼마나", "얼�
                    "있어", "해야", "이야", "대해"}
 SEARCH_POOL = 30      # 재순위 후보로 가져올 벡터 검색 결과 수
 SNIPPET_CHARS = 260   # 발췌 길이
+# 낱말이 그대로 있으면 1점, 조사·어미를 떼야 일치하면 이 점수 ('산업안전' 검색에서
+# '산업'만 있는 쪽이 '산업안전'이 있는 쪽과 같은 점수를 받지 않게 한다)
+STEM_CREDIT = 0.5
 
 
 def query_terms(query):
@@ -791,10 +794,22 @@ def _term_forms(term):
     return forms
 
 
+def term_credits(query, text):
+    """질문 낱말별 일치 점수: 그대로 있으면 1.0, 조사를 떼야 있으면 STEM_CREDIT, 없으면 빠짐."""
+    flat = re.sub(r"\s+", "", text).lower()
+    credits = {}
+    for term in query_terms(query):
+        forms = _term_forms(term)
+        if forms[0] in flat:
+            credits[term] = 1.0
+        elif any(f in flat for f in forms[1:]):
+            credits[term] = STEM_CREDIT
+    return credits
+
+
 def matched_terms(query, text):
     """본문(띄어쓰기 무시, 대소문자 무시)에 들어 있는 질문 낱말."""
-    flat = re.sub(r"\s+", "", text).lower()
-    return [t for t in query_terms(query) if any(f in flat for f in _term_forms(t))]
+    return list(term_credits(query, text))
 
 
 def make_snippet(text, terms, size=SNIPPET_CHARS):
@@ -822,8 +837,9 @@ def rerank_by_terms(hits, query, weight):
     terms = query_terms(query)
     out = []
     for hit in hits:
-        found = matched_terms(query, hit.get("text", "")) if terms else []
-        coverage = len(found) / len(terms) if terms else 0.0
+        credits = term_credits(query, hit.get("text", "")) if terms else {}
+        found = list(credits)
+        coverage = sum(credits.values()) / len(terms) if terms else 0.0
         bonus = (weight or 0) * coverage
         out.append({**hit, "vector_score": hit["score"], "term_coverage": round(coverage, 3),
                     "matched_terms": found, "score": round(hit["score"] + bonus, 4),

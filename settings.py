@@ -58,9 +58,9 @@ except ValueError:
     SEARCH_SCORE_MARGIN = 0.05
 # (추가) 낱말 포함 재순위 가중치: 질문 낱말이 본문에 들어 있는 비율 × 이 값을 벡터 점수에 더한다 (0 이면 끔)
 try:
-    SEARCH_TERM_WEIGHT = float(get("SEARCH_TERM_WEIGHT", "0.10"))
+    SEARCH_TERM_WEIGHT = float(get("SEARCH_TERM_WEIGHT", "0.15"))
 except ValueError:
-    SEARCH_TERM_WEIGHT = 0.10
+    SEARCH_TERM_WEIGHT = 0.15
 # (추가) 채팅 RAG 검색 대상: documents(업로드 문서, 기본) · lab(제1장 실습 문장) · both
 CHAT_RAG_SOURCE = get("CHAT_RAG_SOURCE", "documents").lower()
 

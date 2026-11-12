@@ -1,7 +1,8 @@
 """낱말 포함 재순위와 발췌 (서버·모델 없이 실행)."""
 import unittest
 
-from document_pipeline import make_snippet, matched_terms, query_terms, rerank_by_terms
+from document_pipeline import (make_snippet, matched_terms, query_terms, rerank_by_terms,
+                               term_credits)
 
 
 class QueryTermsTest(unittest.TestCase):
@@ -24,6 +25,11 @@ class MatchedTermsTest(unittest.TestCase):
     def test_korean_particles_are_stripped(self):
         self.assertEqual(matched_terms("수수료는 보증료의", "수수료 비율은 보증료 10%"), ["수수료는", "보증료의"])
 
+    def test_exact_word_scores_higher_than_stripped_match(self):
+        self.assertEqual(term_credits("산업안전", "지역 산업 안전 교육"), {"산업안전": 1.0})
+        self.assertEqual(term_credits("산업안전", "전통산업 및 첨단산업"), {"산업안전": 0.5})
+        self.assertEqual(term_credits("수수료는", "수수료 비율"), {"수수료는": 0.5})
+
     def test_unrelated_text_matches_nothing(self):
         self.assertEqual(matched_terms("산업안전", "버튼 안전 표시 켜짐 꺼짐"), [])
 
@@ -42,6 +48,12 @@ class RerankTest(unittest.TestCase):
         self.assertEqual(ranked[0]["matched_terms"], ["산업안전"])
         self.assertEqual(ranked[2]["term_coverage"], 0.0)
 
+    def test_exact_keyword_beats_partial_match_with_higher_vector_score(self):
+        hits = [{"page": 7, "score": 0.75, "text": "전통산업 및 첨단산업 연쇄재난"},
+                {"page": 8, "score": 0.68, "text": "AI 기반 산업안전 수요 매칭"}]
+        ranked = rerank_by_terms(hits, "산업안전", 0.15)
+        self.assertEqual([(h["page"], h["score"]) for h in ranked], [(8, 0.83), (7, 0.825)])
+
     def test_zero_weight_keeps_vector_order(self):
         ranked = rerank_by_terms(self.hits, "산업안전", 0)
         self.assertEqual([h["page"] for h in ranked], [7, 15, 8])
@@ -49,6 +61,8 @@ class RerankTest(unittest.TestCase):
 
     def test_partial_coverage_gives_partial_bonus(self):
         ranked = rerank_by_terms([{"page": 1, "score": 0.5, "text": "수수료 비율"}], "수수료 보증료", 0.10)
+        self.assertEqual((ranked[0]["term_coverage"], ranked[0]["score"]), (0.5, 0.55))
+        ranked = rerank_by_terms([{"page": 1, "score": 0.5, "text": "수수료 비율"}], "수수료는", 0.10)
         self.assertEqual((ranked[0]["term_coverage"], ranked[0]["score"]), (0.5, 0.55))
 
 
