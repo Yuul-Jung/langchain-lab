@@ -5,7 +5,7 @@ run-eval.py 는 검색 단계(정답 쪽을 찾는가)만 본다. 이 스크립�
 "채팅이 실제로 맞는 내용을 말하는가"를 기계적으로 확인한다.
 
 질문 파일(data/eval/questions.jsonl)에 answer_keys 를 적어 둔 문항만 사실 포함 여부를 본다.
-  "answer_keys": [["88,123"], ["31%", "31 %"]]
+  "answer_keys": [["12,340"], ["27%", "27 %"]]
   - 바깥 목록의 모든 묶음이 답변에 있어야 한다. 묶음 안에서는 하나만 있으면 된다(표기가 여러 가지일 때).
   - 띄어쓰기와 대소문자는 무시한다.
 
@@ -14,6 +14,7 @@ run-eval.py 는 검색 단계(정답 쪽을 찾는가)만 본다. 이 스크립�
   - 사실 포함: 답변에 answer_keys 가 들어 있는가
   - 인용: 답변에 [자료 N] 표시가 있는가
   - 대체 문구: 한국어 답변을 만들지 못해 안내 문구로 바뀌었는가
+  - 외국 문자: 답변에 한자·가나·태국 문자 등이 섞였는가 (문서의 한자를 그대로 인용한 경우도 센다)
 이것은 '핵심 낱말이 들어 있는가'를 보는 확인이지, 답변 전체가 옳은지 판정하는 것이 아니다.
 틀린 설명 속에 맞는 숫자가 들어 있어도 '사실 포함'으로 센다.
 
@@ -39,6 +40,8 @@ ROOT = Path(__file__).resolve().parent.parent
 QUESTIONS = ROOT / "data" / "eval" / "questions.jsonl"
 RESULTS = ROOT / "data" / "eval" / "answer-results"   # run-eval.py 의 results/ 와 섞이지 않게
 FALLBACK_MARK = "다른 언어가 혼용"
+# 한국어 답변에 섞이면 안 되는 문자: 한자 · 일본어 가나 · 태국 문자 · 키릴 문자 · 아랍 문자 · 데바나가리
+FOREIGN_SCRIPT = re.compile("[\u4e00-\u9fff\u3040-\u30ff\u0e00-\u0e7f\u0400-\u04ff\u0600-\u06ff\u0900-\u097f]")
 
 
 def norm(text) -> str:
@@ -66,6 +69,8 @@ def score_answer(item: dict, response: dict, seconds: float) -> dict:
         "facts": facts_present(answer, item.get("answer_keys")),
         "cited": bool(re.search(r"\[자료\s*\d+\]", answer)),
         "fallback": FALLBACK_MARK in answer,
+        "foreign": len(FOREIGN_SCRIPT.findall(answer)),
+        "rewrite": response.get("rewrite"),
         "chars": len(answer),
         "seconds": round(seconds, 1),
     }
@@ -81,6 +86,8 @@ def summarize(results: list[dict]) -> dict:
         "facts_checked": len(with_keys),
         "cited": round(sum(r["cited"] for r in results) / n, 3),
         "fallback": sum(r["fallback"] for r in results),
+        "foreign_answers": sum(1 for r in results if r["foreign"]),
+        "rewritten": sum(1 for r in results if r.get("rewrite") not in (None, "none")),
         "seconds_median": round(statistics.median(r["seconds"] for r in results), 1),
         "seconds_max": max(r["seconds"] for r in results),
     }
@@ -107,7 +114,7 @@ def main():
         print("서버에서 문서 목록을 읽지 못했습니다:", exc)
         return 2
     results, answers = [], {}
-    print(f"{'id':6s} 근거 포함  사실 포함  인용  대체 문구  시간")
+    print(f"{'id':6s} 근거 포함  사실 포함  인용  대체 문구  외국 문자  시간")
     for item in items:
         matches = [d for d in known if d.startswith(item["document_id"])]
         if len(matches) != 1:
@@ -130,7 +137,7 @@ def main():
                                            for s in response.get("sources") or []]}
         mark = lambda v: "-" if v is None else ("예" if v else "아니오")
         print(f"{row['id']:6s} {mark(row['evidence']):9s} {mark(row['facts']):9s} {mark(row['cited']):5s} "
-              f"{mark(row['fallback']):9s} {row['seconds']:5.1f}초")
+              f"{mark(row['fallback']):9s} {row['foreign']:5d}자   {row['seconds']:5.1f}초")
     if not results:
         print("확인한 문항이 없습니다.")
         return 2

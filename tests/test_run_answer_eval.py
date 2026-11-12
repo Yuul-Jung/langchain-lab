@@ -49,6 +49,11 @@ class ScoreTest(unittest.TestCase):
         row = answer_eval.score_answer(ITEM, response(text), 1)
         self.assertEqual((row["fallback"], row["facts"], row["cited"]), (True, False, False))
 
+    def test_foreign_script_characters_are_counted(self):
+        row = answer_eval.score_answer(ITEM, response("장비는 3대입니다. 답案: 3대 に関わる ไท"), 1)
+        self.assertEqual(row["foreign"], 7)
+        self.assertEqual(answer_eval.score_answer(ITEM, response("장비는 3대입니다. XK7 Sample"), 1)["foreign"], 0)
+
     def test_summary(self):
         rows = [answer_eval.score_answer(ITEM, response("장비는 3대입니다 [자료 1]"), 10),
                 answer_eval.score_answer(ITEM, response("모르겠습니다", []), 20),
@@ -56,6 +61,7 @@ class ScoreTest(unittest.TestCase):
         s = answer_eval.summarize(rows)
         self.assertEqual((s["questions"], s["evidence"], s["facts"], s["facts_checked"]), (3, 0.667, 0.5, 2))
         self.assertEqual((s["cited"], s["fallback"], s["seconds_median"], s["seconds_max"]), (0.667, 0, 20, 30))
+        self.assertEqual((s["foreign_answers"], s["rewritten"]), (0, 0))
 
 
 if __name__ == "__main__":

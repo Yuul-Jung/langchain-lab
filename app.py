@@ -1,4 +1,5 @@
 """Local LangChain + Elasticsearch RAG web service. Loopback only."""
+import difflib
 import os
 import re
 import secrets
@@ -196,7 +197,128 @@ def needs_korean_rewrite(answer):
     hangul = len(re.findall(r"[\uac00-\ud7a3]", answer))
     latin_words = len(re.findall(r"[A-Za-z]{3,}", answer))
     # One Hanja character or technical abbreviation is not a reason to retry.
+    # (추가) 이 검사에 걸리지 않는 가벼운 혼입은 아래 fix_light_leak 이 따로 다룬다 (안내 문구로 바꾸지 않음).
     return han >= 2 or (latin_words >= 28 and hangul < 15)
+
+
+# (추가) 가벼운 외국 문자 혼입 ('답案', 'に関わる' 등) 처리 -------------------------------------
+# 위 검사는 한자 2자 이상일 때만 다시 쓰게 해서, 한자 1자·일본어 가나·태국 문자는 그대로 나갔다
+# (2026-11-12 실측: 22개 답변 중 4개). 질문과 참고 문서에 있는 글자는 인용일 수 있으므로 세지 않는다.
+#
+# 처리 방식: 모델에게 한 번 다시 쓰게 하되, 다시 쓴 글 전체를 받지 않는다. 원래 답과 글자 단위로 비교해
+# '외국 문자가 있던 자리'의 수정만 원래 답에 옮긴다. 다시 쓴 글 전체를 받으면 모델이 외국 문자와 상관없는
+# 용어·출처 표시·영문 이름까지 바꾸는 일이 있었다(2026-11-13 실험: 용어를 다른 말로 바꿈, [자료 1] 표시 삭제).
+_FOREIGN_SCRIPT = re.compile("[\u4e00-\u9fff\u3040-\u30ff\u0e00-\u0e7f\u0400-\u04ff\u0600-\u06ff\u0900-\u097f]")
+REWRITE_PROMPT = (
+    "당신은 한국어 교정기입니다. 아래 초안을 자연스러운 한국어로만 "
+    "재작성하세요. 중국어 표현과 불필요한 영어 문장을 한국어로 번역하세요. "
+    "내용을 추가하거나 사실을 변경하지 마세요. 결과 본문만 출력하세요."
+)
+
+
+_CITATION = re.compile(r"\[자료\s*(\d+)\]")
+# 질문이 외국어 표기나 번역을 요청하면, 답의 외국 문자는 혼입이 아니라 요청한 내용이다
+_ASKS_FOREIGN = re.compile(
+    "일본어|일어로|중국어|한자|한문|태국어|러시아어|아랍어|힌디어|외국어|번역|"
+    "translat|japanese|chinese|kanji|hanja|thai|russian|arabic|hindi", re.IGNORECASE)
+
+
+def asks_foreign_text(question: str) -> bool:
+    """질문이 외국어 표기·번역을 요청하는지. 그런 대화에서는 가벼운 혼입 교정을 하지 않는다."""
+    return bool(_ASKS_FOREIGN.search(question))
+
+
+LEAK_SPAN_MAX = 12          # 한 자리에서 바꿀 수 있는 최대 길이. 더 길면 주변 문장까지 바꾼 것으로 보고 받지 않는다
+LEAK_GROWTH_MAX = 4         # 바꾼 뒤 그 자리가 늘어날 수 있는 최대 글자 수 (낱말을 덧붙이는 것 방지)
+# 이보다 긴 답은 글자 단위 비교가 느려지므로 손대지 않는다
+# (2026-11-13 실측, 절반을 다시 쓴 글과 비교: 1,000자 0.07초 · 3,000자 1.2초 · 6,000자 7.3초)
+LIGHT_FIX_MAX_CHARS = 3000
+
+
+# 가벼운 혼입용 지시문: 외국 문자가 든 낱말만 고치게 한다. 2026-11-13 같은 초안 21개로 지시문 세 가지를 비교했다.
+#   · 기존 지시문(자연스럽게 재작성): 문장을 합치거나 줄여 자리별 수정으로 옮길 수 있는 것이 14개
+#   · 이 지시문: 17개, 고친 낱말이 모두 자연스러움
+#   · 섞인 글자를 알려 주고 "한자는 독음으로" 라고 한 지시문: 18개지만 틀린 음으로 바꾼 것이 있었음(사용 → 시용)
+LIGHT_REWRITE_PROMPT = (
+    "당신은 한국어 교정기입니다. 아래 글에는 한국어가 아닌 글자(한자, 일본어, 태국 문자 등)가 조금 섞여 있습니다. "
+    "그 글자가 들어간 낱말만 알맞은 한국어 낱말로 바꾸세요. "
+    "그 밖의 문장, 숫자, 영문 용어, 기호, 줄바꿈, [자료 1] 같은 표시는 한 글자도 바꾸지 말고 그대로 두세요. "
+    "내용을 추가하거나 줄이지 마세요. 설명 없이 고친 글 전체만 출력하세요."
+)
+
+
+def stray_characters(answer: str, allowed: str = "") -> list[str]:
+    """답변에 섞인 외국 문자 (같은 글자는 한 번만, 나온 순서대로). allowed 에 있는 글자는 뺀다."""
+    return list(dict.fromkeys(ch for ch in _FOREIGN_SCRIPT.findall(answer) if ch not in allowed))
+
+
+def foreign_leaks(answer: str, allowed: str = "") -> int:
+    """답변에 섞인 한자·가나·태국 문자 등의 수. allowed(질문·참고 문서)에 있는 글자는 세지 않는다."""
+    return sum(1 for ch in _FOREIGN_SCRIPT.findall(answer) if ch not in allowed)
+
+
+def facts_preserved(original: str, rewrite: str) -> bool:
+    """다시 쓴 답이 원래 답의 숫자·영문 식별자·출처 표시를 모두 간직했는지, 길이가 크게 줄지 않았는지."""
+    if len(rewrite.strip()) < len(original.strip()) * 0.6:
+        return False
+    if set(_CITATION.findall(original)) - set(_CITATION.findall(rewrite)):
+        return False                       # [자료 N] 표시가 빠졌다
+    flat = "".join(rewrite.split()).lower()
+    tokens = set(re.findall(r"\d[\d,.]*\d|\d|[A-Za-z_][A-Za-z0-9_]{2,}", original))
+    return all("".join(token.split()).lower() in flat for token in tokens)
+
+
+def _fixed_marks(text: str, allowed: str) -> list[str]:
+    """한 자리에서 그대로 남아야 하는 글자: 숫자·영문·기호. (한글·공백·섞인 외국 문자·깨진 글자는 바뀔 수 있다)"""
+    stray = set(stray_characters(text, allowed))
+    return [ch for ch in text if not ("가" <= ch <= "힣" or ch.isspace() or ch in stray or ch == "\ufffd")]
+
+
+def _is_leak_fix(old: str, new: str, allowed: str) -> bool:
+    """다시 쓴 글의 한 자리 수정(old → new)을 원래 답에 옮겨도 되는지."""
+    if not stray_characters(old, allowed):
+        return False                                   # 이 자리에는 외국 문자가 없었다 → 상관없는 수정
+    if len(old) > LEAK_SPAN_MAX or len(new) > len(old) + LEAK_GROWTH_MAX:
+        return False                                   # 주변 문장까지 바꿨거나 낱말을 덧붙였다
+    if stray_characters(new, allowed):
+        return False                                   # 다른 외국 문자로 바꿨다
+    if _fixed_marks(old, allowed) != _fixed_marks(new, allowed):
+        return False                                   # 숫자·영문·기호(**, [ ], - 등)가 달라졌다
+    hangul = re.compile("[가-힣]")
+    return len(hangul.findall(new)) >= len(hangul.findall(old))   # 그 자리에 있던 한글을 지웠으면 받지 않는다
+
+
+def merge_leak_fixes(original: str, rewrite: str, allowed: str = "") -> str:
+    """다시 쓴 글에서 '외국 문자가 있던 자리'의 수정만 원래 답에 옮긴다. 그 밖의 변경은 모두 버린다."""
+    parts = []
+    matcher = difflib.SequenceMatcher(None, original, rewrite, autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        old, new = original[i1:i2], rewrite[j1:j2]
+        parts.append(new if tag != "equal" and _is_leak_fix(old, new, allowed) else old)
+    return "".join(parts)
+
+
+def fix_light_leak(answer: str, allowed: str, rewrite_once) -> tuple[str, str]:
+    """가벼운 혼입이면 모델에게 한 번 고치게 하고, 외국 문자가 있던 자리의 수정만 받아들인다.
+
+    rewrite_once(지시문, 초안) 은 모델을 한 번 호출해 고친 글을 돌려준다.
+    돌려주는 값: (답변, 처리 결과). 처리 결과는 none(혼입 없음) · light(외국 문자를 줄임) ·
+    kept(고치지 못해 원래 답 유지). 맞는 답을 안내 문구로 바꾸는 일은 하지 않는다.
+    """
+    if not stray_characters(answer, allowed):
+        return answer, "none"
+    if len(answer) > LIGHT_FIX_MAX_CHARS:
+        return answer, "kept"
+    try:
+        rewrite = rewrite_once(LIGHT_REWRITE_PROMPT, answer)
+    except Exception:
+        return answer, "kept"
+    rewrite = rewrite if isinstance(rewrite, str) else str(rewrite)
+    merged = merge_leak_fixes(answer, rewrite, allowed)
+    # 자리별 규칙만으로 숫자·영문·기호는 바뀌지 않는다. 규칙에 빈틈이 생겼을 때를 대비해 답 전체로 한 번 더 확인한다
+    if foreign_leaks(merged, allowed) < foreign_leaks(answer, allowed) and facts_preserved(answer, merged):
+        return merged, "light"
+    return answer, "kept"
 
 
 @app.get("/")
@@ -319,23 +441,27 @@ def chat(body: ChatRequest):
         llm = make_chat(provider)  # (변경) 선택한 제공자의 채팅 모델
         answer = llm.invoke(messages).content
         answer = answer if isinstance(answer, str) else str(answer)
+        rewrite_state = "none"
+        # 사용자가 쓴 글과 참고 문서에 있는 글자는 인용일 수 있으므로 혼입으로 세지 않는다
+        asked = "\n".join(m.content for m in body.messages if m.role == "user")
+        allowed_text = asked + "".join(s.get("text", "") for s in sources)
         if needs_korean_rewrite(answer):
             # One bounded retry to rewrite the same answer, without adding facts.
-            rewrite = llm.invoke([
-                ("system",
-                 "당신은 한국어 교정기입니다. 아래 초안을 자연스러운 한국어로만 "
-                 "재작성하세요. 중국어 표현과 불필요한 영어 문장을 한국어로 번역하세요. "
-                 "내용을 추가하거나 사실을 변경하지 마세요. 결과 본문만 출력하세요."),
-                ("human", answer),
-            ]).content
+            rewrite = llm.invoke([("system", REWRITE_PROMPT), ("human", answer)]).content
             rewrite = rewrite if isinstance(rewrite, str) else str(rewrite)
             if rewrite.strip() and not needs_korean_rewrite(rewrite):
-                answer = rewrite
+                answer, rewrite_state = rewrite, "heavy"
             else:
+                rewrite_state = "fallback"
                 answer = (
                     "답변에서 다른 언어가 혼용되어 정확한 한국어 결과를 만들지 못했습니다. "
                     "질문을 다시 입력하거나 다른 한국어 지원 모델을 선택해 주세요."
                 )
+        elif not asks_foreign_text(asked):
+            # (추가) 가벼운 혼입(한자 1자, 가나, 태국 문자 등): 한 번 고치게 하고 그 자리의 수정만 받아들임
+            answer, rewrite_state = fix_light_leak(
+                answer, allowed_text,
+                lambda prompt, draft: llm.invoke([("system", prompt), ("human", draft)]).content)
     except Exception as exc:
         # (변경) 실패 원인 안내 추가: 다른 모델이 메모리를 차지해 채팅 모델 로드가 실패하는 경우 등
         if provider.id == "local":
@@ -350,4 +476,6 @@ def chat(body: ChatRequest):
         # (변경) DeepSeek-R1 답변 앞의 빈 줄(추론 블록 뒤 개행)이 채팅 말풍선에 공백으로 보이지 않게 정리
         "answer": answer.strip(),
         "sources": sources,
+        # (추가) 한국어 교정 처리 결과: none · light · kept · heavy · fallback
+        "rewrite": rewrite_state,
     }
