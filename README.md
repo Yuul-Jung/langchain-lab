@@ -10,6 +10,23 @@ LM Studio + DeepSeek 14B + Qwen3 임베딩 4B + Elasticsearch 9.x + FastAPI/Lang
 - GitHub Pages는 Python 서버가 아니며, 루트 공개 페이지는 별도 정적 실습용으로 남겨 둡니다.
 - 외부 공개 서버가 아닙니다. 현재 PC에서만 사용할 수 있습니다.
 
+## GitHub Pages 첫 화면 → 로컬 실행 게이트 (2026-11)
+
+공개 시작 페이지: https://yuul-jung.github.io/langchain-lab/
+
+**실행 순서**
+
+1. 공개 시작 페이지에서 **최초 설정/업데이트** 명령을 복사해 Ubuntu 터미널에서 실행합니다. 기존 프로젝트는 `bash ~/langchain_web/scripts/update-local.sh`를 사용합니다.
+2. 이후 평소에는 `bash ~/langchain_web/scripts/start-local.sh`만 실행합니다. 이 스크립트는 기존 FastAPI 사용자 서비스를 필요할 때 시작하고, LM Studio가 닫혀 있으면 `lms server start`를 시도하며 Elasticsearch 연결 상태를 검사합니다.
+3. 로컬 채팅은 http://127.0.0.1:8000/ , 문서 관리자는 http://127.0.0.1:8000/documents 에서 실행합니다.
+
+공개 GitHub Pages는 브라우저 보안상 로컬 Ubuntu 명령을 직접 실행할 수 없습니다. 시작 페이지에는 **명령 복사**와 로컬 서비스로 이동하는 링크만 제공합니다. 브라우저에서 로컬 상태 검사는 동일 출처 API가 아닌 경우 차단될 수 있으므로 **진단 결과는 로컬 서버나 터미널에서 확인**합니다.
+
+- `start-local.sh`는 패키지를 재설치하거나 데이터·인덱스·비밀번호를 변경하지 않습니다.
+- Elasticsearch는 권한이 필요한 시스템 서비스이므로 `start-local.sh`가 자동으로 `sudo`를 실행하지 않습니다. 중단 상태라면 사용자 확인 후 `sudo systemctl start elasticsearch`를 별도 실행합니다.
+- LM Studio 실행 성공과 DeepSeek/Qwen3 모델 로드 성공은 별개입니다. 실제 임베딩 정상 여부는 로컬 진단 API로 확인합니다.
+- 사용자 개인 PC가 아닌 다른 컴퓨터에서 GitHub Pages를 열어도 `127.0.0.1`은 **그 컴퓨터 자체**를 의미합니다.
+
 ## Ubuntu 최초 설정 (한 번만)
 
 LM Studio에서 Local Server를 시작하고 DeepSeek와 Qwen3-Embedding 모델을 사용할 수 있도록 설정합니다.
