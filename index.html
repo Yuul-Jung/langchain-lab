@@ -65,16 +65,17 @@ footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:1
 <h2 id="setupTitle">① 로컬 실행 환경 준비</h2>
 <p>GitHub Pages는 공개 학습 화면입니다. 여기서 PC 프로그램을 직접 실행하지는 않습니다. <strong>Ubuntu 터미널에서 아래 명령을 실행한 후</strong> 로컬 채팅으로 이동하세요. 이미 설치한 프로그램은 다시 설치하지 않습니다.</p>
 <div class="steps">
- <div class="step"><span class="num">1</span><b>첫 실행 / 코드 업데이트</b><small>프로젝트 소스·라이브러리 확인, 테스트, FastAPI 서비스 업데이트</small></div>
+ <div class="step"><span class="num">1</span><b>처음 한 번: 기본 세팅</b><small>소스 내려받기, 비밀번호 설정, 패키지·테스트, 서비스 등록, 모델 준비, 최종 상태 출력</small></div>
  <div class="step"><span class="num">2</span><b>매일 로컬 서버 시작</b><small>FastAPI와 LM Studio 상태 확인, 필요 시 시작. Elasticsearch는 상태만 확인</small></div>
  <div class="step"><span class="num">3</span><b>로컬 서비스 접속</b><small>127.0.0.1:8000에서 채팅과 PDF 관리 실행</small></div>
 </div>
-<div><strong>최초 설정 또는 소스 업데이트 (필요할 때만)</strong></div>
-<div class="command"><code id="updateCmd">cd ~/langchain_web &amp;&amp; bash scripts/update-local.sh</code><button type="button" data-copy="updateCmd">명령 복사</button></div>
+<div><strong>① 처음 한 번: 기본 세팅 (다시 실행해도 안전)</strong></div>
+<div class="command"><code id="setupCmd">[ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; bash ~/langchain_web/scripts/setup-local.sh</code><button type="button" data-copy="setupCmd">명령 복사</button></div>
+<p class="hint">미리 필요한 것: <b>LM Studio</b>(DeepSeek-R1-Distill-Qwen-14B, Qwen3-Embedding-4B 내려받기)와 <b>Elasticsearch 9</b> 설치. 세팅 스크립트가 빠진 항목과 조치 명령을 알려 주며, sudo는 자동으로 실행하지 않습니다.</p>
 <div><strong>평소 실행 (매번 이 명령 하나)</strong></div>
 <div class="command"><code id="startCmd">cd ~/langchain_web &amp;&amp; bash scripts/start-local.sh</code><button type="button" data-copy="startCmd">명령 복사</button></div>
-<p class="hint">2026년 11월 이후 추가된 실행 스크립트가 아직 PC에 없는 경우, 최초 한 번 아래 명령으로 가져옵니다.</p>
-<div class="command"><code id="pullCmd">cd ~/langchain_web &amp;&amp; git pull --ff-only origin main</code><button type="button" data-copy="pullCmd">명령 복사</button></div>
+<div><strong>소스 업데이트 (GitHub에 새 버전이 올라왔을 때)</strong></div>
+<div class="command"><code id="updateCmd">cd ~/langchain_web &amp;&amp; bash scripts/update-local.sh</code><button type="button" data-copy="updateCmd">명령 복사</button></div>
 <div id="copyState" role="status" aria-live="polite"></div>
 <div class="launch">
  <a href="http://127.0.0.1:8000/" target="_blank" rel="noopener">② 로컬 AI 채팅 열기</a>
@@ -140,9 +141,10 @@ async function checkLocal(){
  }catch(e){
   list.replaceChildren(el("li","❌ 로컬 서비스에 연결하지 못했습니다 ("+(e.name==="AbortError"?"15초 시간 초과":"응답 없음")+")"));
   showAdvice([
-   {text:"1) 로컬 서비스가 꺼져 있으면 시작하세요.",command:"cd ~/langchain_web && bash scripts/start-local.sh"},
-   {text:"2) 상태 확인 기능이 없는 이전 버전이면 업데이트하세요 (2026-11-12 이후 버전 필요).",command:"cd ~/langchain_web && bash scripts/update-local.sh"},
-   {text:"3) 브라우저가 로컬 접근을 막았을 수 있습니다. 주소창 왼쪽 사이트 정보 → 사이트 설정에서 '로컬 네트워크 액세스'를 허용한 뒤 다시 누르세요. 이 확인은 서비스가 실행 중인 바로 그 PC의 브라우저에서만 동작합니다."}
+   {text:"1) 처음 사용하는 PC라면 기본 세팅을 먼저 실행하세요.",command:"[ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; bash ~/langchain_web/scripts/setup-local.sh"},
+   {text:"2) 세팅한 PC라면 로컬 서비스를 시작하세요.",command:"cd ~/langchain_web && bash scripts/start-local.sh"},
+   {text:"3) 상태 확인 기능이 없는 이전 버전이면 업데이트하세요 (2026-11-12 이후 버전 필요).",command:"cd ~/langchain_web && bash scripts/update-local.sh"},
+   {text:"4) 브라우저가 로컬 접근을 막았을 수 있습니다. 주소창 왼쪽 사이트 정보 → 사이트 설정에서 '로컬 네트워크 액세스'를 허용한 뒤 다시 누르세요. 이 확인은 서비스가 실행 중인 바로 그 PC의 브라우저에서만 동작합니다."}
   ]);
  }finally{clearTimeout(timer);btn.disabled=false;btn.textContent="다시 확인";}
 }
