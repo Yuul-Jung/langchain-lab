@@ -36,9 +36,12 @@ def is_loopback(host: str | None) -> bool:
     if not host:
         return False
     try:
-        return ipaddress.ip_address(host).is_loopback
+        address = ipaddress.ip_address(host)
     except ValueError:
         return host == "localhost"
+    # 서버를 IPv6 로 열면 이 PC 의 IPv4 요청이 '::ffff:127.0.0.1' 꼴로 보인다
+    mapped = getattr(address, "ipv4_mapped", None)
+    return (mapped or address).is_loopback
 
 
 def host_name(host_header: str | None) -> str:
@@ -83,9 +86,10 @@ def safe_next(target: str | None) -> str:
 class LoginLimiter:
     """같은 주소에서 틀린 비밀번호가 반복되면 잠시 로그인 시도를 막는다 (메모리에만 보관)."""
 
-    def __init__(self, max_failures: int = 5, window_seconds: int = 300):
+    def __init__(self, max_failures: int = 5, window_seconds: int = 300, max_clients: int = 2000):
         self.max_failures = max_failures
         self.window = window_seconds
+        self.max_clients = max_clients
         self._failures: dict[str, list[float]] = {}
 
     def _recent(self, client: str, now: float) -> list[float]:
@@ -107,6 +111,13 @@ class LoginLimiter:
     def record_failure(self, client: str, now: float | None = None) -> None:
         now = time.time() if now is None else now
         self._failures[client] = self._recent(client, now) + [now]
+        # 수많은 주소에서 시도가 들어와도 기록이 끝없이 쌓이지 않게, 지난 기록부터 버린다
+        if len(self._failures) > self.max_clients:
+            for other in list(self._failures):
+                self._recent(other, now)
+            while len(self._failures) > self.max_clients:
+                oldest = min(self._failures, key=lambda c: self._failures[c][-1])
+                del self._failures[oldest]
 
     def reset(self, client: str) -> None:
         self._failures.pop(client, None)

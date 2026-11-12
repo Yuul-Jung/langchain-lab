@@ -126,6 +126,24 @@ class TokenAndHelpersTest(unittest.TestCase):
         self.assertTrue(ac.is_loopback("127.0.0.1") and ac.is_loopback("127.5.5.5") and ac.is_loopback("::1"))
         self.assertFalse(ac.is_loopback("192.168.0.9") or ac.is_loopback("testclient") or ac.is_loopback(""))
 
+    def test_ipv4_mapped_loopback_is_this_pc(self):
+        self.assertTrue(ac.is_loopback("::ffff:127.0.0.1"))
+        self.assertFalse(ac.is_loopback("::ffff:192.168.0.9"))
+        self.assertFalse(ac.is_loopback("127.0.0.1.evil.example"))
+
+    def test_login_limiter_memory_is_bounded(self):
+        limiter = ac.LoginLimiter(max_failures=5, window_seconds=300, max_clients=50)
+        for n in range(500):
+            limiter.record_failure(f"10.0.{n // 250}.{n % 250}", now=1000 + n * 0.01)
+        self.assertLessEqual(len(limiter._failures), 50)
+        # 방금 실패한 주소의 기록은 남아 있어야 한다
+        limiter.record_failure("10.9.9.9", now=2000)
+        self.assertIn("10.9.9.9", limiter._failures)
+        # 오래된 기록은 창이 지나면 차단에 쓰이지 않고, 그 주소를 다시 볼 때 지워진다
+        self.assertEqual(limiter.retry_after("10.9.9.9", now=5000), 0)
+        self.assertNotIn("10.9.9.9", limiter._failures)
+        self.assertLessEqual(len(limiter._failures), 50)
+
     def test_login_limiter_blocks_then_recovers(self):
         limiter = ac.LoginLimiter(max_failures=3, window_seconds=60)
         for second in range(3):
