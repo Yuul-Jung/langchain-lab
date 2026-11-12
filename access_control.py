@@ -11,6 +11,9 @@
 - 변경을 일으키는 요청(POST 등)은 보낸 페이지의 주소(Origin)가 이 서버의 주소와 같을 때만 받는다.
   다른 웹사이트가 내 브라우저를 통해 업로드·재추출 같은 요청을 보내는 수법(CSRF)을 막는다.
   curl 처럼 Origin 이 없는 요청은 브라우저가 아니므로 해당 없다.
+- 다른 사이트의 페이지가 뒤에서 보내는 요청(이미지·fetch·iframe 등)은 /api/status 만 받는다.
+  응답을 읽지 못하더라도 무거운 읽기 요청(재추출 미리보기 등)을 반복시켜 PC 를 바쁘게 만들 수 있기 때문이다.
+  브라우저가 붙이는 Sec-Fetch-* 표시로 판단하며, 다른 사이트의 링크를 눌러 새 탭으로 여는 것은 허용한다.
 
 세션은 서버에 저장하지 않는다. "만료시각.서명" 꼴의 값을 쿠키에 두고 HMAC 으로 검증한다.
 이 모듈은 FastAPI 에 의존하지 않아 서버 없이 테스트한다.
@@ -29,6 +32,8 @@ OPEN_PATHS = frozenset({"/login", "/api/login", "/api/logout"})
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 # 서버의 상태를 바꿀 수 있는 요청 방식
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+# 다른 사이트의 페이지가 읽어도 되는 유일한 주소 (공개 시작 페이지의 상태 확인, CORS 로 따로 제한)
+CROSS_SITE_PATHS = frozenset({"/api/status"})
 
 
 def is_loopback(host: str | None) -> bool:
@@ -133,15 +138,31 @@ def same_origin(origin_header: str | None, host_header: str | None, allowed_host
     return origin_host == host_name(host_header) or origin_host in {h.lower() for h in allowed_hosts}
 
 
+def cross_site_background(path: str, fetch_site: str | None, fetch_mode: str | None,
+                          fetch_dest: str | None) -> bool:
+    """다른 사이트의 페이지가 뒤에서 보낸 요청인지 (새 탭·창으로 여는 것은 아님).
+
+    Sec-Fetch-* 가 없는 요청(curl, 오래된 브라우저)은 판단하지 않는다.
+    """
+    if (fetch_site or "").lower() != "cross-site" or path in CROSS_SITE_PATHS:
+        return False
+    top_level_navigation = (fetch_mode or "").lower() == "navigate" and (fetch_dest or "").lower() == "document"
+    return not top_level_navigation
+
+
 def decide(*, path: str, client_host: str | None, host_header: str | None,
            password_set: bool, authenticated: bool,
            require_loopback_auth: bool = False, allowed_hosts=(),
-           method: str = "GET", origin_header: str | None = None) -> str:
+           method: str = "GET", origin_header: str | None = None,
+           fetch_site: str | None = None, fetch_mode: str | None = None,
+           fetch_dest: str | None = None) -> str:
     """요청을 어떻게 처리할지: allow · login(로그인 페이지로) · unauthorized(401) · forbidden · bad_host · bad_origin(403).
 
     순서가 중요하다. 로그인 없이 통과시키는 경우(루프백 신뢰)에만 Host 를 검사한다.
     """
     if method.upper() in UNSAFE_METHODS and not same_origin(origin_header, host_header, allowed_hosts):
+        return "bad_origin"
+    if cross_site_background(path, fetch_site, fetch_mode, fetch_dest):
         return "bad_origin"
     local = is_loopback(client_host)
     if not password_set:

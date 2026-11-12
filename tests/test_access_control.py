@@ -92,6 +92,29 @@ class OriginTest(unittest.TestCase):
                                 allowed_hosts=["lab.example.com"]), "allow")
 
 
+class CrossSiteBackgroundTest(unittest.TestCase):
+    """다른 사이트의 페이지가 뒤에서 보내는 요청 (Sec-Fetch-* 표시)."""
+
+    def test_background_requests_from_other_sites_are_refused(self):
+        heavy = "/api/documents/maintenance/reextract-preview"
+        self.assertEqual(decide(path=heavy, fetch_site="cross-site", fetch_mode="no-cors", fetch_dest="image"), "bad_origin")
+        self.assertEqual(decide(path=heavy, fetch_site="cross-site", fetch_mode="cors", fetch_dest="empty"), "bad_origin")
+        self.assertEqual(decide(path="/documents", fetch_site="cross-site", fetch_mode="navigate", fetch_dest="iframe"), "bad_origin")
+
+    def test_links_opened_from_the_public_start_page_still_work(self):
+        for path in ("/", "/documents", "/api/documents/health/status"):
+            self.assertEqual(decide(path=path, fetch_site="cross-site", fetch_mode="navigate", fetch_dest="document"), "allow")
+
+    def test_public_status_check_is_the_one_exception(self):
+        self.assertEqual(decide(path="/api/status", fetch_site="cross-site", fetch_mode="cors", fetch_dest="empty",
+                                origin_header="https://yuul-jung.github.io"), "allow")
+
+    def test_same_site_and_headerless_requests_are_unaffected(self):
+        self.assertEqual(decide(path="/api/documents", fetch_site="same-origin", fetch_mode="cors", fetch_dest="empty"), "allow")
+        self.assertEqual(decide(path="/api/documents", fetch_site="none", fetch_mode="navigate", fetch_dest="document"), "allow")
+        self.assertEqual(decide(path="/api/documents"), "allow")           # curl, 오래된 브라우저
+
+
 class TokenAndHelpersTest(unittest.TestCase):
     def test_token_round_trip_and_expiry(self):
         token = ac.make_token(SECRET, hours=1, now=1000)
@@ -188,6 +211,12 @@ class AppAccessTest(unittest.TestCase):
         r = client.post("/api/documents/search", json={"query": "x"}, headers={"Origin": "https://evil.example"})
         self.assertEqual(r.status_code, 403)
         self.assertIn("다른 웹사이트", r.json()["detail"])
+        background = client.get("/api/documents/maintenance/reextract-preview",
+                                headers={"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "no-cors", "Sec-Fetch-Dest": "image"})
+        self.assertEqual(background.status_code, 403)
+        opened = client.get("/documents", headers={"Sec-Fetch-Site": "cross-site", "Sec-Fetch-Mode": "navigate",
+                                                   "Sec-Fetch-Dest": "document"})
+        self.assertEqual(opened.status_code, 200)
 
     def test_login_is_refused_when_no_password_is_configured(self):
         self.assertEqual(self.local().post("/api/login", json={"password": "x"}).status_code, 400)

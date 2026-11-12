@@ -64,7 +64,7 @@ _LOGIN_LIMITER = access_control.LoginLimiter()
 _ACCESS_MESSAGES = {
     "forbidden": "접속 비밀번호가 설정되지 않아 서버가 실행 중인 PC에서만 사용할 수 있습니다. (.env 의 ACCESS_PASSWORD)",
     "bad_host": "허용되지 않은 주소 이름으로 들어온 요청입니다. 127.0.0.1 또는 localhost 로 접속하세요. (.env 의 ALLOWED_HOSTS)",
-    "bad_origin": "다른 웹사이트에서 보낸 변경 요청은 받지 않습니다.",
+    "bad_origin": "다른 웹사이트에서 보낸 요청은 받지 않습니다.",
     "unauthorized": "로그인이 필요합니다.",
 }
 
@@ -87,6 +87,8 @@ async def access_guard(request: Request, call_next):
         require_loopback_auth=settings.AUTH_REQUIRE_LOOPBACK,
         allowed_hosts=settings.ALLOWED_HOSTS,
         method=request.method, origin_header=request.headers.get("origin"),
+        fetch_site=request.headers.get("sec-fetch-site"), fetch_mode=request.headers.get("sec-fetch-mode"),
+        fetch_dest=request.headers.get("sec-fetch-dest"),
     )
     if verdict == "allow":
         return await call_next(request)
