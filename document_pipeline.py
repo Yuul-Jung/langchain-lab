@@ -103,6 +103,54 @@ def _new_section(number, title, text, page=None, level=1, parent=None):
     }
 
 
+_PDF_HEADING = re.compile(
+    r"^(?:[1-9][0-9]?\.\s+[^\n]{2,65}|"
+    r"제\s*[1-9][0-9]?\s*[장절]\s*[^\n]{2,65})$"
+)
+# (추가) 번호 제목 사이에 끼어도 "본문"으로 치지 않는 줄: 로마 숫자 부 제목, 쪽 번호
+_PDF_SEPARATOR = re.compile(r"^(?:[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+\.?\s+.{1,40}|\d{1,4})$")
+
+
+def _heading_number(line):
+    m = re.match(r"^(?:제\s*)?([1-9][0-9]?)", line)
+    return int(m.group(1)) if m else None
+
+
+def pdf_heading_lines(lines):
+    """(추가) 페이지 줄 목록에서 제목으로 쓸 줄 번호와, 목록·목차로 판단한 줄 번호를 돌려준다.
+
+    번호 줄이 본문 없이 2개 이상 연달아 나오면 목차나 번호 목록(예: '1. 구조를 이해한다.')으로 보고
+    제목으로 쓰지 않는다. 진짜 제목은 아래에 본문이 있다. 단, 제목 바로 뒤에 '1.'부터 시작하는
+    목록이 붙은 경우(예: '2. 목적' → '1. …')에는 앞의 줄만 제목으로 남긴다.
+    """
+    cleaned = [_clean(line) for line in lines]
+    candidates = [i for i, line in enumerate(cleaned) if _PDF_HEADING.fullmatch(line)]
+    runs, run = [], []
+    for i in candidates:
+        if run and all(not cleaned[j] or _PDF_SEPARATOR.fullmatch(cleaned[j])
+                       for j in range(run[-1] + 1, i)):
+            run.append(i)
+        else:
+            if run:
+                runs.append(run)
+            run = [i]
+    if run:
+        runs.append(run)
+    headings, listed = [], set()
+    for run in runs:
+        if len(run) == 1:
+            headings.append(run[0])
+            continue
+        if _heading_number(cleaned[run[0]]) != 1 and _heading_number(cleaned[run[1]]) == 1:
+            headings.append(run[0])
+            run = run[1:]
+        listed.update(run)
+    # Excessive matches usually mean a table or numbered list, not headings.
+    if len(headings) > 12:
+        headings = []
+    return headings, listed
+
+
 def _parse_pdf(path):
     """Keep full original page text while extracting clearly delimited headings.
 
@@ -113,10 +161,6 @@ def _parse_pdf(path):
     if reader.is_encrypted:
         raise ValueError("암호화된 PDF는 업로드할 수 없습니다.")
     sections = []
-    heading = re.compile(
-        r"^(?:[1-9][0-9]?\.\s+[^\n]{2,65}|"
-        r"제\s*[1-9][0-9]?\s*[장절]\s*[^\n]{2,65})$"
-    )
     # (변경) 문서 전체를 먼저 읽어 깨진 공백 한자를 판별·복원한 뒤 페이지별로 처리한다.
     page_texts, _ = repair_broken_spaces(
         [(page.extract_text() or "").strip() for page in reader.pages]
@@ -125,13 +169,10 @@ def _parse_pdf(path):
         if not text:
             continue
         lines = text.splitlines()
-        candidates = [
-            i for i, line in enumerate(lines)
-            if heading.fullmatch(_clean(line))
-        ]
-        # Excessive matches usually mean a table or numbered list, not headings.
-        if len(candidates) > 12:
-            candidates = []
+        # (변경) 목차·번호 목록 줄은 제목 후보에서 뺀다 (pdf_heading_lines 참고)
+        candidates, listed = pdf_heading_lines(lines)
+        nonempty = sum(1 for line in lines if line.strip())
+        is_toc = len(listed) >= 5 and len(listed) * 2 >= nonempty
         starts = [0] + [i for i in candidates if i > 0]
         starts = sorted(set(starts))
         for pos, start in enumerate(starts):
@@ -140,7 +181,8 @@ def _parse_pdf(path):
             if not fragment:
                 continue
             has_heading = start in candidates
-            title = _clean(lines[start]) if has_heading else f"PDF {page_no}쪽"
+            title = _clean(lines[start]) if has_heading else (
+                f"PDF {page_no}쪽 (목차)" if is_toc else f"PDF {page_no}쪽")
             item = _new_section(len(sections) + 1, title, fragment, page_no)
             if has_heading:
                 item["provenance"] = "rule_inferred"
