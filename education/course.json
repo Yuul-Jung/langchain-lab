@@ -1,9 +1,9 @@
 {
   "site_title": "로컬 AI/RAG 시스템 구축 실습",
   "site_subtitle": "LM Studio · LangChain · Elasticsearch · FastAPI · Qwen3-VL · 대형 LLM API",
-  "site_description": "Ubuntu 노트북 한 대에서 로컬 언어 모델, 임베딩, 벡터 검색, 문서 구조화, 페이지 이미지 분석을 구축하고, 설정 분리와 모델 선택, 공개 페이지 운영까지 단계별로 정리했습니다. 실제로 성공한 결과와 아직 검증하지 않은 부분을 구분해 기록한 실습 교재입니다.",
+  "site_description": "Ubuntu 노트북 한 대에서 로컬 언어 모델, 임베딩, 벡터 검색, 문서 구조화, 페이지 이미지 분석을 구축하고, 설정 분리와 모델 선택, 공개 페이지 운영, 검색 품질 평가와 개선까지 단계별로 정리했습니다. 실제로 성공한 결과와 아직 검증하지 않은 부분을 구분해 기록한 실습 교재입니다.",
   "course_code": "LANGCHAIN LAB",
-  "version": "v07",
+  "version": "v08",
   "chapters": [
     {
       "id": "ch01",
@@ -11,7 +11,7 @@
       "title": "로컬 AI/RAG 기반 구축",
       "subtitle": "LM Studio 모델 → LangChain 호출 → 임베딩 → Elasticsearch 벡터 검색 → FastAPI RAG 웹 → systemd",
       "slug": "ch01_local_ai_rag_foundation",
-      "version": "v07",
+      "version": "v08",
       "source": "content/ch01.md",
       "tags": [
         "LM Studio",
@@ -25,16 +25,16 @@
       "id": "ch02",
       "number": 2,
       "title": "문서 업로드와 지식 구조화",
-      "subtitle": "원본 구조 추출 → 청크·임베딩 → 분류·학습 순서 제안 → 전용 인덱스 등록 → 진단·재추출·품질 평가",
+      "subtitle": "원본 구조 추출 → 청크·임베딩 → 분류·학습 순서 제안 → 전용 인덱스 등록 → 진단·재추출 → 추출 적대적 검증",
       "slug": "ch02_document_ingestion",
-      "version": "v03",
+      "version": "v04",
       "source": "content/ch02.md",
       "tags": [
         "PDF·DOCX·HTML",
         "Qwen3 2,560차원",
         "검토 승인",
         "원본 재추출",
-        "목차·번호 목록 판별"
+        "적대적 테스트 50개"
       ]
     },
     {
@@ -58,13 +58,14 @@
       "title": "설정 분리와 모델 선택",
       "subtitle": ".env 설정 한곳 모음 → 로컬 / OpenAI / Anthropic 제공자 → 외부 전송 보호 → 단위 테스트",
       "slug": "ch04_settings_model_selection",
-      "version": "v01",
+      "version": "v02",
       "source": "content/ch04.md",
       "tags": [
         "settings.py",
         ".env",
         "llm_providers",
-        "ALLOW_EXTERNAL_RAG"
+        "ALLOW_EXTERNAL_RAG",
+        "CHAT_RAG_SOURCE"
       ]
     },
     {
@@ -80,6 +81,21 @@
         "setup·start·update",
         "/api/status",
         "URL 실행기"
+      ]
+    },
+    {
+      "id": "ch06",
+      "number": 6,
+      "title": "검색 품질 평가와 개선",
+      "subtitle": "평가 세트·채점 도구 → 채팅 검색 대상 → 점수 컷오프 → 낱말 포함 재순위 → 낱말 후보 → 처음 보는 문서 검증",
+      "slug": "ch06_search_quality_evaluation",
+      "version": "v01",
+      "source": "content/ch06.md",
+      "tags": [
+        "hit@1 · MRR · 정밀도",
+        "SEARCH_SCORE_MARGIN",
+        "SEARCH_TERM_WEIGHT",
+        "처음 보는 문서 검증"
       ]
     }
   ]

@@ -104,7 +104,7 @@ GUI를 이미 설치해 사용 중이므로 LM Studio의 설정(`Ctrl+,`)에서 
 
 브라우저에서 http://127.0.0.1:8000 접속 → `일반 채팅` 또는 `RAG 문서 검색` 선택.
 
-일반 RAG 채팅은 **기존** `langchain_embedding_lab` 인덱스를 읽기 전용으로 검색합니다. 제2장 문서 업로드 기능은 별도 인덱스 `langchain_documents_v1`에 등록하며, 두 검색 경로는 아직 분리되어 있습니다. RAG 채팅에서 새 업로드 문서를 자동 검색하도록 전환하는 기능은 후속 통합 과제입니다.
+RAG 채팅은 기본값으로 제2장에서 업로드한 문서의 인덱스 `langchain_documents_v1`을 검색합니다(2026-11-12부터). 제1장 실습 인덱스 `langchain_embedding_lab`은 `.env`의 `CHAT_RAG_SOURCE=lab`으로 고르거나 업로드한 문서가 없을 때만 씁니다. 검색 결과는 낱말 포함 재순위와 점수 컷오프(`SEARCH_TERM_WEIGHT`, `SEARCH_SCORE_MARGIN`)를 거칩니다. 자세한 내용은 교육과정 제6장에 있습니다.
 
 ## 주의
 
@@ -116,7 +116,7 @@ GUI를 이미 설치해 사용 중이므로 LM Studio의 설정(`Ctrl+,`)에서 
 
 ## 학습용 HTML 교재
 
-교재는 아래 "교육과정" 절의 표준 HTML 교재(목차 + 제1~5장) 하나로 통합했습니다. 예전 `docs/*.html` 교재(구축 가이드 2종, 제2장 안내서, 구조도 디자인 표준)의 주소로 들어오면 표준 교재의 해당 장으로 자동 이동합니다. 예전 구조도 6종은 SVG 그림(`education/assets/diagrams/`)으로 다시 그려 제1·2장에 넣었고, 예전 원본은 Git 기록에 남아 있습니다.
+교재는 아래 "교육과정" 절의 표준 HTML 교재(목차 + 제1~6장) 하나로 통합했습니다. 예전 `docs/*.html` 교재(구축 가이드 2종, 제2장 안내서, 구조도 디자인 표준)의 주소로 들어오면 표준 교재의 해당 장으로 자동 이동합니다. 예전 구조도 6종은 SVG 그림(`education/assets/diagrams/`)으로 다시 그려 제1·2장에 넣었고, 예전 원본은 Git 기록에 남아 있습니다.
 
 
 ## 제2장 — 로컬 문서 업로드·구조화 (v2.0 학습 과정)
@@ -155,11 +155,11 @@ systemctl --user restart langchain-lab
 
 **보안:** 로컬 개발 환경 전용입니다. `.env`와 업로드 원본은 Git에 추가하지 마세요. 외부 네트워크에 노출하지 마세요. 업로드를 통한 스크립트 실행을 허용하지 않지만, 불신 파일에 대한 완전한 악성 파일 검사나 멀티유저 인증은 구현되지 않았습니다.
 
-## 📘 교육과정 목차 + 제1~5장 (표준 HTML 교재 v07)
+## 📘 교육과정 목차 + 제1~6장 (표준 HTML 교재 v08)
 
 - GitHub Pages: https://yuul-jung.github.io/langchain-lab/education/dist/index.html
-- 구성: 제1장 기반 구축 · 제2장 문서 구조화 · 제3장 VLM·OCR · 제4장 설정 분리와 모델 선택 · 제5장 공개 페이지와 로컬 운영
-- 원고: `education/content/ch01~05.md`, 장 목록·버전: `education/course.json`, 구조도: `education/assets/diagrams/`
+- 구성: 제1장 기반 구축 · 제2장 문서 구조화 · 제3장 VLM·OCR · 제4장 설정 분리와 모델 선택 · 제5장 공개 페이지와 로컬 운영 · 제6장 검색 품질 평가와 개선
+- 원고: `education/content/ch01~06.md`, 장 목록·버전: `education/course.json`, 구조도: `education/assets/diagrams/`
 - 장별 파일명은 `chNN_주제_vNN.html`이며 개정할 때마다 버전이 올라갑니다. 시작 페이지(`index.html`)와 예전 주소 이동 페이지(`docs/*.html`)는 장별 파일에 직접 연결하므로, **버전을 올리면 그 링크도 함께 고칩니다.** 끊긴 링크는 GitHub 자동 검사의 `scripts/check-links.py` 단계가 실패로 알려 줍니다.
 
 이 저장소의 교육자료(웹페이지·강의 HTML)는 [Yuul-Jung 교육용 HTML 공통 표준](https://github.com/Yuul-Jung/rule_md/tree/main/web/education-html)을 적용합니다.
