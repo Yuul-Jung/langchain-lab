@@ -25,9 +25,9 @@
       "id": "ch02",
       "number": 2,
       "title": "문서 업로드와 지식 구조화",
-      "subtitle": "원본 구조 추출 → 청크·임베딩 → 분류·학습 순서 제안 → 전용 인덱스 등록 → 진단·재추출 → 추출 적대적 검증",
+      "subtitle": "원본 구조 추출 → 청크·임베딩 → 분류·학습 순서 제안 → 전용 인덱스 등록 → 진단·재추출(승인 유지) → 추출 적대적 검증",
       "slug": "ch02_document_ingestion",
-      "version": "v04",
+      "version": "v05",
       "source": "content/ch02.md",
       "tags": [
         "PDF·DOCX·HTML",
