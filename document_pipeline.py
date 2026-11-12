@@ -842,7 +842,10 @@ def rerank_by_terms(hits, query, weight):
         coverage = sum(credits.values()) / len(terms) if terms else 0.0
         bonus = (weight or 0) * coverage
         out.append({**hit, "vector_score": hit["score"], "term_coverage": round(coverage, 3),
-                    "matched_terms": found, "score": round(hit["score"] + bonus, 4),
+                    "matched_terms": found,
+                    # (추가) 조사를 떼야만 일치한 낱말 — 화면에서 '일부 일치'로 구분해 보여 준다
+                    "partial_terms": [t for t, c in credits.items() if c < 1.0],
+                    "score": round(hit["score"] + bonus, 4),
                     "snippet": make_snippet(hit.get("text", ""), found)})
     out.sort(key=lambda h: -h["score"])
     return out

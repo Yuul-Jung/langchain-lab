@@ -53,6 +53,7 @@ class RerankTest(unittest.TestCase):
                 {"page": 8, "score": 0.68, "text": "AI 기반 산업안전 수요 매칭"}]
         ranked = rerank_by_terms(hits, "산업안전", 0.15)
         self.assertEqual([(h["page"], h["score"]) for h in ranked], [(8, 0.83), (7, 0.825)])
+        self.assertEqual([h["partial_terms"] for h in ranked], [[], ["산업안전"]])
 
     def test_zero_weight_keeps_vector_order(self):
         ranked = rerank_by_terms(self.hits, "산업안전", 0)
