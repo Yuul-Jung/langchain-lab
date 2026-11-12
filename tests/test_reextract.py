@@ -16,7 +16,7 @@ class ReextractTests(unittest.TestCase):
             p = patch.object(dp, name, value)
             p.start()
             self.addCleanup(p.stop)
-        doc = dp.ingest_file("uart.md", "# UART\n수신 회로 설명.".encode(), use_ai=False, index=False)
+        doc = dp.ingest_file("uart.md", "# UART\nUART 수신 회로의 시작 비트 검출을 설명한다.".encode(), use_ai=False, index=False)
         self.doc_id = doc["document"]["document_id"]
         # 사람이 분류를 승인했고 색인도 된 상태라고 가정
         meta = dp.get_document(self.doc_id)
@@ -25,7 +25,7 @@ class ReextractTests(unittest.TestCase):
         dp._write_catalog(meta)
         # 추출 방식이 개선되어 원본에서 절이 하나 더 나오는 상황을 원본 파일로 흉내 낸다
         stored = dp.UPLOAD_DIR / f"{self.doc_id}.md"
-        self.original = "# UART\n수신 회로 설명.\n## 오버샘플링\n16배로 샘플링한다."
+        self.original = "# UART\nUART 수신 회로의 시작 비트 검출을 설명한다.\n## 오버샘플링\n비트 하나를 16배로 샘플링해 가운데 값을 읽는다."
         stored.write_text(self.original, encoding="utf-8")
 
     def test_reextract_rebuilds_chunks_and_resets_review(self):
