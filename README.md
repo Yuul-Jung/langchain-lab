@@ -27,6 +27,30 @@ LM Studio + DeepSeek 14B + Qwen3 임베딩 4B + Elasticsearch 9.x + FastAPI/Lang
 - LM Studio 실행 성공과 DeepSeek/Qwen3 모델 로드 성공은 별개입니다. 실제 임베딩 정상 여부는 로컬 진단 API로 확인합니다.
 - 사용자 개인 PC가 아닌 다른 컴퓨터에서 GitHub Pages를 열어도 `127.0.0.1`은 **그 컴퓨터 자체**를 의미합니다.
 
+## 단계별 품질 검증 — 우선 개선 축
+
+검색 엔진이나 프레임워크를 추가하기 전에 **PDF 전처리 → 임베딩 → 검색 → 답변 생성** 네 단계를 별도 평가합니다.
+
+```bash
+# 최신 읽기 전용 진단 스크립트 받기
+cd ~/langchain_web && git pull --ff-only origin main
+
+# 1. 문서별 PDF 추출·청크·색인 결과 요약
+.venv/bin/python scripts/evaluate-pipeline.py
+
+# 2. 임베딩 서버와 Elasticsearch를 실제 사용한 검색 검사
+.venv/bin/python scripts/evaluate-pipeline.py --query "UART 16배 오버샘플링"
+
+# 3. 해당 키워드가 검색 결과 본문에 들어 있는지 추가 확인
+.venv/bin/python scripts/evaluate-pipeline.py --query "UART 수신" --expected "UART"
+```
+
+- **전처리:** 추출 문자 수, 절/청크 수, 페이지형 제목 수, 제목 추정 수, 공백 청크를 검사합니다. 읽기 전용이며 원본이나 인덱스를 수정하지 않습니다.
+- **임베딩:** 실제 검색에 사용할 임베딩 모델과 벡터 차원 확인은 기존 `/api/documents/health/status`에서 수행합니다.
+- **검색:** 결과 개수·점수·페이지·본문 문자 수만 출력합니다. 검색 결과의 실제 텍스트와 파일명은 출력하지 않습니다. `--expected`는 **키워드 포함 검사**일 뿐 의미 검색의 정확도를 증명하지 않습니다.
+- **답변 생성:** 이 스크립트는 LLM을 호출하지 않습니다. 근거 문서와 정답이 확보된 평가 질문 세트를 만든 후 출처 일치성·사실 정확성·한글 출력 품질을 따로 평가합니다.
+- **판정:** 색인 상태 `indexed`와 높은 유사도 점수만으로 시스템 전체 정확도를 합격 처리하지 않습니다.
+
 ## Ubuntu 최초 설정 (한 번만)
 
 LM Studio에서 Local Server를 시작하고 DeepSeek와 Qwen3-Embedding 모델을 사용할 수 있도록 설정합니다.
