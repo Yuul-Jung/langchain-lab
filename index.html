@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LangChain Lab — AI/RAG 학습 자료</title>
-<meta name="description" content="로컬 AI/RAG 실습 안내서 및 블록다이어그램 표준 템플릿">
+<meta name="description" content="로컬 AI/RAG 초기 설정, 서비스 실행, 학습 안내서 및 블록다이어그램">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#1b293d;font:18px/1.7 system-ui,"Noto Sans KR","Malgun Gothic",sans-serif}
 main{max-width:1120px;margin:auto;padding:32px 22px 85px}
@@ -26,10 +26,49 @@ a.button.secondary{background:#edf3fc;color:#24518e;border:1px solid #d6e3f5}
 .note{background:#eef4fc;border-left:4px solid #5488c7;padding:16px 20px;margin-top:22px;border-radius:0 11px 11px 0}
 footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:15px;color:#64748b}
 @media(max-width:680px){body{font-size:17px}main{padding:16px 12px 50px}.hero{padding:22px}h1{font-size:28px}h2{font-size:25px}.cards,.grid{grid-template-columns:1fr}.node strong{font-size:20px}.node span{font-size:16px}.diagram{padding:15px}}
+
+.setup{background:#fff;border:1px solid #bcd1eb;border-radius:22px;padding:27px;margin-top:22px;box-shadow:0 12px 30px #1d42690d}
+.setup h2{margin:0 0 10px;font-size:27px}.setup p{font-size:16px}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:19px 0}
+.step{background:#f7faff;border:1px solid #dbe6f4;border-radius:15px;padding:17px;min-width:0}
+.step b{display:block;margin-bottom:6px}.step small{color:#52647c;font-size:14px;line-height:1.5}
+.step .num{display:inline-grid;place-items:center;background:#245db1;color:white;border-radius:50%;width:27px;height:27px;font-size:14px;margin-bottom:10px}
+.command{display:flex;gap:9px;align-items:center;background:#142337;border-radius:12px;padding:12px 12px 12px 16px;margin:12px 0;min-width:0}
+.command code{flex:1;min-width:0;color:#eef6ff;font-size:14px;overflow-wrap:anywhere}
+.command button,.setup button{font:inherit;font-size:15px;cursor:pointer;border-radius:9px;border:0;padding:9px 13px}
+.command button{background:#dcecff;color:#17355d;white-space:nowrap}
+.setup .hint{color:#4e617c;font-size:14px}.launch{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 3px}
+.launch a{padding:11px 15px;background:#245db1;color:white;border-radius:10px;text-decoration:none;font-size:16px;font-weight:700}
+.launch a.secondary{background:#eaf2ff;color:#24518e}
+#copyState{font-size:14px;color:#24518e;min-height:1.5em}
+@media(max-width:800px){.steps{grid-template-columns:1fr}.setup{padding:19px}}
 </style></head><body><main>
 <section class="hero"><div class="eyebrow">LOCAL AI · LANGCHAIN · ELASTICSEARCH</div>
 <h1>로컬 AI/RAG 시스템<br>학습자료 라이브러리</h1>
 <p>LM Studio, LangChain, DeepSeek, Qwen3 임베딩, Elasticsearch를 실제로 연동한 구축 교재와 재사용 가능한 구조도 템플릿입니다.</p></section>
+<section class="setup" aria-labelledby="setupTitle">
+<div class="eyebrow">시작하기 · FIRST RUN / DAILY START</div>
+<h2 id="setupTitle">① 로컬 실행 환경 준비</h2>
+<p>GitHub Pages는 공개 학습 화면입니다. 여기서 PC 프로그램을 직접 실행하지는 않습니다. <strong>Ubuntu 터미널에서 아래 명령을 실행한 후</strong> 로컬 채팅으로 이동하세요. 이미 설치한 프로그램은 다시 설치하지 않습니다.</p>
+<div class="steps">
+ <div class="step"><span class="num">1</span><b>첫 실행 / 코드 업데이트</b><small>프로젝트 소스·라이브러리 확인, 테스트, FastAPI 서비스 업데이트</small></div>
+ <div class="step"><span class="num">2</span><b>매일 로컬 서버 시작</b><small>FastAPI와 LM Studio 상태 확인, 필요 시 시작. Elasticsearch는 상태만 확인</small></div>
+ <div class="step"><span class="num">3</span><b>로컬 서비스 접속</b><small>127.0.0.1:8000에서 채팅과 PDF 관리 실행</small></div>
+</div>
+<div><strong>최초 설정 또는 소스 업데이트 (필요할 때만)</strong></div>
+<div class="command"><code id="updateCmd">cd ~/langchain_web &amp;&amp; bash scripts/update-local.sh</code><button type="button" data-copy="updateCmd">명령 복사</button></div>
+<div><strong>평소 실행 (매번 이 명령 하나)</strong></div>
+<div class="command"><code id="startCmd">cd ~/langchain_web &amp;&amp; bash scripts/start-local.sh</code><button type="button" data-copy="startCmd">명령 복사</button></div>
+<p class="hint">2026년 11월 이후 추가된 실행 스크립트가 아직 PC에 없는 경우, 최초 한 번 아래 명령으로 가져옵니다.</p>
+<div class="command"><code id="pullCmd">cd ~/langchain_web &amp;&amp; git pull --ff-only origin main</code><button type="button" data-copy="pullCmd">명령 복사</button></div>
+<div id="copyState" role="status" aria-live="polite"></div>
+<div class="launch">
+ <a href="http://127.0.0.1:8000/" target="_blank" rel="noopener">② 로컬 AI 채팅 열기</a>
+ <a class="secondary" href="http://127.0.0.1:8000/documents" target="_blank" rel="noopener">PDF 문서 관리자</a>
+ <a class="secondary" href="http://127.0.0.1:8000/api/documents/health/status" target="_blank" rel="noopener">연결 진단 결과</a>
+</div>
+<p class="hint">로컬 주소가 열리지 않으면 먼저 실행 명령의 진단 결과를 확인하세요. 외부 GitHub Pages에서는 운영체제 보안상 로컬 서비스를 직접 시작하거나 정상 작동 여부를 확정할 수 없습니다.</p>
+</section>
 <h2>학습 교재 바로가기</h2><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">CHAPTER 02 · 신규 실습</div><h3>문서 업로드 · 자동 분류 · 학습 순서 · 지식 관계 생성</h3><p>제1장 구축 과정을 확장한 제2장 학습안내서입니다. 원본 구조 추출부터 Elasticsearch 인덱싱까지 코드·출력·풀이·구조도로 구성했습니다.</p><a class="button" href="docs/ch02-document-ingestion.html">제2장 학습안내서 열기 →</a></article></section><section class="cards" style="margin-bottom:20px"><article class="card featured" style="grid-column:1/-1"><div class="label">신규 · 샘플 기준 심화 개정판</div><h3>로컬 AI/RAG 구축 실습 — 코드 · 실행 결과 · 풀이 · 구조도</h3><p>손글씨 숫자 학습 HTML 샘플의 구성 밀도를 기준으로 전체 과정을 15절로 재작성했습니다. 9개의 코드 실습과 10개의 구조도를 포함합니다.</p><a class="button" href="docs/learning-guide-detailed.html">심화 실습 교재 열기 →</a></article></section>
 <section class="cards">
 <article class="card featured"><div class="label">01 · 디자인 표준</div><h3>블록다이어그램 표준 템플릿 + 구조도 6종</h3><p>시스템 구성도, RAG 흐름도, 벡터 검색, 서버 자동 시작, 오류 진단, PDF 등록 구조도를 제공합니다.</p><a class="button" href="docs/diagram-style-guide.html">구조도 교재 열기 →</a></article>
@@ -45,6 +84,17 @@ footer{border-top:1px solid #d8e1eb;margin-top:48px;padding-top:20px;font-size:1
 <div><div class="arrow">↕</div><div class="node"><strong>Elasticsearch 9.5.6</strong><span>문서 저장 · 벡터 검색</span></div></div></div></section>
 <h2>로컬 AI 채팅</h2>
 <div class="card"><h3>FastAPI + LangChain 웹 채팅</h3><p>로컬 AI 모델과 서버가 실행 중인 컴퓨터에서만 이용할 수 있습니다. GitHub Pages는 학습자료를 제공하며, Python 모델 서버를 대신 실행하지 않습니다.</p><a class="button secondary" href="http://127.0.0.1:8000">로컬 AI 채팅 열기 →</a></div>
-<div class="note"><strong>안내:</strong> 이 첫 화면은 학습 자료용이며 로컬 서버에 자동 연결하지 않습니다. 따라서 AI 서버가 꺼져 있어도 HTML 교재와 구조도는 정상적으로 열립니다.</div>
+<div class="note"><strong>안내:</strong> 공개 페이지는 로컬 PC 프로그램을 자동 실행하지 않습니다. 위 명령으로 서버를 시작하면 로컬 웹 서비스를 사용할 수 있으며, AI 서버가 꺼져 있어도 GitHub 학습 자료는 열립니다.</div>
 <footer>LangChain Lab · 학습자료 / 디자인 표준 v1.1 · <a href="https://github.com/Yuul-Jung/langchain-lab">GitHub 저장소</a></footer>
-</main></body></html>
+</main><script>
+"use strict";
+for(const button of document.querySelectorAll("[data-copy]")){
+ button.addEventListener("click",async()=>{
+  const node=document.getElementById(button.dataset.copy);
+  const text=node?.textContent||"";
+  const status=document.getElementById("copyState");
+  try{await navigator.clipboard.writeText(text);status.textContent="명령을 복사했습니다. Ubuntu 터미널에 붙여넣어 실행하세요.";}
+  catch{status.textContent="자동 복사가 차단되었습니다. 명령어를 직접 선택해 복사하세요."; }
+ });
+}
+</script></body></html>
