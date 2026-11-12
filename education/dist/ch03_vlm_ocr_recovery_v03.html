@@ -77,8 +77,12 @@ qwen3-vl-4b    qwen3-vl-4b    IDLE      3.33 GB    16384      ...
 </code></pre></div>
 <p><strong>코드 풀이</strong> — LM Studio는 모델을 기본 <strong>4096 토큰</strong>으로 로드합니다. 300dpi 페이지 한 장이 약 4,000 토큰을 차지하므로 질문 문장만 붙여도 한도를 넘습니다(HTTP 400 진단 절 참고). 4B 모델이라 16384도 메모리 부담이 크지 않고, 로드가 실패하면 8192로 낮춥니다.</p>
 <p><strong>작업이 끝나면 비전 모델을 내립니다.</strong> 2026-11-12 실측에서 <code>qwen3-vl-4b</code>(16384)를 올려 둔 채 제1장 RAG 채팅을 하자 DeepSeek 14B가 메모리 부족으로 로드되지 못해 <code>502</code>가 났습니다. 제3장 작업을 마치면 아래 명령으로 되돌립니다. 공개 시작 페이지의 <strong>③ 로컬 프로그램 상태 확인</strong>도 같은 명령을 안내합니다.</p>
-<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code>lms unload qwen3-vl-4b &amp;&amp; lms load deepseek-r1-distill-qwen-14b
+<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># 로드된 모델 확인 후, 비전 모델이 있으면 내리고 채팅 모델이 없을 때만 올림 (여러 번 실행해도 안전)
+lms ps
+lms ps | grep -q qwen3-vl-4b &amp;&amp; lms unload qwen3-vl-4b
+lms ps | grep -q deepseek-r1-distill-qwen-14b || lms load deepseek-r1-distill-qwen-14b
 </code></pre></div>
+<p>이미 올라가 있는 모델에 <code>lms load</code>를 다시 실행하면 같은 모델을 하나 더 올리려다 <code>unable to allocate CUDA0 buffer</code>(GPU 메모리 부족)로 실패합니다. 기존 모델은 그대로 남으므로 위처럼 <code>lms ps</code>로 확인한 뒤 필요한 것만 실행합니다(2026-11-12 실측).</p>
 <p><code>lms load</code> 설정은 지금 로드에만 적용됩니다. 모델이 자동으로 내려갔다가 API 호출로 다시 올라오면 4096으로 돌아갈 수 있으므로, LM Studio의 My Models에서 모델 기본 Context Length를 16384로 저장해 둡니다.</p>
 </section><section class="section" id="s02"><h2><span class="num">02</span>페이지 이미지와 OCR 준비</h2><p>이 단계는 저장소 스크립트 범위 밖입니다. 아래는 같은 형식의 결과를 만드는 <strong>참고 명령</strong>입니다(<code>poppler-utils</code>, <code>tesseract-ocr</code>, <code>tesseract-ocr-kor</code> 패키지 필요, 이 교재 환경에서 실행하지 않음 → 미검증).</p>
 <div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># 115~117쪽을 300dpi PNG 로 변환하고 두 가지 psm 으로 OCR
@@ -445,8 +449,8 @@ echo 'H4sI…' | base64 -d | gunzip &gt; script.py &amp;&amp; python3 -m py_comp
 제2장 파이프라인 연결 — 보정된 텍스트를 langchain_documents_v1 에 페이지 출처와 함께 색인
 </code></pre></div>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
-<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v02  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v02.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v02.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v03  · 실습 결과는 실제 환경에서 검증</footer>
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v03.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;

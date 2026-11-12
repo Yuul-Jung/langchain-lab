@@ -366,11 +366,11 @@ cd ~/langchain_web
 # education/course.json + content/ch0N.md → education/dist/*.html
 cd education &amp;&amp; ../.venv/bin/python build.py
 </code></pre></div>
-<p>실측 출력 (2026-11-12, 제1·3장 v02 개정 후):</p>
+<p>실측 출력 (2026-11-12, 제1·3장 v03 개정 후):</p>
 <div class="codeblock"><div class="codebar"><span>text</span></div><pre><code>생성 완료: 4 개 HTML 파일
-  …/education/dist/ch01_local_ai_rag_foundation_v02.html
+  …/education/dist/ch01_local_ai_rag_foundation_v03.html
   …/education/dist/ch02_document_ingestion_v01.html
-  …/education/dist/ch03_vlm_ocr_recovery_v02.html
+  …/education/dist/ch03_vlm_ocr_recovery_v03.html
   …/education/dist/index.html
 </code></pre></div>
 <p>장을 고치면 <code>course.json</code>에서 그 장의 <code>version</code>을 <code>v02</code>로 올립니다. 생성기는 <code>dist/</code>의 이전 버전 파일을 지웁니다.</p>
@@ -406,8 +406,12 @@ cd education &amp;&amp; ../.venv/bin/python build.py
 모두 정상입니다. 아래 ② 로컬 AI 채팅을 열어 사용하세요.
 </code></pre></div>
 <p>같은 날 제3장 작업 직후에는 비전 모델 <code>qwen3-vl-4b</code>(컨텍스트 16384)만 올라가 있어, RAG 질문이 <code>502 LM Studio 모델 응답 실패</code>로 끝났습니다. LM Studio가 돌려준 원인은 <code>Failed to load model &quot;deepseek-r1-distill-qwen-14b&quot;</code>였습니다. 노트북 한 대에서 비전 모델과 14B 채팅 모델이 메모리를 다툰 것입니다. 이제 이 상태에서는 상태 확인이 ⚠️와 함께 다음 명령을 안내하고, 채팅 오류 메시지에도 같은 원인과 명령이 붙습니다.</p>
-<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code>lms unload qwen3-vl-4b &amp;&amp; lms load deepseek-r1-distill-qwen-14b
+<div class="codeblock"><div class="codebar"><span>bash</span></div><pre><code># 로드된 모델 확인 후, 비전 모델이 있으면 내리고 채팅 모델이 없을 때만 올림 (여러 번 실행해도 안전)
+lms ps
+lms ps | grep -q qwen3-vl-4b &amp;&amp; lms unload qwen3-vl-4b
+lms ps | grep -q deepseek-r1-distill-qwen-14b || lms load deepseek-r1-distill-qwen-14b
 </code></pre></div>
+<p>이미 올라가 있는 모델에 <code>lms load</code>를 다시 실행하면 같은 모델을 하나 더 올리려다 <code>unable to allocate CUDA0 buffer</code>(GPU 메모리 부족)로 실패합니다. 기존 모델은 그대로 남으므로 위처럼 <code>lms ps</code>로 확인한 뒤 필요한 것만 실행합니다(2026-11-12 실측).</p>
 <p>실패하면 아래 순서로 원인을 좁힙니다.</p>
 <table>
 <thead>
@@ -436,7 +440,12 @@ cd education &amp;&amp; ../.venv/bin/python build.py
 <tr>
   <td>⚠️ 채팅 모델 미로드 + 다른 모델 로드됨</td>
   <td>메모리 경합</td>
-  <td>안내된 <code>lms unload … &amp;&amp; lms load …</code></td>
+  <td>안내된 <code>lms unload … &amp;&amp; lms load …</code> (이 상태에서만 실행)</td>
+</tr>
+<tr>
+  <td><code>unable to allocate CUDA0 buffer</code></td>
+  <td>이미 올라간 모델을 한 번 더 로드</td>
+  <td>무시해도 됨, <code>lms ps</code>로 기존 모델 확인</td>
 </tr>
 </tbody>
 </table>
@@ -589,8 +598,8 @@ sources: motor_hot 0.8531 · motor_temp 0.8146 · weather 0.6654
 <li>다음 장에서는 PDF·DOCX·HTML 문서를 업로드해 구조를 추출하고 전용 인덱스에 등록합니다.</li>
 </ul>
 </section><div class="chapter-links" id="chapter-links"></div></main></div>
-<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v02  · 실습 결과는 실제 환경에서 검증</footer>
-<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v02.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v02.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
+<footer class="footer">로컬 AI/RAG 시스템 구축 실습 · v03  · 실습 결과는 실제 환경에서 검증</footer>
+<script>window.COURSE={"title": "로컬 AI/RAG 시스템 구축 실습", "chapters": [{"id": "ch01", "number": 1, "title": "로컬 AI/RAG 기반 구축", "file": "ch01_local_ai_rag_foundation_v03.html"}, {"id": "ch02", "number": 2, "title": "문서 업로드와 지식 구조화", "file": "ch02_document_ingestion_v01.html"}, {"id": "ch03", "number": 3, "title": "페이지 이미지 VLM 분석과 OCR 대조", "file": "ch03_vlm_ocr_recovery_v03.html"}]};</script><script>/* 공통 탐색 및 코드 복사 — 페이지 본문을 변경하지 않음 */
 (()=>{'use strict';
  const data=window.COURSE||{title:'교육과정',chapters:[]};
  const nav=document.getElementById('course-nav');if(!nav)return;
