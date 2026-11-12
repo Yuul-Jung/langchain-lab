@@ -881,6 +881,48 @@ def rerank_by_terms(hits, query, weight):
     return out
 
 
+LEXICAL_TERMS_MAX = 12  # 낱말 후보 검색에 쓸 질문 낱말 수 상한
+
+
+def lexical_candidates_query(query, document_id=None):
+    """(추가) 질문 낱말이 본문에 들어 있는 청크를 찾는 Elasticsearch 질의. 낱말이 없으면 None.
+
+    벡터 후보 30개만 보면, 문서가 늘었을 때 낱말이 든 청크가 후보에 못 들어온다
+    (실측: 732청크에서 검색어가 든 청크의 벡터 순위가 32위·121위). 그래서 낱말로도 후보를 찾는다.
+    낱말은 영문·숫자·밑줄·한글뿐이라 wildcard 특수문자(* ? \\)가 들어갈 수 없다.
+    일치한 낱말 수가 많은 청크가 먼저 온다(낱말마다 점수 1).
+    """
+    terms = query_terms(query)[:LEXICAL_TERMS_MAX]
+    if not terms:
+        return None
+    should = [{"constant_score": {"boost": 1.0, "filter": {"bool": {"should": [
+        {"wildcard": {"text": {"value": f"*{form}*", "case_insensitive": True}}}
+        for form in _term_forms(term)]}}}} for term in terms]
+    body = {"bool": {"should": should, "minimum_should_match": 1}}
+    if document_id:
+        body["bool"]["filter"] = [{"term": {"document_id": document_id}}]
+    return body
+
+
+def cosine_score(query_vector, embedding):
+    """Elasticsearch 의 cosine kNN 점수와 같은 값: (1 + 코사인 유사도) / 2."""
+    dot = sum(a * b for a, b in zip(query_vector, embedding))
+    norm = (sum(a * a for a in query_vector) ** 0.5) * (sum(b * b for b in embedding) ** 0.5)
+    return round((1 + dot / norm) / 2, 4) if norm else 0.0
+
+
+def merge_candidates(vector_hits, lexical_hits):
+    """벡터 후보에 낱말 후보를 더한다. 같은 청크(문서 ID + 청크 ID)는 한 번만, 벡터 후보가 우선."""
+    seen = {(h.get("document_id"), h.get("chunk_id")) for h in vector_hits}
+    merged = list(vector_hits)
+    for hit in lexical_hits:
+        key = (hit.get("document_id"), hit.get("chunk_id"))
+        if key not in seen:
+            seen.add(key)
+            merged.append(hit)
+    return merged
+
+
 def search_uploaded(query, limit=5, document_id=None):
     if not query.strip() or len(query) > 2000:
         raise ValueError("검색어는 1~2000자여야 합니다.")
@@ -903,4 +945,18 @@ def search_uploaded(query, limit=5, document_id=None):
     hits = [{
         **hit["_source"], "score": round(hit["_score"], 4),
     } for hit in response["hits"]["hits"]]
+    # (추가) 낱말이 든 청크도 후보에 넣는다. 재순위를 끈 경우(가중치 0)에는 이전과 같게 건너뛴다.
+    lexical = lexical_candidates_query(query, document_id) if settings.SEARCH_TERM_WEIGHT > 0 else None
+    if lexical:
+        found = es.search(
+            index=DOCUMENT_INDEX, size=pool, query=lexical,
+            source=["document_id", "chunk_id", "section_id", "filename",
+                    "title", "page", "text", "source_order", "provenance", "embedding"],
+        )
+        extra = []
+        for hit in found["hits"]["hits"]:
+            source = dict(hit["_source"])
+            source["score"] = cosine_score(vector, source.pop("embedding"))
+            extra.append(source)
+        hits = merge_candidates(hits, extra)
     return rerank_by_terms(hits, query, settings.SEARCH_TERM_WEIGHT)[:limit]

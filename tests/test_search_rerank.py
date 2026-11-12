@@ -1,8 +1,54 @@
 """낱말 포함 재순위와 발췌 (서버·모델 없이 실행)."""
 import unittest
 
-from document_pipeline import (make_snippet, matched_terms, query_terms, rerank_by_terms,
+from document_pipeline import (cosine_score, lexical_candidates_query, make_snippet,
+                               matched_terms, merge_candidates, query_terms, rerank_by_terms,
                                term_credits)
+
+
+class LexicalCandidatesTest(unittest.TestCase):
+    def test_query_has_one_clause_per_word_with_stripped_forms(self):
+        body = lexical_candidates_query("수수료는 QRS")
+        clauses = body["bool"]["should"]
+        self.assertEqual(len(clauses), 2)
+        forms = [w["wildcard"]["text"]["value"] for w in clauses[0]["constant_score"]["filter"]["bool"]["should"]]
+        self.assertEqual(forms, ["*수수료는*", "*수수료*", "*수수*"])
+        self.assertEqual(body["bool"]["minimum_should_match"], 1)
+
+    def test_no_usable_words_means_no_lexical_search(self):
+        self.assertIsNone(lexical_candidates_query("? ! 가"))
+
+    def test_wildcard_characters_cannot_be_injected(self):
+        body = lexical_candidates_query("a*b?c\\d 가나*다")
+        values = [w["wildcard"]["text"]["value"] for c in body["bool"]["should"]
+                  for w in c["constant_score"]["filter"]["bool"]["should"]]
+        for value in values:
+            self.assertNotRegex(value[1:-1], r"[*?\\]")
+
+    def test_document_filter_and_word_limit(self):
+        body = lexical_candidates_query(" ".join(f"낱말{n}번" for n in range(40)), document_id="doc1")
+        self.assertEqual(body["bool"]["filter"], [{"term": {"document_id": "doc1"}}])
+        self.assertEqual(len(body["bool"]["should"]), 12)
+
+    def test_cosine_score_matches_elasticsearch_formula(self):
+        self.assertEqual(cosine_score([1, 0], [2, 0]), 1.0)
+        self.assertEqual(cosine_score([1, 0], [0, 3]), 0.5)
+        self.assertEqual(cosine_score([1, 0], [-1, 0]), 0.0)
+        self.assertEqual(cosine_score([0, 0], [1, 0]), 0.0)
+
+    def test_merge_keeps_vector_hits_and_adds_only_new_chunks(self):
+        vector = [{"document_id": "a", "chunk_id": "s0001_c001", "score": 0.9}]
+        lexical = [{"document_id": "a", "chunk_id": "s0001_c001", "score": 0.1},
+                   {"document_id": "b", "chunk_id": "s0001_c001", "score": 0.6}]
+        merged = merge_candidates(vector, lexical)
+        # 청크 ID는 문서마다 같은 값이 반복되므로 문서 ID와 함께 비교해야 한다
+        self.assertEqual([(h["document_id"], h["score"]) for h in merged], [("a", 0.9), ("b", 0.6)])
+
+    def test_lexical_only_chunk_can_win_after_rerank(self):
+        vector = [{"document_id": "a", "chunk_id": "c1", "score": 0.76, "text": "모델 생태계 설명"}]
+        lexical = [{"document_id": "b", "chunk_id": "c1", "score": 0.66, "text": "정규분포: 평균과 표준편차"}]
+        ranked = rerank_by_terms(merge_candidates(vector, lexical), "정규분포", 0.15)
+        self.assertEqual(ranked[0]["document_id"], "b")
 
 
 class QueryTermsTest(unittest.TestCase):
