@@ -41,6 +41,31 @@ if ! port_open 1234; then
     fi
 fi
 
+# (추가) 채팅·임베딩 모델 준비: 내려받은 모델이 안 올라가 있으면 올린다 (이미 있으면 건너뜀).
+# 비전 모델이 메모리를 차지하고 있으면 채팅 모델을 억지로 올리지 않고 안내만 한다.
+CHAT_MODEL="${CHAT_MODEL:-deepseek-r1-distill-qwen-14b}"
+EMBED_MODEL="${EMBED_MODEL:-text-embedding-qwen3-embedding-4b}"
+if command -v lms >/dev/null 2>&1 && port_open 1234; then
+    downloaded="$(lms ls 2>/dev/null || true)"
+    loaded="$(lms ps 2>/dev/null || true)"
+    for model in "$EMBED_MODEL" "$CHAT_MODEL"; do
+        if grep -q -- "$model" <<<"$loaded"; then
+            continue
+        fi
+        if ! grep -q -- "$model" <<<"$downloaded"; then
+            echo "[안내] $model 이 내려받아져 있지 않습니다. LM Studio 에서 내려받으세요."
+            continue
+        fi
+        if [[ "$model" == "$CHAT_MODEL" ]] && grep -q -- "qwen3-vl" <<<"$loaded"; then
+            echo "[안내] 비전 모델이 올라가 있어 채팅 모델을 올리지 않았습니다. 제3장 작업이 끝났으면:"
+            echo "        lms unload qwen3-vl-4b && lms load $CHAT_MODEL"
+            continue
+        fi
+        echo "[시작] $model 로드"
+        lms load "$model" || echo "[안내] $model 로드 실패 — lms ps 로 메모리 사용 모델을 확인하세요."
+    done
+fi
+
 # FastAPI is managed by the user's existing systemd unit.
 if systemctl --user cat langchain-lab.service >/dev/null 2>&1; then
     if ! systemctl --user is-active --quiet langchain-lab.service; then

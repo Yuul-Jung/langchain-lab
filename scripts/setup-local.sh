@@ -6,7 +6,7 @@
 #   bash ~/langchain_web/scripts/setup-local.sh
 #
 # 하는 일: 필수 프로그램 확인 → CA 인증서 확인 → .env(비밀번호) 생성 → update-local.sh
-#          (코드·패키지·테스트·서비스) → LM Studio 서버·모델 준비 → 최종 상태 출력
+#          (코드·패키지·테스트·서비스) → LM Studio 서버·모델 준비 → 페이지 버튼 연결 → 최종 상태 출력
 # 하지 않는 일: sudo 자동 실행, 기존 .env·문서·인덱스 변경, 이미 올라간 모델 내리기
 set -Eeuo pipefail
 
@@ -19,7 +19,7 @@ CA_USER="$HOME/.config/elasticsearch/http_ca.crt"
 CA_SYSTEM="/etc/elasticsearch/certs/http_ca.crt"
 WARNINGS=()
 
-step() { printf '\n[%s/6] %s\n' "$1" "$2"; }
+step() { printf '\n[%s/7] %s\n' "$1" "$2"; }
 ok()   { printf '  [정상] %s\n' "$1"; }
 warn() { printf '  [확인 필요] %s\n' "$1"; WARNINGS+=("$1"); }
 fail() { printf '\n[중단] %s\n' "$1" >&2; exit 1; }
@@ -110,8 +110,12 @@ else
   warn "lms 가 없어 모델 준비를 건너뜁니다."
 fi
 
-# ---------------------------------------------------------------- 6. 최종 상태
-step 6 "최종 상태 (/api/status)"
+# ---------------------------------------------------------------- 6. 페이지 버튼 연결
+step 6 "공개 페이지 실행 버튼 연결 (langchainlab:// 링크 처리기)"
+bash scripts/install-launcher.sh || warn "링크 처리기 등록 실패 — 공개 페이지 버튼 대신 명령 복사를 사용하세요."
+
+# ---------------------------------------------------------------- 7. 최종 상태
+step 7 "최종 상태 (/api/status)"
 python3 - <<'PY' || warn "상태 API 응답 없음 — journalctl --user -u langchain-lab -n 40 --no-pager"
 import json
 from urllib.request import urlopen

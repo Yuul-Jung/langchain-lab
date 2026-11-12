@@ -59,7 +59,11 @@ cd ~/langchain_web && git pull --ff-only origin main
 [ -d ~/langchain_web/.git ] || git clone https://github.com/Yuul-Jung/langchain-lab.git ~/langchain_web; bash ~/langchain_web/scripts/setup-local.sh
 ```
 
-필수 프로그램·CA 인증서 확인 → `.env` 생성 → `update-local.sh` → LM Studio 모델 준비 → 최종 상태 출력까지 진행합니다. 아래는 같은 과정을 수동으로 하는 방법입니다.
+필수 프로그램·CA 인증서 확인 → `.env` 생성 → `update-local.sh` → LM Studio 모델 준비 → **공개 페이지 실행 버튼 연결** → 최종 상태 출력까지 진행합니다.
+
+**공개 페이지 실행 버튼** — 기본 세팅이 `langchainlab://` 링크 처리기(`scripts/install-launcher.sh`)를 현재 사용자 계정에 등록합니다. 이후 https://yuul-jung.github.io/langchain-lab/ 의 **▶ 로컬 서비스 시작 / ⟳ 업데이트 / ⚙ 기본 세팅** 버튼을 누르면 Chrome 확인창(xdg-open) → 터미널 창에서 해당 스크립트가 실행되고, 페이지가 상태를 자동으로 다시 확인합니다. 실행기(`scripts/url-launcher.sh`)는 `start`·`update`·`setup` 세 이름만 받고 나머지 주소는 거부·기록합니다(`~/.local/state/langchain-lab/launcher.log`). 해제: `rm ~/.local/share/applications/langchainlab-launcher.desktop`.
+
+아래는 같은 과정을 수동으로 하는 방법입니다.
 
 ### 수동 설정
 
