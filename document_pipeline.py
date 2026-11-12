@@ -72,8 +72,14 @@ _HAN = re.compile(r"[\u4e00-\u9fff]")
 _HANGUL = re.compile(r"[\uac00-\ud7a3]")
 
 
-def broken_space_glyphs(text, min_count=5, min_ratio=0.6):
-    """공백이 깨진 것으로 보이는 한자 집합."""
+def broken_space_glyphs(text, min_count=20, min_ratio=0.6, min_share=0.03):
+    """공백이 깨진 것으로 보이는 한자 집합.
+
+    (변경) 진짜 한자('한美동맹', '서울大학교')를 지우지 않도록 조건을 강화했다. 깨진 공백 글자는
+    띄어쓰기만큼 자주 나온다(실측: 한글 글자 수의 14.5%, 1,487회). 그래서 min_count 회 이상이고
+    한글 글자 수의 min_share 이상일 때만 깨진 공백으로 본다. 정상 문서의 한자는 이 빈도에 못 미친다.
+    """
+    hangul_total = len(_HANGUL.findall(text))
     counts = defaultdict(int)
     between_hangul = defaultdict(int)
     for i, ch in enumerate(text):
@@ -83,7 +89,8 @@ def broken_space_glyphs(text, min_count=5, min_ratio=0.6):
         if 0 < i < len(text) - 1 and _HANGUL.match(text[i - 1]) and _HANGUL.match(text[i + 1]):
             between_hangul[ch] += 1
     return {ch for ch, n in counts.items()
-            if n >= min_count and between_hangul[ch] / n >= min_ratio}
+            if n >= min_count and between_hangul[ch] / n >= min_ratio
+            and n >= hangul_total * min_share}
 
 
 def repair_broken_spaces(texts):
@@ -103,8 +110,10 @@ def _new_section(number, title, text, page=None, level=1, parent=None):
     }
 
 
+# (변경) '11. 5.(목) 10:00' 같은 날짜 줄은 제외((?!\d{1,2}\.)), 마침표 바로 뒤가 한글이면
+# 띄어쓰기가 없어도('1.개요') 후보로 본다. '3.3V'·'1.5 V' 는 숫자가 이어지므로 해당 없음.
 _PDF_HEADING = re.compile(
-    r"^(?:[1-9][0-9]?\.\s+[^\n]{2,65}|"
+    r"^(?:[1-9][0-9]?\.(?:\s+(?!\d{1,2}\.)|(?=[가-힣]))[^\n]{2,65}|"
     r"제\s*[1-9][0-9]?\s*[장절]\s*[^\n]{2,65})$"
 )
 # (추가) 번호 제목 사이에 끼어도 "본문"으로 치지 않는 줄: 로마 숫자 부 제목, 쪽 번호
@@ -124,7 +133,9 @@ def pdf_heading_lines(lines):
     목록이 붙은 경우(예: '2. 목적' → '1. …')에는 앞의 줄만 제목으로 남긴다.
     """
     cleaned = [_clean(line) for line in lines]
-    candidates = [i for i, line in enumerate(cleaned) if _PDF_HEADING.fullmatch(line)]
+    # (변경) 마침표로 끝나는 줄은 문장(목록 항목)이지 제목이 아니다
+    candidates = [i for i, line in enumerate(cleaned)
+                  if _PDF_HEADING.fullmatch(line) and not line.endswith(".")]
     runs, run = [], []
     for i in candidates:
         if run and all(not cleaned[j] or _PDF_SEPARATOR.fullmatch(cleaned[j])
@@ -141,7 +152,11 @@ def pdf_heading_lines(lines):
         if len(run) == 1:
             headings.append(run[0])
             continue
-        if _heading_number(cleaned[run[0]]) != 1 and _heading_number(cleaned[run[1]]) == 1:
+        # (변경) 번호가 둘째 줄에서 다시 1로 시작하면 첫 줄은 제목이다.
+        # 첫 줄 번호도 1이면('1. 개요' → '1. …', '2. …') 셋째 줄이 2인지까지 확인한다.
+        numbers = [_heading_number(cleaned[i]) for i in run[:3]]
+        restarts = numbers[1] == 1 and (numbers[0] != 1 or (len(numbers) > 2 and numbers[2] == 2))
+        if restarts:
             headings.append(run[0])
             run = run[1:]
         listed.update(run)
@@ -152,6 +167,7 @@ def pdf_heading_lines(lines):
 
 
 SHORT_LEAD_CHARS = 80  # 이보다 짧은 쪽 머리 조각은 다음 절에 붙인다
+_CONTROL_CHARS = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 
 def is_page_number_only(fragment):
@@ -171,8 +187,10 @@ def _parse_pdf(path):
         raise ValueError("암호화된 PDF는 업로드할 수 없습니다.")
     sections = []
     # (변경) 문서 전체를 먼저 읽어 깨진 공백 한자를 판별·복원한 뒤 페이지별로 처리한다.
+    # (변경) NUL 등 제어문자는 공백으로 바꾼다. PDF 글꼴이 변환하지 못한 문장부호 자리에
+    # NUL이 들어오는 경우가 있다(실측: 'data[7:0]' → '[7␀0]'). 원래 글자는 복구할 수 없다.
     page_texts, _ = repair_broken_spaces(
-        [(page.extract_text() or "").strip() for page in reader.pages]
+        [_CONTROL_CHARS.sub(" ", page.extract_text() or "").strip() for page in reader.pages]
     )
     for page_no, text in enumerate(page_texts, 1):
         if not text:

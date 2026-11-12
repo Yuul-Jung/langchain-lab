@@ -46,14 +46,14 @@ class PdfHeadingLinesTest(unittest.TestCase):
         self.assertEqual(listed, {2, 3, 4, 6, 7, 9})
 
     def test_numbered_list_in_body_is_not_headings(self):
-        lines = ["2. 실습 목표", "목표는 다음과 같다.", "1. 회로를 이해한다.",
-                 "2. 값을 측정한다.", "3. 결과를 비교한다.", "설명 문단이 이어진다."]
+        lines = ["2. 실습 목표", "목표는 다음과 같다.", "1. 회로 이해",
+                 "2. 값 측정", "3. 결과 비교", "설명 문단이 이어진다."]
         headings, listed = pdf_heading_lines(lines)
         self.assertEqual(headings, [0])
         self.assertEqual(listed, {2, 3, 4})
 
     def test_heading_directly_followed_by_list_keeps_heading(self):
-        lines = ["3. 확인 항목", "1. 입력을 확인한다.", "2. 출력을 확인한다.", "본문"]
+        lines = ["3. 확인 항목", "1. 입력 확인", "2. 출력 확인", "본문"]
         headings, listed = pdf_heading_lines(lines)
         self.assertEqual(headings, [0])
         self.assertEqual(listed, {1, 2})
