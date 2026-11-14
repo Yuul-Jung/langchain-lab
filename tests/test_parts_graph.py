@@ -145,6 +145,31 @@ class PartsGraphTest(unittest.TestCase):
     def test_no_ontology_goes_to_existing_flow(self):
         self.assertFalse(self.run_graph(deps(), "가젯 알파 부품 추천")["answered"])
 
+    def test_short_part_noun_question_without_concept_is_searched_as_is(self):
+        d = deps(ontology=onto("approved"))
+        r = self.run_graph(d, "베타 측정용 칩")
+        self.assertTrue(r["answered"])
+        self.assertEqual(d.calls[0][0], "베타 측정용 칩")
+        for q in ["베타 측정용 칩 있어?", "감자칩 추천", "베타 칩 고장 났어", "베타 칩 중고로 사도 될까", "베타 칩 고르는 요령"]:
+            self.assertFalse(self.run_graph(deps(ontology=onto("approved")), q)["answered"], q)
+
+    def test_fallback_does_not_bypass_unapproved_concept(self):
+        self.assertFalse(self.run_graph(deps(ontology=onto("proposed")), "가젯 알파 칩")["answered"])
+
+    def test_results_in_concept_library_come_first(self):
+        rows = [{"lib_id": "Other:Q1", "name": "Q1", "description": "x"}, {"lib_id": "Zeta:ZX100", "name": "ZX100", "description": "y"}]
+        r = self.run_graph(deps(rows=rows, ontology=onto("approved")), "가젯 알파 부품 추천")
+        self.assertEqual([p["lib_id"] for p in r["parts"]], ["Zeta:ZX100", "Other:Q1"])
+
+    def test_part_number_followed_by_gatchi_is_similar_request(self):
+        self.assertTrue(pg.SIMILAR.search("ZX100 같은 측정 칩"))
+        self.assertFalse(pg.SIMILAR.search("같은 값으로 바꿔줘"))
+
+    def test_how_to_and_troubleshooting_are_not_part_requests(self):
+        for q in ["가젯 알파 구별법 알려줘", "가젯 알파에서 냄새가 나", "가젯 알파가 안 켜져"]:
+            self.assertEqual(pg.parts_concepts(q, onto("approved")), [], q)
+        self.assertEqual(len(pg.parts_concepts("옴의 법칙 가젯 알파 부품 추천", onto("approved"))), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

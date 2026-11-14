@@ -27,16 +27,23 @@ import ontology_graph as og
 INTENT = re.compile(r"부품|추천|후보|종류|모듈|칩|소자|골라|고르|뭐가\s*있|뭐\s*있|무엇이\s*있|있어|있나|있을까|찾아\s*줘|찾아\s*봐|"
                     r"쓸\s*만|뭐\s*쓰|어떤\s*(?:거|게|것)|구해|사야|좋은\s*거|괜찮은|(?<![a-z])ic(?![a-z])", re.I)
 # 부품이 아니라 설명·방법을 묻는 말이 같이 있으면 통과시키지 않는다
-EXPLAIN = re.compile(r"뭐야|뭔지|뭐\s*하는|하는\s*일|무엇|원리|차이|설명|방법|코드|계산|어떻게|왜\s|의미|역할|도와\s*줘|도와주", re.I)
+EXPLAIN = re.compile(r"뭐야|뭔지|뭐\s*하는|하는\s*일|무엇|원리|차이|설명|방법|코드|계산|어떻게|왜\s|의미|역할|도와\s*줘|도와주|"
+                     r"요령|노하우|[가-힣]\s*법(?![가-힣])|정리해", re.I)   # 하는 법·구별법(법칙은 제외)
 # 부품이 아니라 소프트웨어·소비자 제품·구매·환경을 묻는 말 (부품 관련어가 같이 있어도 부품 추천이 아니다)
 NONPART = re.compile(r"개발\s*환경|비밀번호|이어폰|헤드폰|헤드셋|스피커|노트북|스마트폰|(?<![가-힣])앱(?![가-힣])|프로그램|툴|도구|소프트웨어|"
                      r"강의|튜토리얼|예제|코드|펌웨어|라이브러리|키캐드|kicad|풋프린트|시뮬레이션|가격|구매|재고|후기|리뷰|공부|"
-                     r"공유기|전기차|전기\s*자동차|설치|비용|무선\s*충전|핀|(?<![a-z])pin(?![a-z])|핀맵|단자|데이터\s*시트|datasheet|규격|스펙|사양", re.I)   # 핀·규격 질문은 핀 조회가 맡는다
+                     r"공유기|전기차|전기\s*자동차|설치|비용|무선\s*충전|핀|(?<![a-z])pin(?![a-z])|핀맵|단자|데이터\s*시트|datasheet|규격|스펙|사양|"   # 핀·규격 질문은 핀 조회가 맡는다
+                     r"중고|구입|살까|사도\s*(?:돼|되|될)|싸게|배송|직구|"                                   # 구매
+                     r"고장|증상|원인|수리|냄새|안\s*(?:돼|되|켜|꺼|붙)|이상(?:해|하게)|튀(?:어|는|요)|"       # 고장·문제 해결
+                     r"전구|청소기|가전", re.I)                                                              # 소비자 제품
 # 의도어가 없어도 사전에 개념이 있는 짧은 명사구('디지털 가변저항', '트라이악')는 부품을 찾는 말로 본다
 SHORT = 30
 
 # '이 부품 말고 비슷한 것'을 찾는 말 (질문에 카탈로그에 있는 부품 이름이 있을 때)
-SIMILAR = re.compile(r"같은\s*거|같은\s*것|비슷|유사|대체|대신|말고|다른\s*(?:거|것|부품)|호환|또\s*(?:뭐|있)|비교\s*대상|동급|급의", re.I)
+SIMILAR = re.compile(r"같은\s*거|같은\s*것|[A-Za-z0-9]\s*같은|비슷|유사|대체|대신|말고|다른\s*(?:거|것|부품)|호환|또\s*(?:뭐|있)|비교\s*대상|동급|급의", re.I)
+# 사전에 개념이 없어도 부품을 찾는 말이 분명한 짧은 질문(예: '로드셀 증폭용 칩')은 질문 그대로 검색한다
+PART_NOUN = re.compile(r"(?<![가-힣])(?:칩|소자|부품)(?![가-힣])|(?<![a-z])ic(?![a-z])", re.I)
+NO_CONCEPT = "(사전 밖 부품 질문)"
 
 DOC_WORDS = re.compile(r"문서|자료|pdf|올려|업로드|과제|본문|\d+\s*쪽|페이지", re.I)
 
@@ -77,6 +84,32 @@ def parts_concepts(question: str, ontology, include_proposed: bool = False, sema
     # 의도어가 없으면 사전에 정확히 맞는 개념이 있고, 질문이 짧고, 문장형(물음표·'알려줘')이 아닐 때만
     q = question.strip()
     return exact if len(q) <= SHORT and not re.search(r"[?？]|알려|말해|가르쳐", q) else []
+
+
+def plain_parts_request(question: str, ontology) -> bool:
+    """사전에 개념이 없을 때의 보조 관문: 짧고, '칩·IC·소자·부품' 같은 부품 명사가 있고, 설명·문서·비부품 말이 없는 질문."""
+    q = question.strip()
+    if ontology is None or len(q) > SHORT or not PART_NOUN.search(q) or re.search(r"[?？]|알려|말해|가르쳐", q) \
+            or DOC_WORDS.search(q) or EXPLAIN.search(q) or NONPART.search(q):   # 문장형 질문은 짧은 명사구 경로와 같은 규칙으로 제외
+        return False
+    # 사전 용어가 걸리는데(승인 전 개념 포함) 그 개념을 쓰지 않기로 한 경우에는 우회하지 않는다 — 승인 결정을 존중
+    return not og.translate_query(ontology, q, include_proposed=True)
+
+
+def concept_libraries(ontology, concept_ids: list[str]) -> set[str]:
+    """개념이 가리키는 KiCad 분류 이름(lib_prefix 로 펼친 것 포함)."""
+    if ontology is None:
+        return set()
+    return {ontology.nodes[n]["label"] for c in concept_ids for n in ontology.neighbors(c)
+            if ontology.nodes[n].get("kind") == "library"}
+
+
+def rerank_by_library(rows: list[dict], libs: set[str]) -> list[dict]:
+    """검색 순서는 유지하되, 개념의 분류에 속한 부품을 앞으로(예: 'OP앰프' 질문에 오디오 앰프가 먼저 오지 않게)."""
+    if not libs:
+        return rows
+    lib_of = lambda r: r.get("library") or r.get("lib_id", "").split(":", 1)[0]
+    return [r for r in rows if lib_of(r) in libs] + [r for r in rows if lib_of(r) not in libs]
 
 
 def find_anchor(question: str, catalog) -> dict | None:
@@ -143,6 +176,9 @@ def build_parts_graph(deps: PartsDeps):
                     "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}"]}
         ids = parts_concepts(state["question"], deps.ontology, deps.include_proposed, deps.semantic_concepts)
         concepts = [deps.ontology.nodes[c]["label"] for c in ids]
+        if not concepts and plain_parts_request(state["question"], deps.ontology):
+            return {"concepts": [NO_CONCEPT], "concept_ids": [],
+                    "trace": ["classify: 사전에 개념은 없지만 부품을 찾는 짧은 질문 → 질문 그대로 검색"]}
         return {"concepts": concepts, "concept_ids": ids,
                 "trace": ["classify: " + (f"부품 추천 질문, 개념 {concepts}" if concepts else "해당 없음 → 기존 흐름")]}
 
@@ -160,7 +196,9 @@ def build_parts_graph(deps: PartsDeps):
         if deps.expand:
             extra = expansion_terms(deps.ontology, state.get("concept_ids", []))
             query = f"{query} {' '.join(extra)}".strip() if extra else query
-        parts, backend = deps.find(query, deps.limit)
+        libs = concept_libraries(deps.ontology, state.get("concept_ids", []))
+        rows, backend = deps.find(query, deps.limit * 4 if libs else deps.limit)
+        parts = rerank_by_library(rows, libs)[:deps.limit]
         if not parts:   # ES·임베딩이 안 되고 한국어 낱말 검색도 비면: 온톨로지의 영어 키워드·분류로 대체
             parts = ontology_search(deps.ontology, state.get("concept_ids", []), deps.limit)
             backend = "ontology" if parts else backend
