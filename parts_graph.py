@@ -73,6 +73,7 @@ class PartsDeps:
     catalog: Optional[list] = None   # 부품 목록(영문 부품 이름으로 '비슷한 부품'을 찾을 때 씀)
     expand: bool = False          # 검색어에 개념의 영어 키워드·분류 이름을 덧붙인다(짧은 한국어 질문의 의미 검색 보강)
     semantic_concepts: Optional[Callable[[str], list[str]]] = None   # 문구가 사전과 다를 때 의미가 가까운 개념(문턱 넘는 것만)
+    bridge: bool = False          # 한·영 다리 사전의 영어 짝을 검색어에 덧붙임(설정 PARTS_BRIDGE, 기본 꺼짐)
     conditions: bool = False      # 여러 조건 질문(인터페이스·전압·패키지 …)을 뽑아 순서·답에 반영(설정 PARTS_CONDITIONS, 기본 꺼짐)
     veto: Optional[Callable[[str], bool]] = None   # 규칙이 부품 질문이라 본 뒤의 보조 거부(학습 모델, parts_gate.veto). True 면 부품 질문 아님
 
@@ -229,6 +230,9 @@ def build_parts_graph(deps: PartsDeps):
         conds = pc.parse(query, deps.ontology, ids) if deps.conditions else []
         if deps.expand:   # 덧붙일 낱말 순서는 원래 개념 순서(상한 6개 안에서 바뀌지 않게) + 조건 낱말
             extra = expansion_terms(deps.ontology, state.get("concept_ids", [])) + [w for c in conds for w in c.words]
+            if deps.bridge:
+                import bridge_terms
+                extra += bridge_terms.english_for(state["question"])
             query = f"{query} {' '.join(dict.fromkeys(extra))}".strip() if extra else query
         # 분류·후보 수는 조건이 없을 때와 같게 둔다(세트 10에서 찾는 대상만 앞세우자 단일 개념 질문의 적중이 떨어짐 — 2026-11-14).
         # 조건은 같은 후보 안에서 순서만 바꾼다: 분류에 든 부품 중 조건을 더 채운 것이 먼저.

@@ -1213,6 +1213,10 @@ def search_uploaded(query, limit=5, document_id=None):
         return []
     vector = embed_query(query)
     lex_query, en_vector = query, None
+    if settings.DOCUMENT_BRIDGE:   # (추가) 승인된 한·영 다리 구절의 영어를 낱말 검색·재순위에 덧붙인다(bridge_terms.py)
+        import bridge_terms
+        extra = bridge_terms.english_for(query)
+        lex_query = f"{query} {' '.join(extra)}" if extra else query
     # (변경) 후보를 넉넉히 가져와 낱말 포함 여부로 다시 정렬한 뒤 상위 limit 개를 돌려준다
     pool = max(SEARCH_POOL, limit)
     knn = {"field": "embedding", "query_vector": vector,

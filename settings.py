@@ -61,6 +61,9 @@ DOCUMENT_RERANKER_POOL = int(get("DOCUMENT_RERANKER_POOL", "20"))
 # (추가) 한국어 질문을 영어로 번역해 영어 데이터시트 검색을 보강한다(query_translate.py): off · lexical(낱말 검색에만) · dual(번역문 임베딩도) · auto(원래 검색 상위가 영어 본문일 때만 dual). 기본 off
 DOCUMENT_QUERY_TRANSLATE = get("DOCUMENT_QUERY_TRANSLATE", "off").lower()
 DOCUMENT_TRANSLATE_MODEL = get("DOCUMENT_TRANSLATE_MODEL", str(ROOT / "data" / "tools" / "models" / "opus-mt-ko-en"))
+# (추가) 한·영 다리 사전(승인된 구절만, bridge_terms.py): 문서 낱말 검색·부품 검색어에 영어 짝을 덧붙인다. 기본 꺼짐
+DOCUMENT_BRIDGE = get("DOCUMENT_BRIDGE", "false").lower() in ("1", "true", "yes")
+PARTS_BRIDGE = get("PARTS_BRIDGE", "false").lower() in ("1", "true", "yes")
 # (추가) 접근 제어 (access_control.py). ACCESS_PASSWORD 를 비우면 이 PC 에서만 쓸 수 있다.
 ACCESS_PASSWORD = get("ACCESS_PASSWORD")
 SESSION_HOURS = get_int("SESSION_HOURS", 12)
