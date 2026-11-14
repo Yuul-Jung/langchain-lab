@@ -20,6 +20,7 @@ import kicad_parts
 import answer_cite
 import parts_chat
 import fallback_log
+import graph_views
 import hanja_ko
 import routing
 import settings
@@ -146,6 +147,29 @@ def logout():
 @app.get("/documents")
 def documents_page():
     return FileResponse(ROOT / "static" / "documents.html")
+
+
+# (추가) LangGraph 그림 화면: 구조는 모델·ES 없이, 부품 그래프는 질문 하나로 분류·검색만 실행(답 생성 없음). 접근 제어는 access_guard 공통
+@app.get("/graph")
+def graph_page():
+    return FileResponse(ROOT / "static" / "graph.html")
+
+
+@app.get("/api/graph")
+def graph_structure():
+    return {"graphs": graph_views.structure()}
+
+
+class GraphExplainRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=12000)   # 채팅 메시지와 같은 상한
+
+
+@app.post("/api/graph/explain")
+def graph_explain(body: GraphExplainRequest):
+    try:
+        return graph_views.explain_parts(body.question.strip())
+    except Exception:   # 내부 경로·예외 내용을 화면에 내보내지 않는다
+        return JSONResponse(status_code=500, content={"detail": "그래프를 실행하지 못했습니다."})
 
 class Message(BaseModel):
     role: str

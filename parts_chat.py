@@ -35,8 +35,9 @@ def _term_vecs():
     return _cache["vecs"]
 
 
-def answer(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> dict | None:
-    """부품 추천 질문이면 {'answer', 'backend', 'trace'}, 아니면 None. 인자는 시험용으로만 바꾼다."""
+def run(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> dict | None:
+    """부품 그래프를 질문 하나로 실행해 최종 상태(trace 포함)를 돌려준다. 설정이 꺼져 있거나 사전이 없으면 None.
+    답이 만들어졌는지(answered)와 상관없이 돌려준다(그래프 화면이 실행 경로를 보이는 데 쓴다)."""
     if not settings.PARTS_SEMANTIC_SEARCH:
         return None
     onto = ontology if ontology is not None else _ontology()
@@ -55,7 +56,12 @@ def answer(question: str, *, es=None, embed=None, ontology=None, catalog=None) -
         find=lambda q, n: kicad_parts.find_parts(q, parts, n, semantic=True, embed=embed, es=es),
         ontology=onto, include_proposed=include, expand=True, catalog=parts,   # 개념의 영어 키워드·분류 이름을 검색어에 덧붙임(독립 dev 세트 3에서 hit@5 0.83→0.96)
         semantic_concepts=(lambda q: og.semantic_concepts(onto, q, embed, vecs, include_proposed=include)) if vecs else None)
-    result = pg.ask_parts(pg.build_parts_graph(deps), question)
-    if not result.get("answered"):
+    return pg.ask_parts(pg.build_parts_graph(deps), question)
+
+
+def answer(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> dict | None:
+    """부품 추천 질문이면 {'answer', 'backend', 'trace'}, 아니면 None. 인자는 시험용으로만 바꾼다."""
+    result = run(question, es=es, embed=embed, ontology=ontology, catalog=catalog)
+    if not result or not result.get("answered"):
         return None
     return {"answer": result["answer"], "backend": result["backend"], "trace": result["trace"]}

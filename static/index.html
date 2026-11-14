@@ -23,6 +23,7 @@ form{display:flex;gap:9px}textarea{flex:1;min-width:0;resize:none}footer small{d
 <select id="mode"><option value="auto" selected>자동 (질문마다 판단)</option><option value="rag">문서만</option><option value="chat">일반만</option></select>
 <label for="provider">모델</label><select id="provider"><option value="">기본 모델</option></select>
 <a href="/documents" style="display:inline-block;padding:10px 14px;border-radius:9px;background:#34445d;color:white;text-decoration:none;font-size:15px">문서 업로드·관리</a>
+<a href="/graph" style="display:inline-block;padding:10px 14px;border-radius:9px;background:#34445d;color:white;text-decoration:none;font-size:15px">그래프 보기</a>
 <button id="check" class="secondary" type="button">연결 상태</button>
 <button id="clear" class="secondary" type="button">새 대화</button></div>
 <div id="status" role="status">서비스 상태 확인 중...</div><div id="providerNote" role="note" style="font-size:12px;color:#fcd34d;margin-top:4px"></div></header>
@@ -74,6 +75,7 @@ $("form").addEventListener("submit",async e=>{
   history=[...messages,{role:"assistant",content:data.answer||""}];
   // (추가) 어떤 방식으로 처리했는지 한 줄로 보여 준다. 자동 판단이 틀렸다면 "문서만"·"일반만"으로 고정해서 쓴다
   const ROUTE={documents:"문서 근거로 답함",library:"부품 라이브러리(KiCad 공식 심볼) 값으로 답함",general:"일반 대화로 답함 — 올려 둔 문서를 근거로 쓰지 않았습니다"};
+  if(data.parts_trace&&data.parts_trace.length){append("sources","실행 경로: "+data.parts_trace.join(" → "))}
   if(data.route){append("sources","처리 방식: "+(ROUTE[data.route]||data.route)+(data.route_note?"\n"+data.route_note:"")+(data.route==="documents"&&data.route_strength==="weak"?"\n문서와의 관련이 약합니다. 문서와 무관한 질문이면 위의 응답 모드를 '일반만'으로 바꿔 보세요.":""))}
   if(data.sources?.length){
    // (변경) 문서명·쪽 번호 표시, 긴 근거는 앞 300자만

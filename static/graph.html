@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LangGraph 구조</title>
+<style>
+:root{--bg:#fff;--fg:#1c2430;--mut:#5c6b80;--card:#f4f6fa;--line:#d5dbe6;--accent:#34445d;--node:#eef0ff;--nodeline:#7a6fd0;--ran:#ffe8a3;--ranline:#b8860b;--edge:#6b7a90}
+@media (prefers-color-scheme:dark){:root{--bg:#161b24;--fg:#e6ebf3;--mut:#9fb0c7;--card:#1f2632;--line:#33405a;--accent:#5b7aa8;--node:#2a2f4a;--nodeline:#8f86e8;--ran:#6b5a1f;--ranline:#e0b94a;--edge:#8fa2bd}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+a{color:var(--accent)} h1{font-size:22px;margin:0 0 4px} h2{font-size:18px;margin:32px 0 8px}
+small,.mut{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto}
+form{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+input{flex:1;min-width:220px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font-size:16px}
+button{padding:10px 16px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-size:16px;cursor:pointer}
+ol{margin:6px 0 0 18px;padding:0}
+svg text{fill:var(--fg);font:13px system-ui,sans-serif}
+.nd rect{fill:var(--node);stroke:var(--nodeline);stroke-width:1.5}
+.nd.ran rect{fill:var(--ran);stroke:var(--ranline);stroke-width:3}
+.ed{fill:none;stroke:var(--edge);stroke-width:1.5}.ed.cond{stroke-dasharray:6 4}
+.ah{fill:var(--edge)}
+</style></head><body><main>
+<h1>LangGraph 구조</h1>
+<small><a href="/">← 채팅으로</a> · 노란 노드는 방금 실행된 단계 · 점선은 조건에 따라 가는 길</small>
+
+<h2>부품 추천 그래프 — 질문을 넣어 실행 경로 보기</h2>
+<p class="mut">모델을 부르지 않고 분류·검색만 실행합니다(답 생성 없음). 부품 한국어 검색이 꺼져 있으면 구조만 보입니다.</p>
+<form id="f"><input id="q" placeholder="예: 모터 드라이버 추천, 광커플러 찾는중, LM358 대체품" maxlength="12000" autocomplete="off">
+<button type="submit">실행해 보기</button></form>
+<div id="result" class="card" hidden></div>
+<div id="parts" class="card"></div>
+
+<h2>문서 RAG 그래프</h2>
+<p class="mut">검증·인용을 켠 모양입니다. 지금 채팅에는 인용 노드만 연결돼 있어 구조만 보여 줍니다.</p>
+<div id="rag" class="card"></div>
+
+<script>
+const NS='http://www.w3.org/2000/svg', NW=130, NH=38, GX=28, GY=64, PAD=24;
+const $=id=>document.getElementById(id);
+const el=(n,a,t)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!==undefined)e.textContent=t;return e};
+
+// 층 나누기: __start__ 에서 깊이 우선으로 가며 되돌아가는 간선(순환)을 찾아 빼고, 나머지에서 가장 긴 경로로 층을 정한다
+function layout(g){
+  const out={};g.nodes.forEach(n=>out[n]=[]);g.edges.forEach(e=>out[e.source].push(e));
+  const state={},back=new Set(),order=[];
+  (function dfs(n){state[n]=1;for(const e of out[n]){if(state[e.target]===1)back.add(e);else if(!state[e.target])dfs(e.target)}state[n]=2;order.push(n)})(g.nodes.includes('__start__')?'__start__':g.nodes[0]);
+  const layer={};g.nodes.forEach(n=>layer[n]=0);
+  for(const n of order.slice().reverse())for(const e of out[n])if(!back.has(e))layer[e.target]=Math.max(layer[e.target],layer[n]+1);
+  const max=Math.max(...Object.values(layer));
+  if(layer['__end__']!==undefined)layer['__end__']=max;
+  const rows=[];g.nodes.forEach(n=>{(rows[layer[n]]=rows[layer[n]]||[]).push(n)});
+  return {rows:rows.filter(Boolean),back};
+}
+
+function draw(box,g,ran){
+  const {rows,back}=layout(g), cols=Math.max(...rows.map(r=>r.length)), pos={}, layerOf={};
+  const area=cols*NW+(cols-1)*GX, long=[];
+  g.edges.forEach(e=>{});
+  rows.forEach((r,i)=>{const w=r.length*NW+(r.length-1)*GX,x0=PAD+(area-w)/2;r.forEach((n,j)=>{pos[n]={x:x0+j*(NW+GX),y:PAD+i*(NH+GY)};layerOf[n]=i})});
+  g.edges.forEach(e=>{if(back.has(e)||layerOf[e.target]-layerOf[e.source]>1)long.push(e)});
+  const W=PAD*2+area+30+long.length*12, H=PAD*2+rows.length*NH+(rows.length-1)*GY, right=PAD+area;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:W,height:H,role:'img','aria-label':'LangGraph 그림'});
+  const mid='ah'+Math.random().toString(36).slice(2,6), defs=el('defs',{}), mk=el('marker',{id:mid,markerWidth:8,markerHeight:8,refX:7,refY:4,orient:'auto'});
+  mk.appendChild(el('path',{d:'M0,0 L8,4 L0,8 z',class:'ah'}));defs.appendChild(mk);svg.appendChild(defs);
+  const gapBelow=(n,k)=>pos[n].y+NH+GY/2+k, gapAbove=(n,k)=>pos[n].y-GY/2+k;
+  g.edges.forEach((e,i)=>{
+    const a=pos[e.source],b=pos[e.target];let d;
+    if(long.includes(e)){
+      // 노드 밖으로만 지나가는 길: 행 사이 틈 → 오른쪽 통로 → 행 사이 틈 (다른 노드를 가로지르지 않는다)
+      const k=long.indexOf(e),ch=right+18+k*12,off=(k%3)*5,ax=a.x+NW/2,bx=b.x+NW/2;
+      if(back.has(e)){const y1=gapAbove(e.source,-off),y2=gapBelow(e.target,off);d=`M${ax},${a.y} V${y1} H${ch} V${y2} H${bx} V${b.y+NH+1}`}
+      else{const y1=gapBelow(e.source,off),y2=gapAbove(e.target,-off);d=`M${ax},${a.y+NH} V${y1} H${ch} V${y2} H${bx} V${b.y-1}`}
+    }else{const dx=((i%3)-1)*12,x1=a.x+NW/2+dx,y1=a.y+NH,x2=b.x+NW/2+dx,y2=b.y,m=(y2-y1)/2;d=`M${x1},${y1} C${x1},${y1+m} ${x2},${y2-m} ${x2},${y2-1}`}
+    svg.appendChild(el('path',{d,class:'ed'+(e.conditional?' cond':''),'marker-end':`url(#${mid})`,'stroke-linejoin':'round'}));
+  });
+  g.nodes.forEach(n=>{
+    const p=pos[n],gr=el('g',{class:'nd'+(ran&&ran.includes(n)?' ran':''),transform:`translate(${p.x},${p.y})`});
+    gr.appendChild(el('rect',{width:NW,height:NH,rx:n.startsWith('__')?19:8}));
+    gr.appendChild(el('text',{x:NW/2,y:NH/2+5,'text-anchor':'middle'},n.replace(/^__|__$/g,'')));
+    svg.appendChild(gr);
+  });
+  box.replaceChildren(svg);
+}
+
+let graphs={};
+async function load(){
+  const r=await fetch('/api/graph');
+  if(!r.ok){$('parts').textContent='불러오지 못했습니다 ('+r.status+')';return}
+  for(const g of (await r.json()).graphs){graphs[g.key]=g;draw($(g.key),g,[])}
+}
+$('f').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const q=$('q').value.trim();if(!q)return;
+  const box=$('result');box.hidden=false;box.textContent='실행 중…';
+  let r;try{r=await fetch('/api/graph/explain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})}catch(_){box.textContent='실행하지 못했습니다';return}
+  if(!r.ok){box.textContent='실행하지 못했습니다 ('+r.status+')';return}
+  const d=await r.json();box.replaceChildren();
+  const add=(t,bold)=>{const x=document.createElement('div');x.textContent=t;if(bold)x.style.fontWeight='600';box.appendChild(x)};
+  add(d.enabled?(d.answered?'부품 경로로 처리됨':'부품 경로가 처리하지 않음 → 원래 흐름(일반 대화·문서)'):(d.note||'꺼져 있음'),true);
+  if(d.concepts&&d.concepts.length)add('이해한 개념: '+d.concepts.join(', '));
+  if(d.parts&&d.parts.length)add('후보: '+d.parts.join(', '));
+  if(d.trace&&d.trace.length){const ol=document.createElement('ol');for(const t of d.trace){const li=document.createElement('li');li.textContent=t;ol.appendChild(li)}box.appendChild(ol)}
+  draw($('parts'),graphs.parts,d.nodes||[]);
+});
+load().then(()=>{const q=new URLSearchParams(location.search).get('q');if(q){$('q').value=q.slice(0,12000);$('f').requestSubmit()}});
+</script>
+</main></body></html>
