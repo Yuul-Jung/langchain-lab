@@ -322,3 +322,35 @@ def load_term_vecs(path: str | Path) -> dict | None:
     import numpy as np
     z = np.load(p, allow_pickle=False)
     return {"nodes": [str(n) for n in z["nodes"]], "mat": z["mat"]}
+
+
+def attach_wikidata(g: nx.Graph, rows: list[dict]) -> dict:
+    """Wikidata 대조 결과(동료 K2: data/ontology/ko_wikidata.jsonl)를 '근거 보조'로만 붙인다. **승인(review_status)은 바꾸지 않는다.**
+    ko->en 행만 본다. 용어 노드에: wikidata_qid·wikidata_url·wikidata_label_en·wikidata_support
+    (support = 'electronics_match'(영어와 맞고 전기·전자 분야) | 'other_domain'(맞지만 분야 다름) | 'mismatch'(어긋남)).
+    개념 노드에는 전기·전자 분야로 확인된 용어 수(wikidata_supported_terms)와 qid 목록을 붙인다. 못 찾은 용어는 아무것도 붙이지 않는다.
+    돌려주는 값: 상태별 개수."""
+    counts = {"electronics_match": 0, "other_domain": 0, "mismatch": 0}
+    for r in rows:
+        if r.get("direction", "ko->en") != "ko->en" or r.get("verdict") not in ("match", "mismatch") or not r.get("qid"):
+            continue
+        node = f"term:{r['term'].lower()}"
+        if node not in g:
+            continue
+        if r["verdict"] == "mismatch":
+            support = "mismatch"
+        else:
+            support = "electronics_match" if r.get("domain") == "electronics" else "other_domain"
+        d = g.nodes[node]
+        d.update(wikidata_qid=r["qid"], wikidata_url=r.get("url"), wikidata_label_en=r.get("en_label"), wikidata_support=support)
+        counts[support] += 1
+    for c, d in g.nodes(data=True):
+        if d.get("kind") != "concept":
+            continue
+        qids = [g.nodes[t]["wikidata_qid"] for t in g.neighbors(c)
+                if g.nodes[t].get("wikidata_support") == "electronics_match"]
+        if qids:
+            d["wikidata_supported_terms"] = len(qids)
+            d["wikidata_qids"] = sorted(set(qids))
+            d["wikidata_note"] = "Wikidata(CC0) 근거 보조 — 승인 대용이 아님, 사람 승인 필요"
+    return counts

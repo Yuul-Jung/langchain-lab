@@ -104,5 +104,30 @@ class SemanticConceptTest(unittest.TestCase):
         self.assertIsNone(og.load_term_vecs("/no/such/term_vecs.npz"))
 
 
+class WikidataAuxTest(unittest.TestCase):
+    def setUp(self):
+        self.g = og.build_graph(PARTS, min_cooccurrence=1)
+        og.add_korean_bridge(self.g, [{"ko": ["가젯 알파", "가젯 베타"], "kw": ["regulator"]}])
+
+    def test_adds_support_but_never_changes_approval(self):
+        rows = [{"term": "가젯 알파", "direction": "ko->en", "verdict": "match", "domain": "electronics", "qid": "Q1", "url": "u", "en_label": "gadget alpha"},
+                {"term": "가젯 베타", "direction": "ko->en", "verdict": "match", "domain": "other", "qid": "Q2", "url": "u2", "en_label": "gadget beta"},
+                {"term": "없는 말", "direction": "ko->en", "verdict": "match", "domain": "electronics", "qid": "Q3"},
+                {"term": "가젯 알파", "direction": "en->ko", "verdict": "match", "domain": "electronics", "qid": "Q9"}]
+        counts = og.attach_wikidata(self.g, rows)
+        self.assertEqual(counts, {"electronics_match": 1, "other_domain": 1, "mismatch": 0})
+        self.assertEqual(self.g.nodes["term:가젯 알파"]["wikidata_support"], "electronics_match")
+        self.assertEqual(self.g.nodes["term:가젯 베타"]["wikidata_support"], "other_domain")
+        c = self.g.nodes["concept:0"]
+        self.assertEqual(c["wikidata_qids"], ["Q1"])                      # 분야 다른 것은 근거로 세지 않는다
+        self.assertEqual(c["review_status"], "proposed")                 # 승인 대용이 아님
+        self.assertIn("승인 대용이 아님", c["wikidata_note"])
+
+    def test_not_found_rows_add_nothing(self):
+        og.attach_wikidata(self.g, [{"term": "가젯 알파", "direction": "ko->en", "verdict": "not_found"}])
+        self.assertNotIn("wikidata_qid", self.g.nodes["term:가젯 알파"])
+        self.assertNotIn("wikidata_qids", self.g.nodes["concept:0"])
+
+
 if __name__ == "__main__":
     unittest.main()

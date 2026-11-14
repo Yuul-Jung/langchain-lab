@@ -29,6 +29,10 @@ def main() -> int:
     g = og.build_graph(kicad_parts.default_catalog())
     og.add_korean_bridge(g, entries)
     og.annotate_provenance(g, og.kicad_source(ROOT / "data" / "kicad_catalog" / "SOURCE.json"))
+    wd = ROOT / "data" / "ontology" / "ko_wikidata.jsonl"
+    if wd.is_file():   # 동료(71)가 만든 Wikidata 대조 결과 — 근거 보조로만 붙인다(승인 대용 아님)
+        rows = [json.loads(l) for l in wd.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+        print("Wikidata 근거 보조:", og.attach_wikidata(g, rows))
     og.save_graph(g, OUT)
     empty, linked = [], 0
     for n, d in g.nodes(data=True):
