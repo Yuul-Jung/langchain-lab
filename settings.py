@@ -51,6 +51,9 @@ EMBEDDING_DIMS = get_int("EMBEDDING_DIMS", 2560)
 # ---- Elasticsearch 인덱스
 ES_RAG_INDEX = get("ES_RAG_INDEX", "langchain_embedding_lab")
 ES_DOCUMENT_INDEX = get("ES_DOCUMENT_INDEX", "langchain_documents_v1")
+# 문서 인덱스에 노리(한국어 형태소 분석기) 하위 칸(text.nori)을 쓴다: 새 인덱스를 만들 때 그 칸을 넣고, 낱말 후보 검색에 그 칸을 더한다.
+# 노리 플러그인과 노리 칸이 있는 인덱스가 필요하다(scripts/build-nori-index.py). 기본 꺼짐 — 켜려면 DOCUMENT_NORI=true
+DOCUMENT_NORI = get("DOCUMENT_NORI", "false").lower() in ("1", "true", "yes")
 # (추가) 접근 제어 (access_control.py). ACCESS_PASSWORD 를 비우면 이 PC 에서만 쓸 수 있다.
 ACCESS_PASSWORD = get("ACCESS_PASSWORD")
 SESSION_HOURS = get_int("SESSION_HOURS", 12)

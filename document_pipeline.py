@@ -22,6 +22,7 @@ from fastapi import HTTPException
 from pypdf import PdfReader
 
 from rag_search import LM_STUDIO_URL, embed_query, es_client
+import nori_dict
 import settings
 
 ROOT = Path(__file__).resolve().parent
@@ -591,14 +592,17 @@ def _ensure_index(es):
         if field.get("type") != "dense_vector" or field.get("dims") != settings.EMBEDDING_DIMS:
             raise RuntimeError("기존 문서 인덱스의 벡터 매핑이 호환되지 않습니다.")
         return
-    es.indices.create(index=DOCUMENT_INDEX, mappings={"properties": {
+    # (추가) 노리를 켜면 text·title 에 하위 칸 .nori 를 더한다(기존 칸은 그대로라 낱말 조각 검색이 깨지지 않음)
+    nori = {"fields": nori_dict.nori_subfield()} if settings.DOCUMENT_NORI else {}
+    extra = {"settings": {"analysis": nori_dict.index_analysis(nori_dict.read_rules())}} if nori else {}
+    es.indices.create(index=DOCUMENT_INDEX, **extra, mappings={"properties": {
         "document_id": {"type": "keyword"},
         "chunk_id": {"type": "keyword"},
         "section_id": {"type": "keyword"},
         "source_order": {"type": "integer"},
         "filename": {"type": "keyword"},
-        "title": {"type": "text"},
-        "text": {"type": "text"},
+        "title": {"type": "text", **nori},
+        "text": {"type": "text", **nori},
         "page": {"type": "integer"},
         "topic": {"type": "keyword"},
         "topic_method": {"type": "keyword"},
@@ -1140,6 +1144,9 @@ def lexical_candidates_query(query, document_id=None):
     should = [{"constant_score": {"boost": 1.0, "filter": {"bool": {"should": [
         {"wildcard": {"text": {"value": f"*{form}*", "case_insensitive": True}}}
         for form in _term_forms(term)]}}}} for term in terms]
+    if settings.DOCUMENT_NORI:
+        # (추가) 노리 칸: 질문을 노리로 나눈 낱말이 든 청크도 후보로(낱말 조각 검색이 못 잡는 띄어쓰기·합성어 차이 보완)
+        should.append({"constant_score": {"boost": 1.0, "filter": {"match": {"text.nori": query}}}})
     body = {"bool": {"should": should, "minimum_should_match": 1}}
     if document_id:
         body["bool"]["filter"] = [{"term": {"document_id": document_id}}]
