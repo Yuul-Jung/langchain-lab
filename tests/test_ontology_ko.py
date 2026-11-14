@@ -129,5 +129,35 @@ class WikidataAuxTest(unittest.TestCase):
         self.assertNotIn("wikidata_qids", self.g.nodes["concept:0"])
 
 
+class ApprovalTest(unittest.TestCase):
+    def setUp(self):
+        self.g = og.build_graph(PARTS, min_cooccurrence=1)
+        og.add_korean_bridge(self.g, [{"ko": ["가젯 알파"], "kw": ["regulator"]}, {"ko": ["가젯 베타", "베타칩"], "kw": ["regulator"]}])
+
+    def names(self, text, include=False, skip=False):
+        return [self.g.nodes[c]["label"] for c in og.translate_query(self.g, text, include, skip_risky=skip)]
+
+    def test_approved_concepts_work_without_proposed_flag(self):
+        counts = og.apply_approvals(self.g, [{"index": 0, "ko": "가젯 알파", "decision": "approved", "approver": "delegated: test"}])
+        self.assertEqual(counts["approved"], 1)
+        self.assertEqual(self.names("가젯 알파 추천"), ["가젯 알파"])
+        self.assertEqual(self.g.nodes["concept:0"]["review_by"], "delegated: test")
+
+    def test_rejected_is_never_used_even_with_proposed_flag(self):
+        og.apply_approvals(self.g, [{"index": 1, "ko": "가젯 베타", "decision": "rejected"}])
+        self.assertEqual(self.names("가젯 베타 추천", include=True), [])
+
+    def test_index_and_label_mismatch_is_not_applied(self):
+        counts = og.apply_approvals(self.g, [{"index": 0, "ko": "다른 이름", "decision": "approved"}])
+        self.assertEqual(counts["mismatch"], 1)
+        self.assertEqual(self.g.nodes["concept:0"]["review_status"], "proposed")
+
+    def test_risky_terms_skipped_only_when_asked(self):
+        og.apply_approvals(self.g, [{"index": 1, "ko": "가젯 베타", "decision": "approved", "risky_terms": ["베타칩"]}])
+        self.assertEqual(self.names("베타칩 추천"), ["가젯 베타"])
+        self.assertEqual(self.names("베타칩", skip=True), [])
+        self.assertEqual(self.names("가젯 베타", skip=True), ["가젯 베타"])
+
+
 if __name__ == "__main__":
     unittest.main()

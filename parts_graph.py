@@ -70,9 +70,10 @@ def parts_concepts(question: str, ontology, include_proposed: bool = False, sema
     """부품 추천 질문이면 이해한 개념 노드 id 목록, 아니면 빈 목록. 사전에 정확히 맞는 용어가 없으면 semantic(질문)을 시도한다."""
     if ontology is None or DOC_WORDS.search(question) or EXPLAIN.search(question) or NONPART.search(question):
         return []
-    exact = og.translate_query(ontology, question, include_proposed)
     if INTENT.search(question):
+        exact = og.translate_query(ontology, question, include_proposed)
         return exact or (semantic(question) if semantic else [])
+    exact = og.translate_query(ontology, question, include_proposed, skip_risky=True)   # 의도어 없으면 위험 용어 제외
     # 의도어가 없으면 사전에 정확히 맞는 개념이 있고, 질문이 짧고, 문장형(물음표·'알려줘')이 아닐 때만
     q = question.strip()
     return exact if len(q) <= SHORT and not re.search(r"[?？]|알려|말해|가르쳐", q) else []

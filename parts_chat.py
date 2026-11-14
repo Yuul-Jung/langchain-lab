@@ -10,6 +10,7 @@ from pathlib import Path
 import kicad_parts
 import ontology_graph as og
 import parts_graph as pg
+import parts_log
 import settings
 
 GRAPH_PATH = Path(__file__).resolve().parent / "data" / "ontology" / "graph_ko.json"
@@ -62,6 +63,8 @@ def run(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> d
 def answer(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> dict | None:
     """부품 추천 질문이면 {'answer', 'backend', 'trace'}, 아니면 None. 인자는 시험용으로만 바꾼다."""
     result = run(question, es=es, embed=embed, ontology=ontology, catalog=catalog)
+    if result is not None and settings.PARTS_ROUTE_LOG and parts_log.in_server_process():
+        parts_log.record(question, result)      # 처리하지 않은 질문도 남긴다(놓친 질문을 찾는 재료). 이 PC 전용
     if not result or not result.get("answered"):
         return None
     return {"answer": result["answer"], "backend": result["backend"], "trace": result["trace"]}

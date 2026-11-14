@@ -26,6 +26,7 @@ def onto(status="proposed"):
 def ask(q="가젯 알파 부품 추천", **flags):
     with mock.patch.object(settings, "PARTS_SEMANTIC_SEARCH", flags.get("sem", True)), \
          mock.patch.object(settings, "PARTS_ONTOLOGY_INCLUDE_PROPOSED", flags.get("prop", False)), \
+         mock.patch.object(settings, "PARTS_ROUTE_LOG", False), \
          mock.patch.object(parts_chat, "TERM_VECS_PATH", parts_chat.TERM_VECS_PATH.with_name("nope.npz")):   # 이 PC의 data/ 파일에 기대지 않는다
         return parts_chat.answer(q, es=FakeEs(), embed=lambda s: [0.1], ontology=flags.get("onto", onto()), catalog=CAT)
 

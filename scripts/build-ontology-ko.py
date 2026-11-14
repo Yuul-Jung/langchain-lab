@@ -24,16 +24,21 @@ OUT = ROOT / "data" / "ontology" / "graph_ko.json"
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ask", default="")
+    ap.add_argument("--out", default=str(OUT), help="저장 위치(검증용 임시 그래프를 따로 만들 때)")
     args = ap.parse_args()
     entries = json.loads(SEED.read_text(encoding="utf-8"))["entries"]
     g = og.build_graph(kicad_parts.default_catalog())
     og.add_korean_bridge(g, entries)
+    ap = ROOT / "data" / "ontology" / "approvals.jsonl"
+    if ap.is_file():   # 승인 기록(시드는 그대로) — 지우면 전부 proposed 로 돌아간다
+        rows = [json.loads(l) for l in ap.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
+        print("승인 기록 반영:", og.apply_approvals(g, rows))
     og.annotate_provenance(g, og.kicad_source(ROOT / "data" / "kicad_catalog" / "SOURCE.json"))
     wd = ROOT / "data" / "ontology" / "ko_wikidata.jsonl"
     if wd.is_file():   # 동료(71)가 만든 Wikidata 대조 결과 — 근거 보조로만 붙인다(승인 대용 아님)
         rows = [json.loads(l) for l in wd.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
         print("Wikidata 근거 보조:", og.attach_wikidata(g, rows))
-    og.save_graph(g, OUT)
+    og.save_graph(g, args.out)
     empty, linked = [], 0
     for n, d in g.nodes(data=True):
         if d.get("kind") != "concept":
@@ -45,7 +50,7 @@ def main() -> int:
     total = sum(1 for _, d in g.nodes(data=True) if d.get("kind") == "concept")
     print(f"개념 {total}개 · 용어 {sum(1 for _, d in g.nodes(data=True) if d.get('kind') == 'term')}개 · "
           f"부품에 닿는 개념 {linked}개 · 부품이 없는 개념 {len(empty)}개 {empty}")
-    print("저장:", OUT)
+    print("저장:", args.out)
     if args.ask:
         for r in og.ask_ko(g, args.ask, include_proposed=True):
             print(f"- {r['concept']} [{r['status']}]", [p["lib_id"] for p in r["parts"]])

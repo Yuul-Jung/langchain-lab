@@ -240,9 +240,11 @@ def add_korean_bridge(g: nx.Graph, entries: list[dict]) -> int:
     return made
 
 
-def translate_query(g: nx.Graph, text: str, include_proposed: bool = False) -> list[str]:
-    """질문 속 한국어 용어가 가리키는 개념 노드 목록(긴 용어 우선, 겹치는 용어는 하나만)."""
-    terms = sorted((n for n in _nodes(g, "term")), key=lambda n: -len(g.nodes[n]["label"]))
+def translate_query(g: nx.Graph, text: str, include_proposed: bool = False, skip_risky: bool = False) -> list[str]:
+    """질문 속 한국어 용어가 가리키는 개념 노드 목록(긴 용어 우선, 겹치는 용어는 하나만).
+    skip_risky=True 면 오탐 위험 표시(risky)가 붙은 용어는 쓰지 않는다(의도어 없는 짧은 질문 경로용)."""
+    terms = sorted((n for n in _nodes(g, "term") if not (skip_risky and g.nodes[n].get("risky"))),
+                   key=lambda n: -len(g.nodes[n]["label"]))
     lowered = text.lower()
     taken: list[tuple[int, int]] = []
     concepts: list[str] = []
@@ -253,7 +255,8 @@ def translate_query(g: nx.Graph, text: str, include_proposed: bool = False) -> l
         for c in g.neighbors(tn):
             if g.nodes[c].get("kind") != "concept":
                 continue
-            if g.nodes[c].get("review_status") != "approved" and not include_proposed:
+            status = g.nodes[c].get("review_status")
+            if status == "rejected" or (status != "approved" and not include_proposed):   # 반려된 개념은 어떤 설정에서도 쓰지 않는다
                 continue
             taken.append((m.start(), m.end()))
             if c not in concepts:
@@ -305,10 +308,13 @@ def semantic_concepts(g: nx.Graph, text: str, embed, term_vecs: dict, threshold:
     for j in np.argsort(-sims)[:6]:
         if sims[j] < threshold:
             break
+        if g.nodes.get(term_vecs["nodes"][j], {}).get("risky"):   # 오탐 위험 용어는 문구가 비슷하다는 이유만으로 잇지 않는다
+            continue
         for c in g.neighbors(term_vecs["nodes"][j]):
             if g.nodes[c].get("kind") != "concept" or c in out:
                 continue
-            if g.nodes[c].get("review_status") != "approved" and not include_proposed:
+            status = g.nodes[c].get("review_status")
+            if status == "rejected" or (status != "approved" and not include_proposed):
                 continue
             out.append(c)
     return out[:limit]
@@ -354,3 +360,32 @@ def attach_wikidata(g: nx.Graph, rows: list[dict]) -> dict:
             d["wikidata_qids"] = sorted(set(qids))
             d["wikidata_note"] = "Wikidata(CC0) 근거 보조 — 승인 대용이 아님, 사람 승인 필요"
     return counts
+
+
+def apply_approvals(g: nx.Graph, rows: list[dict]) -> dict:
+    """승인 기록(data/ontology/approvals.jsonl)을 개념 노드에 반영한다. 시드 파일은 바꾸지 않는다.
+    한 줄: {'index': 개념 번호, 'ko': 대표 한국어 용어(번호와 짝이 맞는지 확인용), 'decision': approved|rejected|proposed,
+            'approver': 누가(예: 'delegated: jung-29 + 71 (사용자 위임)'), 'date': 날짜, 'reason': 이유}
+    같은 개념이 여러 줄이면 마지막 줄이 이긴다. 번호와 대표 용어가 안 맞으면(시드 순서가 바뀐 경우) 반영하지 않고 세어 돌려준다."""
+    counts = {"approved": 0, "rejected": 0, "proposed": 0, "mismatch": 0}
+    for r in rows:
+        if "decision" not in r:   # 머리말 줄(_note) 등은 건너뛴다
+            continue
+        c = f"concept:{r.get('index')}"
+        decision = r.get("decision")
+        if c not in g or decision not in ("approved", "rejected", "proposed"):
+            counts["mismatch"] += 1
+            continue
+        if g.nodes[c].get("label") != r.get("ko"):
+            counts["mismatch"] += 1
+            continue
+        g.nodes[c].update(review_status=decision, review_by=r.get("approver"), review_at=r.get("date"),
+                          review_note=r.get("reason", ""))
+        for term in r.get("risky_terms", []):   # 개념 승인과 별개로, 그 용어는 의도어가 있을 때만 쓰게 표시
+            tn = f"term:{term.lower()}"
+            if tn in g:
+                g.nodes[tn]["risky"] = True
+    final = [d.get("review_status") for _, d in g.nodes(data=True) if d.get("kind") == "concept"]
+    counts.update({k: final.count(k) for k in ("approved", "rejected", "proposed")})
+    return counts
+

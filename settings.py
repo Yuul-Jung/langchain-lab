@@ -114,6 +114,8 @@ CHAT_PARTS_LOOKUP = get("CHAT_PARTS_LOOKUP", "true").lower() in ("1", "true", "y
 PARTS_SEMANTIC_SEARCH = get("PARTS_SEMANTIC_SEARCH", "false").lower() in ("1", "true", "yes")
 # 한·영 사전의 승인 전(proposed) 개념도 부품 추천 질문 이해에 쓴다. 원칙은 승인된 개념만이므로 시험할 때만 켠다
 PARTS_ONTOLOGY_INCLUDE_PROPOSED = get("PARTS_ONTOLOGY_INCLUDE_PROPOSED", "false").lower() in ("1", "true", "yes")
+# 부품 경로의 판단(질문·처리 여부·개념·검색 방식)을 data/diagnostics/parts_route.jsonl 에 남긴다(이 PC 전용, 질문 원문 포함 — 공유 금지). 끄려면 PARTS_ROUTE_LOG=false
+PARTS_ROUTE_LOG = get("PARTS_ROUTE_LOG", "true").lower() in ("1", "true", "yes")
 
 # ---- 공개 시작 페이지가 /api/status 를 읽을 수 있는 출처
 STATUS_ALLOWED_ORIGINS = frozenset(get_list("STATUS_ALLOWED_ORIGINS", "https://yuul-jung.github.io"))

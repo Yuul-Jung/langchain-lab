@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개념 승인</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--sub:#5b6676;--line:#dde2ea;--ok:#1f7a4d;--warn:#a15c00;--bad:#b3261e;--acc:#34445d;--chip:#eef1f6}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--ink:#e6e9ee;--sub:#9aa4b2;--line:#2e343e;--ok:#5cc28f;--warn:#e0a24a;--bad:#ef7a72;--acc:#8fa6c8;--chip:#272c35}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Noto Sans KR",sans-serif}
+header{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+header a{color:var(--acc)}
+h1{font-size:19px;margin:4px 0 6px}
+.note{color:var(--sub);font-size:13px;margin:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.bar select,.bar input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.bar input{flex:1;min-width:140px}
+.stat{font-size:13px;color:var(--sub)}
+main{max-width:980px;margin:0 auto;padding:12px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.terms{font-weight:600}
+.num{color:var(--sub);font-weight:400;margin-right:6px}
+.status{font-size:13px;padding:2px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.s-approved{color:var(--ok)}.s-proposed{color:var(--sub)}.s-rejected{color:var(--bad)}
+.row{margin:6px 0 0;font-size:14px;overflow-wrap:anywhere}
+.k{color:var(--sub);display:inline-block;min-width:84px}
+.chip{display:inline-block;background:var(--chip);border-radius:6px;padding:0 6px;margin:2px 4px 2px 0;font-size:13px}
+.warn{color:var(--warn)}.bad{color:var(--bad)}.good{color:var(--ok)}
+.act{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.act input{flex:1;min-width:160px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+button{font:inherit;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+button.a{border-color:var(--ok);color:var(--ok)}button.r{border-color:var(--bad);color:var(--bad)}
+.by{font-size:12px;color:var(--sub);margin-top:4px}
+.msg{font-size:13px;margin-left:4px}
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← 채팅</a> · <a href="/graph">그래프 보기</a>
+  <h1>온톨로지 개념 승인</h1>
+  <p class="note">한국어 용어 → KiCad 분류 대응을 개념마다 승인·보류·반려합니다. 누르면 기록 파일에 한 줄이 덧붙고(이전 기록은 남음), 같은 개념은 마지막 결정이 이깁니다.
+  '위임' 표시는 사용자 위임에 따른 두 Claude 세션의 합의이며, 여기서 누르면 사람의 결정으로 바뀝니다. 실제 검색에 반영하려면 그래프를 다시 만들고 서버를 재시작해야 합니다.</p>
+  <div class="bar">
+    <select id="fStatus" aria-label="상태"><option value="">모든 상태</option><option value="approved">승인</option><option value="proposed">승인 전</option><option value="rejected">반려</option></select>
+    <select id="fKind" aria-label="검토 의견"><option value="">모든 개념</option><option value="disagree">두 검토가 엇갈림</option><option value="wrong">틀린 용어 있음</option><option value="risky">위험 용어 있음</option><option value="delegated">위임 승인</option><option value="human">사람이 결정함</option></select>
+    <input id="fText" type="search" placeholder="용어·분류 찾기" aria-label="용어·분류 찾기">
+  </div>
+  <div class="stat" id="stat">불러오는 중…</div>
+</header>
+<main id="list"></main>
+<script>
+const LABEL={approved:"승인",proposed:"승인 전",rejected:"반려"};
+let DATA=null;
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+function chips(arr,cls){const s=el("span");(arr||[]).forEach(t=>s.append(el("span","chip"+(cls?" "+cls:""),t)));return s}
+function line(k,v){const p=el("div","row");p.append(el("span","k",k));if(typeof v==="string")p.append(document.createTextNode(v));else p.append(v);return p}
+async function load(){
+  const r=await fetch("/api/ontology/concepts");
+  if(r.status===401){location.href="/login?next=/ontology";return}
+  if(!r.ok){document.getElementById("stat").textContent="목록을 읽지 못했습니다.";return}
+  DATA=await r.json();render();
+}
+function match(c){
+  const st=document.getElementById("fStatus").value,kd=document.getElementById("fKind").value,tx=document.getElementById("fText").value.trim().toLowerCase();
+  if(st&&c.status!==st)return false;
+  const autoOk=c.auto.recommendation==="권고 승인",peerOk=c.peer.verdict==="OK";
+  if(kd==="disagree"&&(!c.auto.recommendation||!c.peer.verdict||autoOk===peerOk))return false;
+  if(kd==="wrong"&&!(c.peer.wrong_terms||[]).length)return false;
+  if(kd==="risky"&&!(c.peer.risky_terms||[]).length)return false;
+  if(kd==="delegated"&&!(c.by||"").startsWith("delegated"))return false;
+  if(kd==="human"&&!(c.by||"").startsWith("human"))return false;
+  if(tx&&![...c.ko,...c.kw,...c.lib].join(" ").toLowerCase().includes(tx))return false;
+  return true;
+}
+function render(){
+  const list=document.getElementById("list");list.textContent="";
+  const shown=DATA.concepts.filter(match);
+  const c=DATA.counts;
+  document.getElementById("stat").textContent=`전체 ${DATA.concepts.length} · 승인 ${c.approved} · 승인 전 ${c.proposed} · 반려 ${c.rejected} · 사람 결정 ${DATA.human_decisions} · 반영 대기 ${DATA.pending_rebuild} · 표시 ${shown.length}`;
+  shown.forEach(x=>list.append(card(x)));
+}
+function card(x){
+  const box=el("article","card");
+  const top=el("div","top");const t=el("div","terms");t.append(el("span","num","#"+x.index),document.createTextNode(x.ko.join(", ")));
+  top.append(t,el("span","status s-"+x.status,LABEL[x.status]||x.status));box.append(top);
+  box.append(line("영어 키워드",chips(x.kw)),line("KiCad 분류",chips(x.lib)));
+  if(x.evidence_parts!=null)box.append(line("근거 부품",`${x.evidence_parts}개`+(x.example_parts.length?" · 예: "+x.example_parts.join(", "):"")));
+  if(x.wikidata_supported_terms)box.append(line("Wikidata",`전기·전자 분야로 확인된 용어 ${x.wikidata_supported_terms}개 (근거 보조)`));
+  const a=el("span",x.auto.recommendation==="권고 승인"?"good":"warn",x.auto.recommendation||"없음");
+  const av=el("span");av.append(a);if(x.auto.flags.length)av.append(document.createTextNode(" — "+x.auto.flags.join("; ")));
+  box.append(line("자동 검증",av));
+  const pv=el("span");pv.append(el("span",x.peer.verdict==="OK"?"good":(x.peer.verdict==="오류"?"bad":"warn"),x.peer.verdict||"없음"));
+  if(x.peer.reason)pv.append(document.createTextNode(" — "+x.peer.reason));box.append(line("독립 검토",pv));
+  if(x.peer.wrong_terms.length)box.append(line("틀린 용어",chips(x.peer.wrong_terms,"bad")));
+  if(x.peer.risky_terms.length)box.append(line("위험 용어",chips(x.peer.risky_terms,"warn")));
+  if(x.peer.missing_synonyms.length)box.append(line("빠진 말 후보",chips(x.peer.missing_synonyms)));
+  if(x.by)box.append(el("div","by",`현재 결정: ${LABEL[x.status]||x.status} · ${x.by} · ${x.at||""}${x.note?" · "+x.note:""}`));
+  const act=el("div","act");const note=el("input");note.placeholder="이유(선택)";note.maxLength=300;note.setAttribute("aria-label","이유");
+  const msg=el("span","msg");
+  [["approved","승인","a"],["proposed","보류",""],["rejected","반려","r"]].forEach(([d,lab,cls])=>{
+    const b=el("button",cls,lab);b.type="button";b.onclick=()=>decide(x,d,note.value,msg,b);act.append(b)});
+  act.append(note,msg);box.append(act);return box;
+}
+async function decide(x,d,note,msg,btn){
+  btn.disabled=true;msg.textContent="저장 중…";
+  try{
+    const r=await fetch("/api/ontology/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:x.index,decision:d,note})});
+    if(r.status===401){location.href="/login?next=/ontology";return}
+    const j=await r.json();
+    if(!r.ok){msg.textContent=j.detail||"저장하지 못했습니다.";msg.className="msg bad";return}
+    msg.textContent="저장됨";msg.className="msg good";await load();
+  }catch(e){msg.textContent="저장하지 못했습니다.";msg.className="msg bad"}
+  finally{btn.disabled=false}
+}
+["fStatus","fKind"].forEach(id=>document.getElementById(id).onchange=render);
+document.getElementById("fText").oninput=render;
+load();
+</script>
+</body>
+</html>
