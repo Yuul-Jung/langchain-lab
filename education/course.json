@@ -1,9 +1,9 @@
 {
   "site_title": "로컬 AI/RAG 시스템 구축 실습",
   "site_subtitle": "LM Studio · LangChain · Elasticsearch · FastAPI · Qwen3-VL · 대형 LLM API",
-  "site_description": "Ubuntu 노트북 한 대에서 로컬 언어 모델, 임베딩, 벡터 검색, 문서 구조화, 페이지 이미지 분석을 구축하고, 설정 분리와 모델 선택, 공개 페이지 운영, 검색 품질 평가와 개선까지 단계별로 정리했습니다. 실제로 성공한 결과와 아직 검증하지 않은 부분을 구분해 기록한 실습 교재입니다.",
+  "site_description": "Ubuntu 노트북 한 대에서 로컬 언어 모델, 임베딩, 벡터 검색, 문서 구조화, 페이지 이미지 분석을 구축하고, 설정 분리와 모델 선택, 공개 페이지 운영, 검색 품질 평가와 개선, 부품 라이브러리 확보까지 단계별로 정리했습니다. 실제로 성공한 결과와 아직 검증하지 않은 부분을 구분해 기록한 실습 교재입니다.",
   "course_code": "LANGCHAIN LAB",
-  "version": "v08",
+  "version": "v09",
   "chapters": [
     {
       "id": "ch01",
@@ -56,48 +56,70 @@
       "id": "ch04",
       "number": 4,
       "title": "설정 분리와 모델 선택",
-      "subtitle": ".env 설정 한곳 모음 → 로컬 / OpenAI / Anthropic 제공자 → 외부 전송 보호 → 단위 테스트",
+      "subtitle": ".env 설정 한곳 모음 → 로컬 / OpenAI / Anthropic 제공자 → 외부 전송 보호 → 응답 모드(자동·문서만·일반만) → 단위 테스트",
       "slug": "ch04_settings_model_selection",
-      "version": "v03",
+      "version": "v04",
       "source": "content/ch04.md",
       "tags": [
         "settings.py",
         ".env",
         "llm_providers",
         "ALLOW_EXTERNAL_RAG",
-        "CHAT_RAG_SOURCE"
+        "CHAT_RAG_SOURCE",
+        "응답 모드 · 자동 판단"
       ]
     },
     {
       "id": "ch05",
       "number": 5,
       "title": "공개 페이지와 로컬 운영",
-      "subtitle": "GitHub Pages 시작 페이지 → 실행 버튼 → 상태 확인 → 업데이트 완료 판정 → 접근 제어 → 다른 PC로 옮길 준비 → 교재 게시",
+      "subtitle": "GitHub Pages 시작 페이지 → 실행 버튼 → 상태 확인 → 업데이트 완료 판정 → 접근 제어 → 다른 PC로 옮길 준비 → 교재 게시 → 메모리 부족 대응",
       "slug": "ch05_public_page_operations",
-      "version": "v04",
+      "version": "v05",
       "source": "content/ch05.md",
       "tags": [
         "GitHub Pages",
         "setup·start·update",
         "/api/status",
         "URL 실행기",
-        "ACCESS_PASSWORD"
+        "ACCESS_PASSWORD",
+        "Elasticsearch 힙 상한"
       ]
     },
     {
       "id": "ch06",
       "number": 6,
       "title": "검색 품질 평가와 개선",
-      "subtitle": "평가 세트·채점 도구 → 채팅 검색 대상 → 점수 컷오프 → 낱말 포함 재순위 → 낱말 후보 → 처음 보는 문서 검증 → 답변 확인·외국 문자 교정",
+      "subtitle": "평가 세트·채점 도구 → 채팅 검색 대상 → 점수 컷오프 → 낱말 포함 재순위 → 낱말 후보 → 처음 보는 문서 검증 → 답변 확인·외국 문자 교정 → 여러 번 재기 → 한자 음 표 → 근거 대조 → 출처 지시문 실험 → 자동 모드 판단 검증",
       "slug": "ch06_search_quality_evaluation",
-      "version": "v05",
+      "version": "v06",
       "source": "content/ch06.md",
       "tags": [
         "hit@1 · MRR · 정밀도",
         "SEARCH_SCORE_MARGIN",
         "SEARCH_TERM_WEIGHT",
         "처음 보는 문서 검증",
-        "답변 확인"
+        "답변 확인",
+        "한자 음 표",
+        "근거 대조",
+        "사전 등록 검증"
+      ]
+    },
+    {
+      "id": "ch07",
+      "number": 7,
+      "title": "부품 라이브러리 확보와 핀 질문",
+      "subtitle": "라이선스 확인 → KiCad 카탈로그 → 연결 점검 → LibrePCB 변환 → 교차 검증 → 핀 질문 연결",
+      "slug": "ch07_parts_library",
+      "version": "v01",
+      "source": "content/ch07.md",
+      "tags": [
+        "KiCad 카탈로그",
+        "LibrePCB (CC0)",
+        "S-표현식 파서",
+        "연결 점검",
+        "교차 검증",
+        "proposed 표시"
       ]
     }
   ]
