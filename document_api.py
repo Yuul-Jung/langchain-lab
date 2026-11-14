@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 import settings
 from document_pipeline import (
+    delete_document,
     ALLOWED_RELATIONS, MAX_BYTES, UPLOAD_DIR, _index_chunks, _write_catalog,
     extract_sections, get_document, ingest_file, list_documents, make_chunks,
     analyze_document, propose_relations, learning_sequence,
@@ -158,6 +159,18 @@ def search_documents_api(request: SearchRequest):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=503, detail="검색 엔진 또는 임베딩 모델 연결 실패") from exc
+
+
+@router.delete("/{document_id}")
+def delete_document_api(document_id: str):
+    """(추가) 문서 정식 삭제: 검색 청크·원본 파일·목록 정보를 모두 지운다(되돌릴 수 없음)."""
+    _load(document_id)
+    try:
+        return delete_document(document_id)
+    except (FileNotFoundError, ValueError):
+        raise HTTPException(status_code=404, detail="문서를 찾지 못했습니다.")
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="삭제 중 검색 엔진 연결 실패 — 목록 정보는 남겨 두었으니 다시 시도하세요.") from exc
 
 
 @router.post("/{document_id}/reindex")

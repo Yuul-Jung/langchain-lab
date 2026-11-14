@@ -715,6 +715,32 @@ def delete_document_chunks(document_id):
                            query={"term": {"document_id": document_id}})
 
 
+DELETE_INDEX_PATTERN = "langchain_*"   # 문서 청크 사본이 있을 수 있는 색인(서비스·노리·평가용 사본). 제1장 실습 색인은 document_id 칸이 없어 영향 없음
+
+
+def delete_document(document_id):
+    """(추가) 문서를 정식으로 지운다: 검색 청크(모든 langchain_* 색인의 사본 포함) → 원본 파일 → 목록 정보 순서.
+    목록 정보를 마지막에 지우므로, 중간에 실패하면 화면에 남아 다시 시도할 수 있다. 되돌릴 수 없다."""
+    path = _catalog_path(document_id)
+    if not path.is_file():
+        raise FileNotFoundError(document_id)
+    es = es_client()
+    removed = {}
+    for index in es.indices.get(index=DELETE_INDEX_PATTERN).keys():
+        if index.startswith("."):
+            continue
+        result = es.delete_by_query(index=index, refresh=True, conflicts="proceed",
+                                    query={"term": {"document_id": document_id}})
+        if result.get("deleted"):
+            removed[index] = result["deleted"]
+    files = []
+    for stored in UPLOAD_DIR.glob(document_id + ".*"):
+        stored.unlink()
+        files.append(stored.name)
+    path.unlink()
+    return {"document_id": document_id, "chunks_deleted": removed, "files_deleted": files}
+
+
 def chunks_digest(chunks):
     """(추가) 청크 본문 전체의 지문. 색인된 내용과 새 추출 결과가 같은지 비교하는 데 쓴다."""
     digest = hashlib.sha256()
