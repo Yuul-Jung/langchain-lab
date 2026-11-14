@@ -88,6 +88,22 @@ def evaluate(gold: dict[str, dict], pred: dict[str, dict], exclude_sources=()) -
             "value_rows": value_rows}
 
 
+GROUPS = {"supply": {"supply_min_v", "supply_max_v", "abs_max_supply_v"}, "temp": {"temp_min_c", "temp_max_c"}}
+
+
+def evaluate_by_rule(gold: dict[str, dict], pred: dict[str, dict], exclude_sources=()) -> dict:
+    """규칙 묶음(전원·온도)을 따로 채점한다 — 한 묶음의 값 없음이 다른 묶음의 틀린 값을 가리지 않게(11-15 측정 보완)."""
+    out = {}
+    for name, gfields in GROUPS.items():
+        g2 = {k: {"values": {f: v for f, v in r["values"].items() if f in gfields}} for k, r in gold.items()}
+        g2 = {k: r for k, r in g2.items() if r["values"]}
+        p2 = {k: {"values": {f: v for f, v in (r.get("values") or {}).items() if f in gfields}} for k, r in pred.items()}
+        res = evaluate(g2, p2, exclude_sources)
+        res.pop("value_rows")
+        out[name] = res
+    return out
+
+
 def _partial_verdict(record: dict, rail: float, temp, fields) -> str:
     """정답에 있는 필드에 해당하는 규칙만으로 판정(없는 필드의 MISSING 은 세지 않음)."""
     f = cs.check_operating_point(record, rail, temp)
@@ -117,6 +133,7 @@ def main() -> int:
     rows = res.pop("value_rows")
     print(f"정답 부품 {len(gold)}개 중 기록 있음 {len(pred)}개")
     print(json.dumps(res, ensure_ascii=False))
+    print("규칙 묶음별:", json.dumps(evaluate_by_rule(gold, pred, tuple(args.exclude_source)), ensure_ascii=False))
     if args.rows:
         for r in rows:
             print(r)
