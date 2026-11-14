@@ -35,6 +35,8 @@ FIX_PROPOSALS = {106: ["resistor"], 107: ["capacitor"], 108: ["inductor"], 109: 
 def short_term(label: str) -> bool:
     ascii_only = all(ord(c) < 128 for c in label)
     core = label.replace(" ", "")
+    if ascii_only and core.upper() in og.CASE_SENSITIVE_ACRONYMS:   # 대문자로 쓴 경우만 맞추므로 영어 일반어와 겹치지 않는다
+        return False
     return core.lower() in COMMON_EN if ascii_only else len(core) <= 1
 
 

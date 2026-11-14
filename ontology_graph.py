@@ -195,6 +195,8 @@ def load_graph(path: str | Path) -> nx.Graph:
 import functools
 
 _SEP = r"[\s\-_/]*"
+# 용어 전체가 이 약어일 때만 대소문자를 구분한다('CAN 통신' 같은 섞인 용어는 그대로). LED 는 소문자 입력이 흔해 넣지 않음.
+CASE_SENSITIVE_ACRONYMS = frozenset({"CAN", "ARM", "PIC", "GAL"})
 
 
 @functools.lru_cache(maxsize=2048)
@@ -249,7 +251,11 @@ def translate_query(g: nx.Graph, text: str, include_proposed: bool = False, skip
     taken: list[tuple[int, int]] = []
     concepts: list[str] = []
     for tn in terms:
-        m = _term_regex(g.nodes[tn]["label"]).search(lowered)
+        label = g.nodes[tn]["label"]
+        if label.upper() in CASE_SENSITIVE_ACRONYMS:   # 영어 일반어와 같은 약어는 대문자로 쓴 경우만(예: 'can' ≠ 'CAN')
+            m = re.search(r"(?<![A-Za-z0-9])" + re.escape(label.upper()) + r"(?![A-Za-z0-9])", text)
+        else:
+            m = _term_regex(label).search(lowered)
         if not m or any(m.start() < b and a < m.end() for a, b in taken):
             continue
         for c in g.neighbors(tn):
@@ -308,7 +314,8 @@ def semantic_concepts(g: nx.Graph, text: str, embed, term_vecs: dict, threshold:
     for j in np.argsort(-sims)[:6]:
         if sims[j] < threshold:
             break
-        if g.nodes.get(term_vecs["nodes"][j], {}).get("risky"):   # 오탐 위험 용어는 문구가 비슷하다는 이유만으로 잇지 않는다
+        tn = term_vecs["nodes"][j]
+        if tn not in g or g.nodes[tn].get("risky"):   # 사전에서 빠진 용어(벡터 파일이 옛것)·오탐 위험 용어는 잇지 않는다
             continue
         for c in g.neighbors(term_vecs["nodes"][j]):
             if g.nodes[c].get("kind") != "concept" or c in out:

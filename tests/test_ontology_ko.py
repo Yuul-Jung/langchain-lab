@@ -72,6 +72,22 @@ class ShortKoreanTermTest(unittest.TestCase):
         self.assertEqual(self.names("메모리 램으로 추천해줘"), ["램"])
 
 
+class CaseSensitiveAcronymTest(unittest.TestCase):
+    def names(self, text):
+        g = og.build_graph(PARTS, min_cooccurrence=1)
+        og.add_korean_bridge(g, [{"ko": ["캔 통신", "CAN 통신", "CAN"], "kw": ["regulator"]},
+                                 {"ko": ["발광 다이오드", "LED"], "kw": ["led"]}])
+        return [g.nodes[c]["label"] for c in og.translate_query(g, text, True)]
+
+    def test_bare_acronym_needs_uppercase(self):
+        self.assertEqual(self.names("can you recommend a part"), [])
+        self.assertEqual(self.names("CAN 되는 칩 추천"), ["캔 통신"])
+
+    def test_mixed_term_and_led_stay_case_insensitive(self):
+        self.assertEqual(self.names("can 통신 칩 추천"), ["캔 통신"])
+        self.assertEqual(self.names("led 추천"), ["발광 다이오드"])
+
+
 class SemanticConceptTest(unittest.TestCase):
     def setUp(self):
         import numpy as np
