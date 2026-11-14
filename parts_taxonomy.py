@@ -169,8 +169,8 @@ class Taxonomy:
     def aliases(self) -> list[tuple[str, str]]:
         """[(낱말, 기능 id)] — 낱말의 출처는 분류 체계 파일뿐: 기능의 한국어 이름 토막, 부분 이름 규칙·일반 분류 규칙의 한국어 이름('냉각 팬'
         '개발 보드' …), 부분 이름 규칙의 키(NUCLEO·Arduino 같은 카탈로그 이름). 질문 문장에서 따온 낱말은 없다."""
-        if "aliases" in _cache:
-            return _cache["aliases"]
+        if getattr(self, "_aliases", None) is not None:
+            return self._aliases
         out: list[tuple[str, str]] = []
 
         def add(word: str, fid: str):
@@ -198,26 +198,42 @@ class Taxonomy:
                 for tok in re.split(r"[·()\s,/]+", r.get("ko", "")):
                     add(tok, r["function"])
         # 같은 낱말이 기능을 둘 이상 가리키면 그대로 둔다(모두 후보)
-        _cache["aliases"] = out
+        self._aliases = out                # 분류 체계마다 따로 저장한다(파일이 바뀌어 새로 읽으면 낱말도 새로 만든다)
         return out
 
-    def question_functions(self, question: str, limit: int = 3) -> list[str]:
-        """질문 속 낱말이 가리키는 기능(긴 낱말 우선, 최대 limit 개). 오처리를 줄이는 일반 규칙 셋:
+    def _matches(self, question: str) -> dict[str, set[str]]:
+        """질문에 나온 분류 체계 낱말 → 쓸 수 있는 기능들. 오처리를 줄이는 일반 규칙:
         (1) 한국어 낱말은 앞에 다른 한글이 붙어 있으면 안 된다('색온도'의 '온도'는 안 됨),
-        (2) 낱말이 서로 다른 도메인의 기능을 가리키면(예: '컨트롤러') 그 낱말은 쓰지 않는다,
-        (3) 맞은 기능들이 둘 이상의 도메인에 걸리면(예: '메모리 카드') 복합 말로 보고 찾지 않는다."""
+        (2) 한 낱말이 서로 다른 도메인의 기능을 가리키면 버린다. 다만 같은 질문의 모호하지 않은 다른 낱말이 그 도메인 하나를 가리키면
+            그 도메인의 해석만 쓴다('게이트 인버터'의 '게이트'는 인버터가 가리키는 로직 도메인)."""
         q = question.lower()
         by_word: dict[str, set[str]] = {}
         for w, fid in self.aliases():
             by_word.setdefault(w, set()).add(fid)
-        score: dict[str, int] = {}
+        found = {}
         for w, fids in by_word.items():
-            if len({self.funcs[f]["domain"] for f in fids}) > 1:
-                continue
             rx = r"(?<![a-z0-9])" + re.escape(w) + r"(?![a-z0-9])" if w.isascii() else r"(?<![가-힣a-z0-9])" + re.escape(w)
             if re.search(rx, q):
-                for f in fids:
-                    score[f] = max(score.get(f, 0), len(w))
+                found[w] = fids
+        dom = lambda f: self.funcs[f]["domain"]
+        sure = {dom(f) for fids in found.values() if len({dom(f) for f in fids}) == 1 for f in fids}
+        out = {}
+        for w, fids in found.items():
+            if len({dom(f) for f in fids}) == 1:
+                out[w] = fids
+            else:
+                keep = {f for f in fids if dom(f) in sure}
+                if keep and len({dom(f) for f in keep}) == 1:
+                    out[w] = keep
+        return out
+
+    def question_functions(self, question: str, limit: int = 3) -> list[str]:
+        """질문 속 낱말이 가리키는 기능(긴 낱말 우선, 최대 limit 개). 맞은 기능들이 둘 이상의 도메인에 걸리면(예: '메모리 카드')
+        복합 말로 보고 빈 목록."""
+        score: dict[str, int] = {}
+        for w, fids in self._matches(question).items():
+            for f in fids:
+                score[f] = max(score.get(f, 0), len(w))
         ranked = [f for f, _ in sorted(score.items(), key=lambda kv: -kv[1])]
         if len({self.funcs[f]["domain"] for f in ranked}) > 1:
             return []
@@ -230,12 +246,8 @@ class Taxonomy:
         words = re.findall(r"[가-힣a-z0-9+\-/]+", q)
         if not words or len(words) > 4 or len(q) > 30 or not self.question_functions(question):
             return False
-        by_word: dict[str, set[str]] = {}
-        for w, fid in self.aliases():
-            by_word.setdefault(w, set()).add(fid)
-        usable = sorted((w for w, fs in by_word.items() if len({self.funcs[f]["domain"] for f in fs}) == 1), key=len, reverse=True)
         rest = q
-        for w in usable:
+        for w in sorted(self._matches(question), key=len, reverse=True):
             rx = r"(?<![a-z0-9])" + re.escape(w) + r"(?![a-z0-9])" if w.isascii() else r"(?<![가-힣a-z0-9])" + re.escape(w)
             rest = re.sub(rx, " ", rest)
         left = [t for t in re.findall(r"[가-힣a-z0-9+\-/]+", rest) if len(t) > 1 and t not in _GENERIC_KO and t not in ("부품", "칩", "ic")]
@@ -247,15 +259,15 @@ class Taxonomy:
 
     def index(self, catalog: list[dict]) -> dict[str, list[dict]]:
         """기능 → 그 기능으로 분류된 부품 목록(카탈로그 전체를 한 번 분류해 둔다)."""
-        key = ("index", id(catalog), len(catalog))
-        if _cache.get("index_key") != key:
+        key = (id(catalog), len(catalog))
+        if getattr(self, "_index_key", None) != key:
             by: dict[str, list[dict]] = {}
             for p in catalog:
                 info = self.classify(p["library"], p["name"], part_text(p))
                 if info:
                     by.setdefault(info["function"], []).append(p)
-            _cache["index"], _cache["index_key"] = by, key
-        return _cache["index"]
+            self._index, self._index_key = by, key
+        return self._index
 
 
 def part_text(p: dict) -> str:

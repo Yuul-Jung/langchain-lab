@@ -110,6 +110,15 @@ class GraphTest(unittest.TestCase):
         self.assertFalse(run("냉각 팬", rank=False)["answered"])
         self.assertFalse(run("냉각 팬 소음")["answered"])
 
+    def test_cross_domain_word_is_resolved_by_the_other_words(self):
+        tax = {**TAX, "domains": TAX["domains"] + [{"id": "power", "ko": "전원", "en": "Power"}],
+               "functions": TAX["functions"] + [{"id": "gate_driver", "domain": "power", "ko": "게이트 드라이버", "en": "Gate drivers", "kind": "ic"}]}
+        t = pt.Taxonomy(tax)
+        self.assertEqual(t.question_functions("게이트"), [])                       # 로직 게이트와 전원 게이트 드라이버 사이 모호
+        self.assertEqual(t.question_functions("게이트 인버터"), ["gates"])         # 인버터가 로직 도메인을 가리켜 풀린다
+        self.assertTrue(t.phrase_covered("게이트 인버터"))
+        self.assertEqual(t.question_functions("게이트 드라이버"), ["gate_driver"])
+
     def test_alias_rules_block_compound_and_cross_domain_words(self):
         t = pt.Taxonomy(TAX)
         self.assertEqual(t.question_functions("색카운터 칩"), [])                  # 앞에 다른 한글이 붙은 낱말
