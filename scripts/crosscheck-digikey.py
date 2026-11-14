@@ -70,7 +70,7 @@ def sample(libs, parts, gold_ids, per_lib=3, seed=0):
     return out
 
 
-def record(part, dk_product, dk_rule, q, q_rule, today, cats):
+def record(part, dk_product, dk_rule, q, q_rule, today, cats, variants=()):
     ref = part["lib_id"]
     fields = {}
     kpins = part.get("pin_count") or None
@@ -85,15 +85,31 @@ def record(part, dk_product, dk_rule, q, q_rule, today, cats):
         pkg_text = P.get("Package / Case") or P.get("Supplier Device Package") or ""
         dpins = pr.pins_from_package(pkg_text) or pr.pins_from_package(P.get("Supplier Device Package") or "")
         if dpins:
-            ev["pin_count"].append(pr.evidence("digikey", dpins, mpn, today, unit="pins", typ=dpins))
+            ep = bool(re.search(r"exposed pad|\bEP\b", pkg_text, re.I))   # KiCad 는 노출 패드를 핀 하나로 센다
+            n = dpins + 1 if ep else dpins
+            ev["pin_count"].append(pr.evidence("digikey", n, mpn, today, unit="pins", typ=n,
+                                               conditions="노출 패드 포함(+1)" if ep else ""))
         dpkg = pr.package_family(pkg_text) or pr.package_family(P.get("Supplier Device Package") or "")
         if dpkg:
             ev["package"].append(pr.evidence("digikey", dpkg, mpn, today, conditions=pkg_text))
+        # 같은 검색어의 주문 가능한 변형(제조사·등급·포장)마다 값을 모은다. 서로 다르면 모두 근거로 남겨 충돌로 드러낸다(하나를 고르지 않음)
         for key, field, unit in (("Voltage - Supply", "supply_voltage", "V"), ("Operating Temperature", "operating_temperature", "°C")):
-            text = next((v for k, v in P.items() if k and k.startswith(key)), None)
-            lo, hi = pr.parse_range(text or "", unit)
-            if lo is not None:
-                ev[field].append(pr.evidence("digikey", text, mpn, today, unit=unit, lo=lo, hi=hi))
+            seen = {}
+            for v in [dk_product] + [x for x in variants if x is not dk_product]:
+                vp = params(v)
+                text = next((t for k, t in vp.items() if k and k.startswith(key)), None)
+                lo, hi = pr.parse_range(text or "", unit)
+                if lo is None:
+                    continue
+                single = lo == hi and not re.search(r"~|\bto\b|\.\.|–", text or "")
+                k = ("single", lo) if single else (lo, hi)
+                seen.setdefault(k, (text, v.get("ManufacturerProductNumber"), single))
+            for (a, b), (text, num, single) in seen.items():
+                if single:   # 'Voltage - Supply: 2.7 V' 처럼 값 하나 — 최소인지 최대인지 알 수 없으니 범위로 쓰지 않는다
+                    ev[field].append(pr.evidence("digikey", text, num, today, unit=unit, conditions="단일 값(범위 아님)"))
+                else:
+                    ev[field].append(pr.evidence("digikey", text, num, today, unit=unit, lo=a, hi=b,
+                                                 conditions=f"변형 {len(seen)}종 중" if len(seen) > 1 else ""))
         cid = mapdk.leaf_category(dk_product.get("Category"))
         if cid:
             ev["category"].append(pr.evidence("digikey", cats.get(cid, {}).get("path", str(cid)), mpn, today))
@@ -121,7 +137,11 @@ def main():
         if data.get("_status") == "skipped: call cap":
             skipped += 1; continue
         prod, rule = pick(data, q)
-        r = record(part, prod, rule, q, q_rule, today, cats)
+        # 변형: 검색어가 부품 번호 안에 들어 있는 것(앞의 제조사 접두어 SN·CD·MC 허용, 뒤에 숫자가 바로 이어지면 다른 부품)
+        vpat = re.compile(r"(?<![A-Z0-9])(?:[A-Z]{1,3})?" + re.escape(q.upper()) + r"(?![0-9])")
+        variants = [x for x in (data.get("ExactMatches") or []) + (data.get("Products") or [])
+                    if vpat.search((x.get("ManufacturerProductNumber") or "").upper())] if prod else []
+        r = record(part, prod, rule, q, q_rule, today, cats, variants)
         r["gold"] = is_gold
         recs.append(r)
     with (OUT / "records.jsonl").open("w", encoding="utf-8") as f:

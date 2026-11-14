@@ -58,3 +58,25 @@ class ConverterTest(unittest.TestCase):
                                                          {"value": 1.8, "source": "datasheet", "ref": "p3"}])
         self.assertEqual(out["values"]["temp_max_c"], [{"value": 85, "source": "distributor", "ref": "MPN1"}])
         self.assertNotIn("abs_max_supply_v", out["values"])
+
+
+class PinParseTest(unittest.TestCase):
+    def test_diode_outline_numbers_are_not_pins(self):
+        self.assertIsNone(pr.pins_from_package("DO-35"))
+        self.assertIsNone(pr.pins_from_package("SOD-80"))
+        self.assertEqual(pr.pins_from_package("TO-220-3"), 3)
+
+
+class VariantAndSingleTest(unittest.TestCase):
+    def test_single_supply_value_is_not_a_range(self):
+        e = pr.evidence("digikey", "2.7 V", "M", "d", unit="V", conditions="단일 값(범위 아님)")
+        r = pr.resolve([e])
+        self.assertEqual(r["status"], "unknown")
+        self.assertEqual(pr.to_constraint_record({"fields": {"supply_voltage": r}})["values"], {})
+
+    def test_variants_with_different_grades_conflict(self):
+        a = pr.evidence("digikey", "-40°C ~ 85°C", "SN74X", "d", unit="°C", lo=-40, hi=85)
+        b = pr.evidence("digikey", "-40°C ~ 125°C", "74XBQ", "d", unit="°C", lo=-40, hi=125)
+        r = pr.resolve([a, b])
+        self.assertEqual(r["status"], "conflict")
+        self.assertEqual(len(pr.to_constraint_record({"fields": {"operating_temperature": r}})["values"]["temp_max_c"]), 2)

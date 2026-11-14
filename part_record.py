@@ -59,7 +59,7 @@ def pins_from_package(text: str) -> int | None:
     if m:
         return int(m.group(1))
     tail = re.findall(r"-(\d{1,3})(?![\d.])", t)      # 'SOT-23-5' 는 마지막 '-5' 가 핀 수
-    return int(tail[-1]) if len(tail) >= 2 or (tail and not re.search(r"SOT|TO|SC", t.upper())) else None
+    return int(tail[-1]) if len(tail) >= 2 else None     # 'DO-35'·'SOD-80' 의 숫자는 핀 수가 아니다(앞 숫자형 '8-SOIC' 이나 'SOT-23-5' 만)
 
 
 # ---------- 판정 ----------
@@ -77,14 +77,18 @@ def _same(a: dict, b: dict) -> bool:
 
 def resolve(evs: list[dict]) -> dict:
     evs = [e for e in evs if e and (e["value"] not in (None, "", "-"))]
+    ranged = [e for e in evs if e["unit"] not in ("V", "°C") or e["min"] is not None]   # 범위 없는 단일 값은 비교·선택에서 뺀다
+    if evs and not ranged:
+        return {"evidence": evs, "status": "unknown", "chosen": None}
+    evs_all, evs = evs, ranged
     if not evs:
         return {"evidence": [], "status": "unknown", "chosen": None}
     if len(evs) == 1:
-        return {"evidence": evs, "status": "single", "chosen": evs[0]}
+        return {"evidence": evs_all, "status": "single", "chosen": evs[0]}
     base = max(evs, key=lambda e: e["basis_rank"])
     if all(_same(base, e) for e in evs):
-        return {"evidence": evs, "status": "agreed", "chosen": base}
-    return {"evidence": evs, "status": "conflict", "chosen": None}      # proposed: 자동으로 고르지 않는다
+        return {"evidence": evs_all, "status": "agreed", "chosen": base}
+    return {"evidence": evs_all, "status": "conflict", "chosen": None}      # proposed: 자동으로 고르지 않는다
 
 
 # ---------- S3(eda_harness constraints) 입력으로 바꾸기 ----------
@@ -97,7 +101,7 @@ def to_constraint_record(rec: dict) -> dict:
     values: dict[str, list] = {}
 
     def add(field, value, ev):
-        if value is not None:
+        if value is not None:   # 범위 없는 단일 값(min·max 없음)은 넘기지 않는다 → S3 에서 MISSING(안전)
             values.setdefault(field, []).append({"value": value, "source": S3_SOURCE[ev["source"]], "ref": ev["source_ref"]})
     for ev in rec["fields"].get("supply_voltage", {}).get("evidence", []):
         add("supply_min_v", ev["min"], ev); add("supply_max_v", ev["max"], ev)
