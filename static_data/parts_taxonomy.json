@@ -104,691 +104,806 @@
    "id": "mcu",
    "domain": "processor",
    "ko": "마이크로컨트롤러",
-   "en": "Microcontrollers"
+   "en": "Microcontrollers",
+   "kind": "ic"
   },
   {
    "id": "mpu_soc",
    "domain": "processor",
    "ko": "마이크로프로세서·SoC",
-   "en": "Microprocessors & SoC"
+   "en": "Microprocessors & SoC",
+   "kind": "ic"
   },
   {
    "id": "dsp",
    "domain": "processor",
    "ko": "DSP",
-   "en": "DSP"
+   "en": "DSP",
+   "kind": "ic"
   },
   {
    "id": "fpga",
    "domain": "processor",
    "ko": "FPGA",
-   "en": "FPGA"
+   "en": "FPGA",
+   "kind": "ic"
   },
   {
    "id": "pld",
    "domain": "processor",
    "ko": "CPLD·PLD",
-   "en": "CPLD & PLD"
+   "en": "CPLD & PLD",
+   "kind": "ic"
   },
   {
    "id": "module",
    "domain": "processor",
    "ko": "마이컴·컴퓨터 모듈",
-   "en": "Embedded modules"
+   "en": "Embedded modules",
+   "kind": "module"
   },
   {
    "id": "opamp",
    "domain": "analog",
    "ko": "OP앰프·증폭기",
-   "en": "Amplifiers"
+   "en": "Amplifiers",
+   "kind": "ic"
   },
   {
    "id": "audio_amp",
    "domain": "analog",
    "ko": "오디오 증폭기",
-   "en": "Audio amplifiers"
+   "en": "Audio amplifiers",
+   "kind": "ic"
   },
   {
    "id": "audio_codec",
    "domain": "analog",
    "ko": "오디오 처리·코덱",
-   "en": "Audio processing"
+   "en": "Audio processing",
+   "kind": "ic"
   },
   {
    "id": "microphone",
    "domain": "analog",
    "ko": "마이크·스피커·부저",
-   "en": "Microphones, speakers, buzzers"
+   "en": "Microphones, speakers, buzzers",
+   "kind": "electromech"
   },
   {
    "id": "video",
    "domain": "analog",
    "ko": "비디오 증폭·처리",
-   "en": "Video"
+   "en": "Video",
+   "kind": "ic"
   },
   {
    "id": "comparator",
    "domain": "analog",
    "ko": "비교기",
-   "en": "Comparators"
+   "en": "Comparators",
+   "kind": "ic"
   },
   {
    "id": "adc",
    "domain": "analog",
    "ko": "AD 변환기",
-   "en": "ADC"
+   "en": "ADC",
+   "kind": "ic"
   },
   {
    "id": "dac",
    "domain": "analog",
    "ko": "DA 변환기",
-   "en": "DAC"
+   "en": "DAC",
+   "kind": "ic"
   },
   {
    "id": "digipot",
    "domain": "analog",
    "ko": "디지털 가변저항",
-   "en": "Digital potentiometers"
+   "en": "Digital potentiometers",
+   "kind": "ic"
   },
   {
    "id": "ldo",
    "domain": "power",
    "ko": "선형 레귤레이터(LDO)",
-   "en": "Linear regulators"
+   "en": "Linear regulators",
+   "kind": "ic"
   },
   {
    "id": "switching_reg",
    "domain": "power",
    "ko": "스위칭 레귤레이터",
-   "en": "Switching regulators"
+   "en": "Switching regulators",
+   "kind": "ic"
   },
   {
    "id": "reg_controller",
    "domain": "power",
    "ko": "레귤레이터 컨트롤러",
-   "en": "Regulator controllers"
+   "en": "Regulator controllers",
+   "kind": "ic"
   },
   {
    "id": "dcdc_module",
    "domain": "power",
    "ko": "DC-DC 모듈",
-   "en": "DC-DC modules"
+   "en": "DC-DC modules",
+   "kind": "module"
   },
   {
    "id": "acdc",
    "domain": "power",
    "ko": "AC-DC 전원",
-   "en": "AC-DC converters"
+   "en": "AC-DC converters",
+   "kind": "module"
   },
   {
    "id": "battery_mgmt",
    "domain": "power",
    "ko": "배터리 관리·충전",
-   "en": "Battery management"
+   "en": "Battery management",
+   "kind": "ic"
   },
   {
    "id": "supervisor",
    "domain": "analog",
    "ko": "전원 감시·리셋",
-   "en": "Supervisors"
+   "en": "Supervisors",
+   "kind": "ic"
   },
   {
    "id": "reference",
    "domain": "analog",
    "ko": "전압 기준",
-   "en": "Voltage references"
+   "en": "Voltage references",
+   "kind": "ic"
   },
   {
    "id": "led_driver",
    "domain": "power",
    "ko": "LED 드라이버",
-   "en": "LED drivers"
+   "en": "LED drivers",
+   "kind": "ic"
   },
   {
    "id": "motor_driver",
    "domain": "power",
    "ko": "모터 드라이버",
-   "en": "Motor drivers"
+   "en": "Motor drivers",
+   "kind": "ic"
   },
   {
    "id": "gate_driver",
    "domain": "power",
    "ko": "게이트 드라이버",
-   "en": "Gate drivers"
+   "en": "Gate drivers",
+   "kind": "ic"
   },
   {
    "id": "display_driver",
    "domain": "power",
    "ko": "디스플레이 드라이버",
-   "en": "Display drivers"
+   "en": "Display drivers",
+   "kind": "ic"
   },
   {
    "id": "current_reg",
    "domain": "power",
    "ko": "전류 조절·관리",
-   "en": "Current regulation"
+   "en": "Current regulation",
+   "kind": "ic"
   },
   {
    "id": "metering",
    "domain": "power",
    "ko": "전력 계측",
-   "en": "Energy metering"
+   "en": "Energy metering",
+   "kind": "ic"
   },
   {
    "id": "vf_conv",
    "domain": "power",
    "ko": "V/F·F/V 변환",
-   "en": "V/F converters"
+   "en": "V/F converters",
+   "kind": "ic"
   },
   {
    "id": "battery_cell",
    "domain": "power",
    "ko": "배터리·전지",
-   "en": "Batteries & cells"
+   "en": "Batteries & cells",
+   "kind": "electromech"
   },
   {
    "id": "solar",
    "domain": "power",
    "ko": "태양전지",
-   "en": "Solar cells"
+   "en": "Solar cells",
+   "kind": "discrete"
   },
   {
    "id": "gates",
    "domain": "logic",
    "ko": "게이트·인버터",
-   "en": "Gates & inverters"
+   "en": "Gates & inverters",
+   "kind": "ic"
   },
   {
    "id": "logic_buffer",
    "domain": "logic",
    "ko": "로직 버퍼·트랜시버",
-   "en": "Logic buffers & transceivers"
+   "en": "Logic buffers & transceivers",
+   "kind": "ic"
   },
   {
    "id": "counters",
    "domain": "logic",
    "ko": "카운터·분주기",
-   "en": "Counters & dividers"
+   "en": "Counters & dividers",
+   "kind": "ic"
   },
   {
    "id": "level_shifter",
    "domain": "logic",
    "ko": "레벨 변환",
-   "en": "Level translators"
+   "en": "Level translators",
+   "kind": "ic"
   },
   {
    "id": "clock_gen",
    "domain": "logic",
    "ko": "클록 발생·PLL",
-   "en": "Clock generators & PLL"
+   "en": "Clock generators & PLL",
+   "kind": "ic"
   },
   {
    "id": "timer_ic",
    "domain": "logic",
    "ko": "타이머 IC",
-   "en": "Timer ICs"
+   "en": "Timer ICs",
+   "kind": "ic"
   },
   {
    "id": "rtc",
    "domain": "logic",
    "ko": "실시간 시계(RTC)",
-   "en": "Real-time clocks"
+   "en": "Real-time clocks",
+   "kind": "ic"
   },
   {
    "id": "oscillator",
    "domain": "logic",
    "ko": "발진기",
-   "en": "Oscillators"
+   "en": "Oscillators",
+   "kind": "module"
   },
   {
    "id": "crystal",
    "domain": "logic",
    "ko": "크리스탈·공진자",
-   "en": "Crystals & resonators"
+   "en": "Crystals & resonators",
+   "kind": "passive"
   },
   {
    "id": "delay",
    "domain": "logic",
    "ko": "지연선",
-   "en": "Delay lines"
+   "en": "Delay lines",
+   "kind": "passive"
   },
   {
    "id": "memory_ic",
    "domain": "memory",
    "ko": "메모리",
-   "en": "Memory"
+   "en": "Memory",
+   "kind": "ic"
   },
   {
    "id": "line_transceiver",
    "domain": "interface",
    "ko": "통신 트랜시버(UART·CAN·RS-485·USB)",
-   "en": "Line transceivers"
+   "en": "Line transceivers",
+   "kind": "ic"
   },
   {
    "id": "uart",
    "domain": "interface",
    "ko": "UART",
-   "en": "UART"
+   "en": "UART",
+   "kind": "ic"
   },
   {
    "id": "if_controller",
    "domain": "interface",
    "ko": "인터페이스 컨트롤러",
-   "en": "Interface controllers"
+   "en": "Interface controllers",
+   "kind": "ic"
   },
   {
    "id": "io_expander",
    "domain": "interface",
    "ko": "I/O 확장",
-   "en": "I/O expanders"
+   "en": "I/O expanders",
+   "kind": "ic"
   },
   {
    "id": "analog_switch",
    "domain": "analog",
    "ko": "아날로그 스위치·멀티플렉서",
-   "en": "Analog switches & mux"
+   "en": "Analog switches & mux",
+   "kind": "ic"
   },
   {
    "id": "sensor_if",
    "domain": "interface",
    "ko": "센서 인터페이스",
-   "en": "Sensor interfaces"
+   "en": "Sensor interfaces",
+   "kind": "ic"
   },
   {
    "id": "touch",
    "domain": "interface",
    "ko": "정전식 터치",
-   "en": "Capacitive touch"
+   "en": "Capacitive touch",
+   "kind": "ic"
   },
   {
    "id": "signal_buffer",
    "domain": "interface",
    "ko": "신호 버퍼·리피터",
-   "en": "Signal buffers & repeaters"
+   "en": "Signal buffers & repeaters",
+   "kind": "ic"
   },
   {
    "id": "telecom",
    "domain": "interface",
    "ko": "통신선 인터페이스",
-   "en": "Telecom interfaces"
+   "en": "Telecom interfaces",
+   "kind": "ic"
   },
   {
    "id": "isolator",
    "domain": "interface",
    "ko": "절연기·포토커플러",
-   "en": "Isolators & optocouplers"
+   "en": "Isolators & optocouplers",
+   "kind": "ic"
   },
   {
    "id": "if_special",
    "domain": "interface",
    "ko": "특수 인터페이스",
-   "en": "Specialized interfaces"
+   "en": "Specialized interfaces",
+   "kind": "ic"
   },
   {
    "id": "rf_amp",
    "domain": "rf",
    "ko": "RF 증폭기",
-   "en": "RF amplifiers"
+   "en": "RF amplifiers",
+   "kind": "ic"
   },
   {
    "id": "rf_mixer",
    "domain": "rf",
    "ko": "RF 믹서",
-   "en": "RF mixers"
+   "en": "RF mixers",
+   "kind": "ic"
   },
   {
    "id": "rf_switch",
    "domain": "rf",
    "ko": "RF 스위치",
-   "en": "RF switches"
+   "en": "RF switches",
+   "kind": "ic"
   },
   {
    "id": "rf_receiver",
    "domain": "rf",
    "ko": "RF 수신기",
-   "en": "RF receivers"
+   "en": "RF receivers",
+   "kind": "ic"
   },
   {
    "id": "rf_transceiver",
    "domain": "rf",
    "ko": "RF 트랜시버 IC",
-   "en": "RF transceiver ICs"
+   "en": "RF transceiver ICs",
+   "kind": "ic"
   },
   {
    "id": "rf_module",
    "domain": "rf",
    "ko": "무선 모듈·모뎀",
-   "en": "Wireless modules & modems"
+   "en": "Wireless modules & modems",
+   "kind": "module"
   },
   {
    "id": "rfid",
    "domain": "rf",
    "ko": "RFID·NFC",
-   "en": "RFID & NFC"
+   "en": "RFID & NFC",
+   "kind": "ic"
   },
   {
    "id": "rf_misc",
    "domain": "rf",
    "ko": "기타 RF",
-   "en": "Other RF"
+   "en": "Other RF",
+   "kind": "ic"
   },
   {
    "id": "antenna",
    "domain": "rf",
    "ko": "안테나",
-   "en": "Antennas"
+   "en": "Antennas",
+   "kind": "passive"
   },
   {
    "id": "rf_filter",
    "domain": "rf",
    "ko": "RF 필터",
-   "en": "RF filters"
+   "en": "RF filters",
+   "kind": "passive"
   },
   {
    "id": "current_sensor",
    "domain": "sensor",
    "ko": "전류 센서",
-   "en": "Current sensors"
+   "en": "Current sensors",
+   "kind": "ic"
   },
   {
    "id": "gas_sensor",
    "domain": "sensor",
    "ko": "가스 센서",
-   "en": "Gas sensors"
+   "en": "Gas sensors",
+   "kind": "ic"
   },
   {
    "id": "humidity_sensor",
    "domain": "sensor",
    "ko": "습도 센서",
-   "en": "Humidity sensors"
+   "en": "Humidity sensors",
+   "kind": "ic"
   },
   {
    "id": "imu",
    "domain": "sensor",
    "ko": "관성·모션 센서",
-   "en": "Motion sensors & IMU"
+   "en": "Motion sensors & IMU",
+   "kind": "ic"
   },
   {
    "id": "multi_sensor",
    "domain": "sensor",
    "ko": "복합 센서",
-   "en": "Multifunction sensors"
+   "en": "Multifunction sensors",
+   "kind": "ic"
   },
   {
    "id": "light_sensor",
    "domain": "sensor",
    "ko": "광 센서",
-   "en": "Optical sensors"
+   "en": "Optical sensors",
+   "kind": "ic"
   },
   {
    "id": "distance_sensor",
    "domain": "sensor",
    "ko": "거리·근접 센서",
-   "en": "Distance & proximity sensors"
+   "en": "Distance & proximity sensors",
+   "kind": "ic"
   },
   {
    "id": "ir_receiver",
    "domain": "sensor",
    "ko": "적외선 수신",
-   "en": "IR receivers"
+   "en": "IR receivers",
+   "kind": "ic"
   },
   {
    "id": "position_sensor",
    "domain": "sensor",
    "ko": "위치·자기 센서",
-   "en": "Position & magnetic sensors"
+   "en": "Position & magnetic sensors",
+   "kind": "ic"
   },
   {
    "id": "pressure_sensor",
    "domain": "sensor",
    "ko": "압력 센서",
-   "en": "Pressure sensors"
+   "en": "Pressure sensors",
+   "kind": "ic"
   },
   {
    "id": "temp_sensor",
    "domain": "sensor",
    "ko": "온도 센서",
-   "en": "Temperature sensors"
+   "en": "Temperature sensors",
+   "kind": "ic"
   },
   {
    "id": "thermistor",
    "domain": "sensor",
    "ko": "서미스터·열전대",
-   "en": "Thermistors & thermocouples"
+   "en": "Thermistors & thermocouples",
+   "kind": "passive"
   },
   {
    "id": "diode",
    "domain": "discrete",
    "ko": "다이오드",
-   "en": "Diodes"
+   "en": "Diodes",
+   "kind": "discrete"
   },
   {
    "id": "bridge",
    "domain": "discrete",
    "ko": "브리지 정류기",
-   "en": "Bridge rectifiers"
+   "en": "Bridge rectifiers",
+   "kind": "discrete"
   },
   {
    "id": "thyristor",
    "domain": "discrete",
    "ko": "사이리스터·TRIAC",
-   "en": "Thyristors & TRIACs"
+   "en": "Thyristors & TRIACs",
+   "kind": "discrete"
   },
   {
    "id": "bjt",
    "domain": "discrete",
    "ko": "바이폴라 트랜지스터",
-   "en": "Bipolar transistors"
+   "en": "Bipolar transistors",
+   "kind": "discrete"
   },
   {
    "id": "bjt_array",
    "domain": "discrete",
    "ko": "트랜지스터 어레이",
-   "en": "Transistor arrays"
+   "en": "Transistor arrays",
+   "kind": "discrete"
   },
   {
    "id": "transistor",
    "domain": "discrete",
    "ko": "트랜지스터(일반)",
-   "en": "Transistors (general)"
+   "en": "Transistors (general)",
+   "kind": "discrete"
   },
   {
    "id": "fet",
    "domain": "discrete",
    "ko": "FET·MOSFET",
-   "en": "FETs & MOSFETs"
+   "en": "FETs & MOSFETs",
+   "kind": "discrete"
   },
   {
    "id": "igbt",
    "domain": "discrete",
    "ko": "IGBT",
-   "en": "IGBT"
+   "en": "IGBT",
+   "kind": "discrete"
   },
   {
    "id": "current_diode",
    "domain": "discrete",
    "ko": "정전류 소자",
-   "en": "Current-regulating devices"
+   "en": "Current-regulating devices",
+   "kind": "discrete"
   },
   {
    "id": "led",
    "domain": "opto",
    "ko": "LED",
-   "en": "LEDs"
+   "en": "LEDs",
+   "kind": "discrete"
   },
   {
    "id": "laser",
    "domain": "opto",
    "ko": "레이저 다이오드",
-   "en": "Laser diodes"
+   "en": "Laser diodes",
+   "kind": "discrete"
   },
   {
    "id": "fiber",
    "domain": "opto",
    "ko": "광섬유 모듈",
-   "en": "Fiber-optic modules"
+   "en": "Fiber-optic modules",
+   "kind": "module"
   },
   {
    "id": "lcd_char",
    "domain": "opto",
    "ko": "문자 LCD·OLED",
-   "en": "Character displays"
+   "en": "Character displays",
+   "kind": "module"
   },
   {
    "id": "lcd_graphic",
    "domain": "opto",
    "ko": "그래픽 LCD·OLED",
-   "en": "Graphic displays"
+   "en": "Graphic displays",
+   "kind": "module"
   },
   {
    "id": "lamp",
    "domain": "opto",
    "ko": "램프·표시등",
-   "en": "Lamps"
+   "en": "Lamps",
+   "kind": "electromech"
   },
   {
    "id": "relay",
    "domain": "electromech",
    "ko": "릴레이",
-   "en": "Relays"
+   "en": "Relays",
+   "kind": "electromech"
   },
   {
    "id": "ssr",
    "domain": "electromech",
    "ko": "반도체 릴레이(SSR)",
-   "en": "Solid-state relays"
+   "en": "Solid-state relays",
+   "kind": "module"
   },
   {
    "id": "switch",
    "domain": "electromech",
    "ko": "스위치",
-   "en": "Switches"
+   "en": "Switches",
+   "kind": "electromech"
   },
   {
    "id": "motor",
    "domain": "electromech",
    "ko": "모터·액추에이터",
-   "en": "Motors & actuators"
+   "en": "Motors & actuators",
+   "kind": "electromech"
   },
   {
    "id": "thermal",
    "domain": "electromech",
    "ko": "열 관리",
-   "en": "Thermal management"
+   "en": "Thermal management",
+   "kind": "mechanical"
   },
   {
    "id": "encoder",
    "domain": "electromech",
    "ko": "엔코더",
-   "en": "Encoders"
+   "en": "Encoders",
+   "kind": "electromech"
   },
   {
    "id": "tvs",
    "domain": "protection",
    "ko": "TVS·서지 보호",
-   "en": "TVS & surge protection"
+   "en": "TVS & surge protection",
+   "kind": "discrete"
   },
   {
    "id": "emi_filter",
    "domain": "protection",
    "ko": "EMI·노이즈 필터",
-   "en": "EMI filters"
+   "en": "EMI filters",
+   "kind": "passive"
   },
   {
    "id": "fuse",
    "domain": "protection",
    "ko": "퓨즈·차단기",
-   "en": "Fuses & breakers"
+   "en": "Fuses & breakers",
+   "kind": "passive"
   },
   {
    "id": "varistor",
    "domain": "protection",
    "ko": "배리스터·방전관",
-   "en": "Varistors & arresters"
+   "en": "Varistors & arresters",
+   "kind": "passive"
   },
   {
    "id": "ferrite",
    "domain": "protection",
    "ko": "페라이트 비드",
-   "en": "Ferrite beads"
+   "en": "Ferrite beads",
+   "kind": "passive"
   },
   {
    "id": "resistor",
    "domain": "passive",
    "ko": "저항",
-   "en": "Resistors"
+   "en": "Resistors",
+   "kind": "passive"
   },
   {
    "id": "capacitor",
    "domain": "passive",
    "ko": "커패시터",
-   "en": "Capacitors"
+   "en": "Capacitors",
+   "kind": "passive"
   },
   {
    "id": "inductor",
    "domain": "passive",
    "ko": "인덕터",
-   "en": "Inductors"
+   "en": "Inductors",
+   "kind": "passive"
   },
   {
    "id": "transformer",
    "domain": "passive",
    "ko": "변압기",
-   "en": "Transformers"
+   "en": "Transformers",
+   "kind": "passive"
   },
   {
    "id": "passive_misc",
    "domain": "passive",
    "ko": "기타 수동 소자",
-   "en": "Other passives"
+   "en": "Other passives",
+   "kind": "passive"
   },
   {
    "id": "connector",
    "domain": "connect",
    "ko": "커넥터",
-   "en": "Connectors"
+   "en": "Connectors",
+   "kind": "mechanical"
   },
   {
    "id": "header",
    "domain": "connect",
    "ko": "헤더·점퍼",
-   "en": "Headers & jumpers"
+   "en": "Headers & jumpers",
+   "kind": "mechanical"
   },
   {
    "id": "mechanical",
    "domain": "connect",
    "ko": "기구·방열",
-   "en": "Mechanical"
+   "en": "Mechanical",
+   "kind": "mechanical"
   },
   {
    "id": "dev_board",
    "domain": "boards",
    "ko": "개발 보드·키트",
-   "en": "Boards & kits"
+   "en": "Boards & kits",
+   "kind": "module"
   },
   {
    "id": "specialized_ic",
    "domain": "other",
    "ko": "특수 IC",
-   "en": "Specialized ICs"
+   "en": "Specialized ICs",
+   "kind": "ic"
   },
   {
    "id": "schematic_symbol",
    "domain": "other",
    "ko": "회로도 전용 기호",
-   "en": "Schematic-only symbols"
+   "en": "Schematic-only symbols",
+   "kind": "symbol"
   },
   {
    "id": "clock_buffer",
    "domain": "logic",
    "ko": "클록 버퍼·팬아웃",
-   "en": "Clock buffers & fanout"
+   "en": "Clock buffers & fanout",
+   "kind": "ic"
   },
   {
    "id": "vacuum_tube",
-   "domain": "discrete",
+   "domain": "other",
    "ko": "진공관",
-   "en": "Vacuum tubes"
+   "en": "Vacuum tubes",
+   "kind": "tube"
   }
  ],
  "libraries": {
@@ -2838,6 +2953,71 @@
    "date": "2026-11-15",
    "by": "jung-29",
    "change": "MCU_Module 개발 보드 규칙 수정: 'RaspberryPi' 가 컴퓨트 모듈(RaspberryPi-CM*)까지 삼키던 것을 'RaspberryPi_Pico' 로 좁힘"
+  },
+  {
+   "date": "2026-11-15",
+   "by": "jung-29 (71 결정)",
+   "change": "기능마다 kind 추가(허용: ic·discrete·passive·electromech·module·mechanical·symbol·tube), vacuum_tube 를 기타 도메인으로, 외부 테크트리와 다른 배치의 이유(notes), 외부 이름 목록(external_names_not_in_catalog) 추가"
   }
+ ],
+ "notes": [
+  {
+   "library": "Valve",
+   "decision": "진공관(tube)이라 비반도체. 개별 반도체가 아님.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Filter",
+   "decision": "대부분 공통 모드 초크·라인 필터라 보호·필터 도메인(EMI 필터). 일부 RF 필터·능동 필터는 혼합으로 표시.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Fiber_Optic",
+   "decision": "광섬유 송수신 광학 모듈(종류 module). 커넥터가 아님.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "LED",
+   "decision": "개별 반도체(종류 discrete). 집적회로가 아님(내장 컨트롤러 LED 는 같은 라이브러리에 섞여 있음).",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Isolator",
+   "decision": "절연기·포토커플러는 통신·인터페이스 도메인.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Potentiometer_Digital",
+   "decision": "디지털 가변저항은 IC 이므로 아날로그 도메인의 digipot(수동 소자 아님).",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Transformer",
+   "decision": "변압기는 수동 소자.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Video",
+   "decision": "비디오 증폭·처리는 아날로그 IC.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Display_Character",
+   "decision": "표시기는 모듈(종류 module). IC 가 아님.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "Display_Graphic",
+   "decision": "표시기는 모듈(종류 module). IC 가 아님.",
+   "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  }
+ ],
+ "external_names_not_in_catalog": [
+  "Driver_Haptic",
+  "Driver_Relay",
+  "Driver_TEC",
+  "MCU_Espressif_ESP32",
+  "MCU_Nordic_nRF52",
+  "pspice"
  ]
 }

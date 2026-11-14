@@ -9,7 +9,8 @@ spec.loader.exec_module(cpt)
 
 TAX = {
     "domains": [{"id": "power", "definition": "d1"}, {"id": "analog", "definition": "d2"}],
-    "functions": [{"id": "ldo", "domain": "power"}, {"id": "reference", "domain": "analog"}, {"id": "resistor", "domain": "analog"}],
+    "functions": [{"id": "ldo", "domain": "power", "kind": "ic"}, {"id": "reference", "domain": "analog", "kind": "ic"},
+                  {"id": "resistor", "domain": "analog", "kind": "electromech"}],
     "libraries": {"Reg": {"function": "ldo", "status": "confirmed", "approver": "delegated: a + b", "also_ok": []},
                   "Ref": {"function": "reference", "status": "proposed", "approver": "-", "also_ok": []}},
     "generic": {"Device": {"R": {"function": "resistor", "status": "rule"}}},
@@ -58,7 +59,7 @@ class TaxonomyCheckTest(unittest.TestCase):
 
     def test_mixed_library_schema_and_part_rules(self):
         t = copy.deepcopy(TAX)
-        t["functions"].append({"id": "fan", "domain": "power"})
+        t["functions"].append({"id": "fan", "domain": "power", "kind": "module"})
         t["libraries"]["Ref"].update({"mixed": True, "also_functions": ["ldo"], "also_ok": ["power"],
                                       "part_rules": {"Fan": {"function": "fan"}}})
         r = run(tax=t, parts=PARTS + [{"library": "Ref", "name": "Fan_3pin"}, {"library": "Ref", "name": "Fanatic"}])
@@ -74,6 +75,24 @@ class TaxonomyCheckTest(unittest.TestCase):
         self.assertEqual(cpt.match_rule(rules, "RaspberryPi_Pico_W_Debug", "_-"), 2)
         self.assertIsNone(cpt.match_rule(rules, "RaspberryPi-CM3", "_-"))      # 컴퓨트 모듈은 보드 규칙에 안 걸린다
         self.assertEqual(cpt.match_rule({"NUCLEO144": 1}, "NUCLEO144-F207ZG", "_-"), 1)
+
+    def test_function_kind_is_required_valid_and_fits_the_domain(self):
+        t = copy.deepcopy(TAX); del t["functions"][0]["kind"]
+        self.assertTrue(any("kind 가 없음" in m for m in run(tax=t)["problems"]["check2"]))
+        t = copy.deepcopy(TAX); t["functions"][0]["kind"] = "gadget"
+        self.assertTrue(any("허용되지 않는 kind" in m for m in run(tax=t)["problems"]["check2"]))
+        t = copy.deepcopy(TAX)
+        t["domains"].append({"id": "passive", "definition": "p"})
+        t["functions"].append({"id": "res", "domain": "passive", "kind": "ic"})     # 수동 소자 도메인에 IC 종류
+        self.assertTrue(any("맞지 않는 kind" in m for m in run(tax=t)["problems"]["check2"]))
+        t["functions"][-1]["kind"] = "passive"
+        self.assertEqual(run(tax=t)["problems"]["check2"], [])
+
+    def test_external_names_are_informational_only(self):
+        t = copy.deepcopy(TAX); t["external_names_not_in_catalog"] = ["Driver_Haptic", "Reg"]
+        r = run(tax=t)
+        self.assertEqual(r["problems"], {"check1": [], "check2": [], "check3": []})
+        self.assertEqual(r["info"]["external_names_present_in_catalog"], ["Reg"])
 
     def test_check3_only_when_reference_and_raw_exist(self):
         ref = {"libraries": {"Reg": 5}, "functions": {"ldo": [5, 99]}}

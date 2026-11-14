@@ -2,24 +2,33 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>부품 테크트리</title>
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--sub:#5b6676;--line:#dde2ea;--ok:#1f7a4d;--warn:#a15c00;--acc:#34445d;--chip:#eef1f6}
-@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--ink:#e6e9ee;--sub:#9aa4b2;--line:#2e343e;--ok:#5cc28f;--warn:#e0a24a;--acc:#8fa6c8;--chip:#272c35}}
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--sub:#5b6676;--line:#dde2ea;--ok:#1f7a4d;--warn:#a15c00;--acc:#34445d;--chip:#eef1f6;
+--k-ic:#2563eb;--k-discrete:#7c3aed;--k-passive:#0f766e;--k-electromech:#b45309;--k-module:#be185d;--k-mechanical:#64748b;--k-symbol:#9ca3af;--k-tube:#b91c1c}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--ink:#e6e9ee;--sub:#9aa4b2;--line:#2e343e;--ok:#5cc28f;--warn:#e0a24a;--acc:#8fa6c8;--chip:#272c35;
+--k-ic:#7aa2ff;--k-discrete:#b794f6;--k-passive:#4fd1c5;--k-electromech:#f6ad55;--k-module:#f687b3;--k-mechanical:#a0aec0;--k-symbol:#cbd5e0;--k-tube:#fc8181}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Noto Sans KR",sans-serif}
 header{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
 header h1{margin:0 0 4px;font-size:18px}
 header p{margin:0;color:var(--sub);font-size:13px}
 main{max-width:1100px;margin:0 auto;padding:16px}
-.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
 input[type=search]{flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit}
+button{padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+button[aria-pressed=true]{background:var(--acc);color:var(--bg);border-color:var(--acc)}
 label{font-size:13px;color:var(--sub)}
-.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
 .stat b{font-size:16px;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-bottom:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;background:var(--k-symbol)}
+.k-ic{background:var(--k-ic)}.k-discrete{background:var(--k-discrete)}.k-passive{background:var(--k-passive)}.k-electromech{background:var(--k-electromech)}
+.k-module{background:var(--k-module)}.k-mechanical{background:var(--k-mechanical)}.k-symbol{background:var(--k-symbol)}.k-tube{background:var(--k-tube)}
 details{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}
 details>summary{cursor:pointer;padding:10px 12px;font-weight:600;list-style-position:inside}
 details details{border:none;border-top:1px solid var(--line);border-radius:0;margin:0}
 details details>summary{font-weight:500;font-size:14px;padding:8px 12px 8px 24px;color:var(--sub)}
+.def{padding:0 12px 8px;color:var(--sub);font-size:12px}
 .lib{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;padding:6px 12px 6px 40px;border-top:1px dashed var(--line);font-size:14px}
 .lib code{font-weight:600}
 .chip{background:var(--chip);border-radius:10px;padding:0 8px;font-size:12px}
@@ -29,21 +38,27 @@ details details>summary{font-weight:500;font-size:14px;padding:8px 12px 8px 24px
 </style></head>
 <body>
 <header><h1>부품 테크트리</h1>
-<p>도메인 → 기능 → KiCad 라이브러리. 우리 분류 체계(jung-29·71 위임 합의, 사람 검토 전 초안). '검토 필요'는 근거 보강 전, '이름 규칙'은 일반 분류(Device 등)를 부품 이름으로 나눈 것, '회로도 전용'은 구매 부품이 아닌 기호.</p></header>
+<p>같은 부품을 두 가지로 봅니다. 기능 보기: 도메인 → 기능 → KiCad 라이브러리. 기술 보기: 반도체·비반도체·모듈 → 종류 → 기능 → 라이브러리. 우리 분류 체계(jung-29·71 위임 합의, 사람 검토 전 초안). '확정'은 두 세션의 합의일 뿐 사람 확인이 아닙니다.</p></header>
 <main>
-<div class="bar"><input id="q" type="search" placeholder="찾기: 라이브러리·분류·한국어 개념 (예: LDO, 저항, Interface)" aria-label="찾기">
+<div class="bar" role="group" aria-label="보기 선택">
+<button id="vFn" type="button" aria-pressed="true">기능 보기</button>
+<button id="vTech" type="button" aria-pressed="false">기술 보기</button>
+<button id="expand" type="button">모두 펼치기</button><button id="collapse" type="button">모두 접기</button></div>
+<div class="bar"><input id="q" type="search" placeholder="찾기: 라이브러리·기능·한국어 개념 (예: LDO, 저항, Interface)" aria-label="찾기">
 <label><input id="onlyok" type="checkbox"> 확정만</label></div>
 <div class="stats" id="stats"></div>
+<div class="legend" id="legend" aria-label="종류 색 설명"></div>
 <div id="tree" aria-live="polite">불러오는 중…</div>
 </main>
 <script>
 const $=id=>document.getElementById(id);
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n};
 const STCLS={"확정":"st-확정","검토 필요":"st-검토","이름 규칙":"st-규칙","미분류":"st-검토","회로도 전용":"muted"};
-let DATA=null;
+let DATA=null,VIEW="domains";
+function dot(kind){return el("span","","dot k-"+(kind||"symbol"))}
 function libRow(l){
   const r=el("div",null,"lib");r.dataset.text=[l.kicad,(l.ko_concepts||[]).join(" "),(l.examples||[]).join(" ")].join(" ").toLowerCase();r.dataset.status=l.status;
-  r.append(el("code",l.kicad),el("span",l.parts+"개","muted"));
+  const d=dot(l.kind);d.title=(DATA.kinds||{})[l.kind]||"";r.append(d,el("code",l.kicad),el("span",l.parts+"개","muted"));
   for(const k of l.ko_concepts||[])r.append(el("span",k,"chip"));
   r.append(el("span",l.status,STCLS[l.status]||"muted"));
   if(l.mixed&&l.mixed.length){const m=el("span","혼합: "+l.mixed.join(", "),"chip");m.title="이 라이브러리에는 다른 기능의 부품도 섞여 있습니다";r.append(m)}
@@ -51,17 +66,21 @@ function libRow(l){
   return r}
 function render(){
   const root=$("tree");root.replaceChildren();
-  const tot=DATA.domains.reduce((a,d)=>a+d.parts,0)+(DATA.unmapped||[]).reduce((a,l)=>a+l.parts,0);
-  const by={};for(const d of DATA.domains)for(const b of d.branches)for(const l of b.libraries)by[l.status]=(by[l.status]||0)+l.parts;
+  const groups=DATA[VIEW]||[];
+  const tot=groups.reduce((a,d)=>a+d.parts,0)+(DATA.unmapped||[]).reduce((a,l)=>a+l.parts,0);
+  const by={};for(const d of groups)for(const b of d.branches)for(const l of b.libraries)by[l.status]=(by[l.status]||0)+l.parts;
   const s=$("stats");s.replaceChildren();
   const stat=(k,v)=>{const x=el("div",null,"stat");x.append(el("b",v),document.createTextNode(k));s.append(x)};
-  stat("도메인",DATA.domains.length);stat("전체 부품",tot.toLocaleString());
+  stat(VIEW==="domains"?"도메인":"묶음",groups.length);stat("전체 부품",tot.toLocaleString());
   for(const k of ["확정","검토 필요","이름 규칙"])if(by[k])stat(k,(by[k]/tot*100).toFixed(1)+"%");
-  for(const d of DATA.domains){
-    const D=el("details");const sm=el("summary",d.ko+" — 라이브러리 "+d.libraries+"개 · 부품 "+d.parts.toLocaleString()+"개");D.append(sm);
-    for(const b of d.branches){const B=el("details");B.append(el("summary",b.title+" ("+b.libraries.length+")"));for(const l of b.libraries)B.append(libRow(l));D.append(B)}
+  const lg=$("legend");lg.replaceChildren();
+  for(const [k,v] of Object.entries(DATA.kinds||{})){const x=el("span");x.append(dot(k),document.createTextNode(v));lg.append(x)}
+  for(const d of groups){
+    const D=el("details");D.append(el("summary",d.ko+" — 라이브러리 "+d.libraries+"개 · 부품 "+d.parts.toLocaleString()+"개"));
+    if(d.definition)D.append(el("div",d.definition,"def"));
+    for(const b of d.branches){const B=el("details");const sm=el("summary");sm.append(dot(b.kind),document.createTextNode(b.title+" ("+b.libraries.length+")"));B.append(sm);for(const l of b.libraries)B.append(libRow(l));D.append(B)}
     root.append(D)}
-  if(DATA.unmapped&&DATA.unmapped.length){const U=el("details");U.append(el("summary","미분류 — "+DATA.unmapped.length+"개 (기호 전용·일반 분류)"));for(const l of DATA.unmapped)U.append(libRow(l));root.append(U)}
+  if(VIEW==="domains"&&DATA.unmapped&&DATA.unmapped.length){const U=el("details");U.append(el("summary","미분류 — "+DATA.unmapped.length+"개"));for(const l of DATA.unmapped)U.append(libRow(l));root.append(U)}
   filter()}
 function filter(){
   const q=$("q").value.trim().toLowerCase(),ok=$("onlyok").checked;
@@ -71,7 +90,11 @@ function filter(){
       B.classList.toggle("hidden",!hit);if(q)B.open=hit;any=any||hit}
     for(const r of D.querySelectorAll(":scope>.lib")){const show=(!q||r.dataset.text.includes(q))&&!ok;r.classList.toggle("hidden",!show);any=any||show}
     D.classList.toggle("hidden",!any);if(q)D.open=any}}
+function setView(v){VIEW=v;$("vFn").setAttribute("aria-pressed",String(v==="domains"));$("vTech").setAttribute("aria-pressed",String(v==="tech"));render()}
+function setAll(open){for(const d of $("tree").querySelectorAll("details"))if(!d.classList.contains("hidden"))d.open=open}
 $("q").addEventListener("input",filter);$("onlyok").addEventListener("change",filter);
+$("vFn").addEventListener("click",()=>setView("domains"));$("vTech").addEventListener("click",()=>setView("tech"));
+$("expand").addEventListener("click",()=>setAll(true));$("collapse").addEventListener("click",()=>setAll(false));
 fetch("/api/parts-tree").then(r=>{if(r.status===401){location.href="/login?next=/parts-tree";throw Error("로그인 필요")}return r.json()})
   .then(d=>{DATA=d;render()}).catch(e=>{$("tree").textContent="불러오지 못했습니다: "+e.message});
 </script></body></html>

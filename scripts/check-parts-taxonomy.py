@@ -19,17 +19,16 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+import parts_taxonomy as pt  # noqa: E402
+
 TAXONOMY = ROOT / "static_data" / "parts_taxonomy.json"
 REF = ROOT / "data" / "parts_tree" / "digikey_ref.json"
 RAW = ROOT / "data" / "digikey" / "taxonomy_raw.json"
 STATUSES = {"confirmed", "proposed", "rule", "schematic_only"}
 
 
-def match_rule(rules: dict, name: str, seps: str = "_"):
-    """이름이 키와 같거나 '키+구분자'로 시작하면 그 규칙(긴 키 먼저). 'R' 이 'RotaryEncoder' 를 삼키지 않는다."""
-    keys = sorted((k for k in rules if k != "*"), key=len, reverse=True)
-    k = next((k for k in keys if name == k or any(name.startswith(k + s) for s in seps)), None)
-    return rules.get(k) if k else rules.get("*")
+match_rule = pt.match_rule
 
 
 def validate(tax: dict, parts: list[dict], ref: dict | None = None, digikey_ids: set | None = None) -> dict:
@@ -45,6 +44,13 @@ def validate(tax: dict, parts: list[dict], ref: dict | None = None, digikey_ids:
     for fid, f in funcs.items():
         if f["domain"] not in domains:
             problems["check2"].append(f"기능 {fid} 의 도메인 {f['domain']} 이 없음")
+        kind = f.get("kind")
+        if kind is None:
+            problems["check2"].append(f"기능 {fid}: kind 가 없음")
+        elif kind not in pt.KINDS:
+            problems["check2"].append(f"기능 {fid}: 허용되지 않는 kind {kind}")
+        elif kind not in pt.DOMAIN_KINDS.get(f["domain"], set()):
+            problems["check2"].append(f"기능 {fid}: 도메인 {f['domain']} 에 맞지 않는 kind {kind}")
     libs, generic, unmapped = tax["libraries"], tax["generic"], set(tax.get("unmapped", []))
     # --- 검사 1: 라이브러리마다 정확히 한 곳
     homes = Counter()
@@ -114,8 +120,11 @@ def validate(tax: dict, parts: list[dict], ref: dict | None = None, digikey_ids:
         for lib in ref.get("libraries", {}):
             if lib not in libs:
                 problems["check3"].append(f"참고 파일의 라이브러리가 분류 체계에 없음: {lib}")
+    # 외부 테크트리에만 있는 이름(다른 KiCad 버전일 수 있음)은 실패가 아니다. 카탈로그에 실제로 있으면 알려만 준다.
+    ext = tax.get("external_names_not_in_catalog", [])
+    info = {"external_names": ext, "external_names_present_in_catalog": sorted(set(ext) & set(by_lib))}
     total = sum(cov.values())
-    return {"problems": problems, "check3_skipped": skipped3, "parts_total": total,
+    return {"problems": problems, "info": info, "check3_skipped": skipped3, "parts_total": total,
             "coverage": {k: (v, round(v / total * 100, 1) if total else 0.0) for k, v in sorted(cov.items())}}
 
 
@@ -146,6 +155,9 @@ def main():
             print(f"{k}: {'통과' if not msgs else str(len(msgs)) + '건 실패'}" + (" (건너뜀: 참고 파일 없음)" if k == "check3" and res["check3_skipped"] else ""))
             for m in msgs[:10]:
                 print("   -", m)
+        if res["info"]["external_names"]:
+            print("참고: 외부 테크트리에만 있는 이름", len(res["info"]["external_names"]), "개(실패 아님)",
+                  "— 카탈로그에도 있음: " + ", ".join(res["info"]["external_names_present_in_catalog"]) if res["info"]["external_names_present_in_catalog"] else "")
         print(f"check4 적용 범위(부품 {res['parts_total']:,}개):", {k: f"{v[0]:,} ({v[1]}%)" for k, v in res["coverage"].items()})
     return 1 if any(res["problems"].values()) else 0
 

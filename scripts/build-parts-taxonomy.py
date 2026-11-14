@@ -19,6 +19,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+import parts_taxonomy as pt  # noqa: E402
+
 OUT = ROOT / "static_data" / "parts_taxonomy.json"
 REF = ROOT / "data" / "parts_tree" / "digikey_ref.json"
 
@@ -59,7 +61,7 @@ FUNCTIONS = [
     ("vf_conv", "power", "V/F·F/V 변환", "V/F converters"), ("battery_cell", "power", "배터리·전지", "Batteries & cells"), ("solar", "power", "태양전지", "Solar cells"),
     ("gates", "logic", "게이트·인버터", "Gates & inverters"), ("logic_buffer", "logic", "로직 버퍼·트랜시버", "Logic buffers & transceivers"),
     ("counters", "logic", "카운터·분주기", "Counters & dividers"), ("level_shifter", "logic", "레벨 변환", "Level translators"),
-    ("clock_gen", "logic", "클록 발생·PLL", "Clock generators & PLL"), ("timer_ic", "logic", "타이머 IC", "Timer ICs"),
+    ("clock_gen", "logic", "클록 발생·PLL", "Clock generators & PLL"), ("clock_buffer", "logic", "클록 버퍼·팬아웃", "Clock buffers & fanout"), ("timer_ic", "logic", "타이머 IC", "Timer ICs"),
     ("rtc", "logic", "실시간 시계(RTC)", "Real-time clocks"), ("oscillator", "logic", "발진기", "Oscillators"),
     ("crystal", "logic", "크리스탈·공진자", "Crystals & resonators"), ("delay", "logic", "지연선", "Delay lines"),
     ("memory_ic", "memory", "메모리", "Memory"),
@@ -97,7 +99,7 @@ FUNCTIONS = [
     ("connector", "connect", "커넥터", "Connectors"), ("header", "connect", "헤더·점퍼", "Headers & jumpers"),
     ("mechanical", "connect", "기구·방열", "Mechanical"),
     ("dev_board", "boards", "개발 보드·키트", "Boards & kits"),
-    ("specialized_ic", "other", "특수 IC", "Specialized ICs"), ("schematic_symbol", "other", "회로도 전용 기호", "Schematic-only symbols"),
+    ("specialized_ic", "other", "특수 IC", "Specialized ICs"), ("vacuum_tube", "other", "진공관", "Vacuum tubes"), ("schematic_symbol", "other", "회로도 전용 기호", "Schematic-only symbols"),
 ]
 FUNC = {f[0]: f for f in FUNCTIONS}
 
@@ -190,7 +192,7 @@ def main():
         print("규칙에 맞지 않는 경로:", unmatched); sys.exit(1)
     data = {"version": 1, "_note": "부품 분류 체계(우리 것, DigiKey 이름·번호 없음). 검토 전 초안. 만든 도구: scripts/build-parts-taxonomy.py",
             "domains": [{"id": i, "ko": k, "en": e, "definition": d} for i, k, e, d in DOMAINS],
-            "functions": [{"id": i, "domain": d, "ko": k, "en": e} for i, d, k, e in FUNCTIONS],
+            "functions": [{"id": i, "domain": d, "ko": k, "en": e, "kind": pt.default_kind(i, d)} for i, d, k, e in FUNCTIONS],
             "libraries": dict(sorted(libs_out.items())), "generic": generic_out, "unmapped": sorted(unmapped)}
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     REF.parent.mkdir(parents=True, exist_ok=True)
