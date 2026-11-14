@@ -85,3 +85,24 @@ def resolve(evs: list[dict]) -> dict:
     if all(_same(base, e) for e in evs):
         return {"evidence": evs, "status": "agreed", "chosen": base}
     return {"evidence": evs, "status": "conflict", "chosen": None}      # proposed: 자동으로 고르지 않는다
+
+
+# ---------- S3(eda_harness constraints) 입력으로 바꾸기 ----------
+S3_SOURCE = {"datasheet": "datasheet", "digikey": "distributor", "kicad": "library"}
+
+
+def to_constraint_record(rec: dict) -> dict:
+    """부품 기록 → eda_harness constraints 입력 {"values": {field: [{"value", "source", "ref"}]}}.
+    순위 매기기는 S3 가 한 번만 하도록, chosen 이 아니라 모든 근거를 출처와 함께 넘긴다(충돌도 그대로 전달)."""
+    values: dict[str, list] = {}
+
+    def add(field, value, ev):
+        if value is not None:
+            values.setdefault(field, []).append({"value": value, "source": S3_SOURCE[ev["source"]], "ref": ev["source_ref"]})
+    for ev in rec["fields"].get("supply_voltage", {}).get("evidence", []):
+        add("supply_min_v", ev["min"], ev); add("supply_max_v", ev["max"], ev)
+    for ev in rec["fields"].get("abs_max_supply", {}).get("evidence", []):
+        add("abs_max_supply_v", ev["max"], ev)
+    for ev in rec["fields"].get("operating_temperature", {}).get("evidence", []):
+        add("temp_min_c", ev["min"], ev); add("temp_max_c", ev["max"], ev)
+    return {"lib_id": rec.get("lib_id"), "values": values}

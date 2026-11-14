@@ -45,3 +45,16 @@ class ResolveTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConverterTest(unittest.TestCase):
+    def test_passes_all_evidence_with_source(self):
+        a = pr.evidence("digikey", "2.7V ~ 5.5V", "MPN1", "d", unit="V", lo=2.7, hi=5.5)
+        b = pr.evidence("datasheet", "1.8 to 5.5 V", "p3", "d", unit="V", lo=1.8, hi=5.5)
+        t = pr.evidence("digikey", "-40°C ~ 85°C", "MPN1", "d", unit="°C", lo=-40, hi=85)
+        rec = {"lib_id": "Zeta:X1", "fields": {"supply_voltage": pr.resolve([a, b]), "operating_temperature": pr.resolve([t])}}
+        out = pr.to_constraint_record(rec)
+        self.assertEqual(out["values"]["supply_min_v"], [{"value": 2.7, "source": "distributor", "ref": "MPN1"},
+                                                         {"value": 1.8, "source": "datasheet", "ref": "p3"}])
+        self.assertEqual(out["values"]["temp_max_c"], [{"value": 85, "source": "distributor", "ref": "MPN1"}])
+        self.assertNotIn("abs_max_supply_v", out["values"])
