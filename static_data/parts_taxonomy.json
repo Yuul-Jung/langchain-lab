@@ -1,0 +1,2537 @@
+{
+ "version": 1,
+ "_note": "부품 분류 체계(우리 것, DigiKey 이름·번호 없음). 검토 전 초안. 만든 도구: scripts/build-parts-taxonomy.py",
+ "domains": [
+  {
+   "id": "processor",
+   "ko": "처리기 (MCU·CPU·FPGA)",
+   "en": "Processors",
+   "definition": "프로그램이나 논리를 실행하는 칩(마이크로컨트롤러·프로세서·DSP·FPGA·PLD)과 그것을 담은 모듈."
+  },
+  {
+   "id": "power",
+   "ko": "전원",
+   "en": "Power",
+   "definition": "전력을 변환·공급·구동하는 소자(레귤레이터·컨버터·배터리 관리·LED/모터/게이트 드라이버·전력 계측)."
+  },
+  {
+   "id": "analog",
+   "ko": "아날로그·신호 처리",
+   "en": "Analog & signal",
+   "definition": "연속 신호를 증폭·변환·비교·기준·감시하는 소자(증폭기·ADC/DAC·비교기·전압 기준·전원 감시·아날로그 스위치)."
+  },
+  {
+   "id": "logic",
+   "ko": "디지털 로직·타이밍",
+   "en": "Logic & timing",
+   "definition": "디지털 신호를 처리하고 시간 기준을 만드는 소자(게이트·카운터·레벨 변환·클록·타이머·발진기·크리스탈)."
+  },
+  {
+   "id": "memory",
+   "ko": "메모리",
+   "en": "Memory",
+   "definition": "데이터를 저장하는 칩(EEPROM·플래시·RAM·ROM 등)."
+  },
+  {
+   "id": "interface",
+   "ko": "통신·인터페이스",
+   "en": "Interface",
+   "definition": "칩·기기 사이의 통신 규격(UART·CAN·RS-485·USB·이더넷)을 처리하거나 신호를 절연·확장하는 소자."
+  },
+  {
+   "id": "rf",
+   "ko": "RF·무선",
+   "en": "RF & wireless",
+   "definition": "무선 신호를 보내고 받는 소자와 모듈(RF 증폭·믹서·트랜시버·RFID·안테나·RF 필터)."
+  },
+  {
+   "id": "sensor",
+   "ko": "센서",
+   "en": "Sensors",
+   "definition": "물리량(온도·전류·가스·위치·빛·압력)을 전기 신호로 바꾸는 소자."
+  },
+  {
+   "id": "discrete",
+   "ko": "개별 반도체",
+   "en": "Discrete semiconductors",
+   "definition": "단일 기능 반도체(다이오드·트랜지스터·사이리스터·IGBT)."
+  },
+  {
+   "id": "opto",
+   "ko": "광·표시",
+   "en": "Optoelectronics & display",
+   "definition": "빛을 내거나 보여 주는 소자(LED·레이저·LCD·OLED·광섬유)."
+  },
+  {
+   "id": "electromech",
+   "ko": "전기기계 (릴레이·스위치·모터)",
+   "en": "Electromechanical",
+   "definition": "움직이는 부분이 있는 소자(릴레이·스위치·모터·엔코더·냉각 팬)."
+  },
+  {
+   "id": "protection",
+   "ko": "보호·필터",
+   "en": "Protection & filters",
+   "definition": "서지·노이즈·과전류에서 회로를 지키는 소자(TVS·퓨즈·EMI 필터·페라이트)."
+  },
+  {
+   "id": "passive",
+   "ko": "수동 소자",
+   "en": "Passives",
+   "definition": "저항·커패시터·인덕터·변압기처럼 전원 없이 동작하는 기본 소자."
+  },
+  {
+   "id": "connect",
+   "ko": "연결·기구",
+   "en": "Connectors & mechanical",
+   "definition": "연결하고 고정하는 기구 부품(커넥터·헤더·방열판)."
+  },
+  {
+   "id": "boards",
+   "ko": "개발 보드·키트",
+   "en": "Boards & kits",
+   "definition": "개발 보드·평가 키트·프로그래머."
+  },
+  {
+   "id": "other",
+   "ko": "기타",
+   "en": "Other",
+   "definition": "위 어디에도 맞지 않는 특수 IC와 회로도 전용 기호."
+  }
+ ],
+ "functions": [
+  {
+   "id": "mcu",
+   "domain": "processor",
+   "ko": "마이크로컨트롤러",
+   "en": "Microcontrollers"
+  },
+  {
+   "id": "mpu_soc",
+   "domain": "processor",
+   "ko": "마이크로프로세서·SoC",
+   "en": "Microprocessors & SoC"
+  },
+  {
+   "id": "dsp",
+   "domain": "processor",
+   "ko": "DSP",
+   "en": "DSP"
+  },
+  {
+   "id": "fpga",
+   "domain": "processor",
+   "ko": "FPGA",
+   "en": "FPGA"
+  },
+  {
+   "id": "pld",
+   "domain": "processor",
+   "ko": "CPLD·PLD",
+   "en": "CPLD & PLD"
+  },
+  {
+   "id": "module",
+   "domain": "processor",
+   "ko": "마이컴·컴퓨터 모듈",
+   "en": "Embedded modules"
+  },
+  {
+   "id": "opamp",
+   "domain": "analog",
+   "ko": "OP앰프·증폭기",
+   "en": "Amplifiers"
+  },
+  {
+   "id": "audio_amp",
+   "domain": "analog",
+   "ko": "오디오 증폭기",
+   "en": "Audio amplifiers"
+  },
+  {
+   "id": "audio_codec",
+   "domain": "analog",
+   "ko": "오디오 처리·코덱",
+   "en": "Audio processing"
+  },
+  {
+   "id": "microphone",
+   "domain": "analog",
+   "ko": "마이크·스피커·부저",
+   "en": "Microphones, speakers, buzzers"
+  },
+  {
+   "id": "video",
+   "domain": "analog",
+   "ko": "비디오 증폭·처리",
+   "en": "Video"
+  },
+  {
+   "id": "comparator",
+   "domain": "analog",
+   "ko": "비교기",
+   "en": "Comparators"
+  },
+  {
+   "id": "adc",
+   "domain": "analog",
+   "ko": "AD 변환기",
+   "en": "ADC"
+  },
+  {
+   "id": "dac",
+   "domain": "analog",
+   "ko": "DA 변환기",
+   "en": "DAC"
+  },
+  {
+   "id": "digipot",
+   "domain": "analog",
+   "ko": "디지털 가변저항",
+   "en": "Digital potentiometers"
+  },
+  {
+   "id": "ldo",
+   "domain": "power",
+   "ko": "선형 레귤레이터(LDO)",
+   "en": "Linear regulators"
+  },
+  {
+   "id": "switching_reg",
+   "domain": "power",
+   "ko": "스위칭 레귤레이터",
+   "en": "Switching regulators"
+  },
+  {
+   "id": "reg_controller",
+   "domain": "power",
+   "ko": "레귤레이터 컨트롤러",
+   "en": "Regulator controllers"
+  },
+  {
+   "id": "dcdc_module",
+   "domain": "power",
+   "ko": "DC-DC 모듈",
+   "en": "DC-DC modules"
+  },
+  {
+   "id": "acdc",
+   "domain": "power",
+   "ko": "AC-DC 전원",
+   "en": "AC-DC converters"
+  },
+  {
+   "id": "battery_mgmt",
+   "domain": "power",
+   "ko": "배터리 관리·충전",
+   "en": "Battery management"
+  },
+  {
+   "id": "supervisor",
+   "domain": "analog",
+   "ko": "전원 감시·리셋",
+   "en": "Supervisors"
+  },
+  {
+   "id": "reference",
+   "domain": "analog",
+   "ko": "전압 기준",
+   "en": "Voltage references"
+  },
+  {
+   "id": "led_driver",
+   "domain": "power",
+   "ko": "LED 드라이버",
+   "en": "LED drivers"
+  },
+  {
+   "id": "motor_driver",
+   "domain": "power",
+   "ko": "모터 드라이버",
+   "en": "Motor drivers"
+  },
+  {
+   "id": "gate_driver",
+   "domain": "power",
+   "ko": "게이트 드라이버",
+   "en": "Gate drivers"
+  },
+  {
+   "id": "display_driver",
+   "domain": "power",
+   "ko": "디스플레이 드라이버",
+   "en": "Display drivers"
+  },
+  {
+   "id": "current_reg",
+   "domain": "power",
+   "ko": "전류 조절·관리",
+   "en": "Current regulation"
+  },
+  {
+   "id": "metering",
+   "domain": "power",
+   "ko": "전력 계측",
+   "en": "Energy metering"
+  },
+  {
+   "id": "vf_conv",
+   "domain": "power",
+   "ko": "V/F·F/V 변환",
+   "en": "V/F converters"
+  },
+  {
+   "id": "battery_cell",
+   "domain": "power",
+   "ko": "배터리·전지",
+   "en": "Batteries & cells"
+  },
+  {
+   "id": "solar",
+   "domain": "power",
+   "ko": "태양전지",
+   "en": "Solar cells"
+  },
+  {
+   "id": "gates",
+   "domain": "logic",
+   "ko": "게이트·인버터",
+   "en": "Gates & inverters"
+  },
+  {
+   "id": "logic_buffer",
+   "domain": "logic",
+   "ko": "로직 버퍼·트랜시버",
+   "en": "Logic buffers & transceivers"
+  },
+  {
+   "id": "counters",
+   "domain": "logic",
+   "ko": "카운터·분주기",
+   "en": "Counters & dividers"
+  },
+  {
+   "id": "level_shifter",
+   "domain": "logic",
+   "ko": "레벨 변환",
+   "en": "Level translators"
+  },
+  {
+   "id": "clock_gen",
+   "domain": "logic",
+   "ko": "클록 발생·PLL",
+   "en": "Clock generators & PLL"
+  },
+  {
+   "id": "timer_ic",
+   "domain": "logic",
+   "ko": "타이머 IC",
+   "en": "Timer ICs"
+  },
+  {
+   "id": "rtc",
+   "domain": "logic",
+   "ko": "실시간 시계(RTC)",
+   "en": "Real-time clocks"
+  },
+  {
+   "id": "oscillator",
+   "domain": "logic",
+   "ko": "발진기",
+   "en": "Oscillators"
+  },
+  {
+   "id": "crystal",
+   "domain": "logic",
+   "ko": "크리스탈·공진자",
+   "en": "Crystals & resonators"
+  },
+  {
+   "id": "delay",
+   "domain": "logic",
+   "ko": "지연선",
+   "en": "Delay lines"
+  },
+  {
+   "id": "memory_ic",
+   "domain": "memory",
+   "ko": "메모리",
+   "en": "Memory"
+  },
+  {
+   "id": "line_transceiver",
+   "domain": "interface",
+   "ko": "통신 트랜시버(UART·CAN·RS-485·USB)",
+   "en": "Line transceivers"
+  },
+  {
+   "id": "uart",
+   "domain": "interface",
+   "ko": "UART",
+   "en": "UART"
+  },
+  {
+   "id": "if_controller",
+   "domain": "interface",
+   "ko": "인터페이스 컨트롤러",
+   "en": "Interface controllers"
+  },
+  {
+   "id": "io_expander",
+   "domain": "interface",
+   "ko": "I/O 확장",
+   "en": "I/O expanders"
+  },
+  {
+   "id": "analog_switch",
+   "domain": "analog",
+   "ko": "아날로그 스위치·멀티플렉서",
+   "en": "Analog switches & mux"
+  },
+  {
+   "id": "sensor_if",
+   "domain": "interface",
+   "ko": "센서 인터페이스",
+   "en": "Sensor interfaces"
+  },
+  {
+   "id": "touch",
+   "domain": "interface",
+   "ko": "정전식 터치",
+   "en": "Capacitive touch"
+  },
+  {
+   "id": "signal_buffer",
+   "domain": "interface",
+   "ko": "신호 버퍼·리피터",
+   "en": "Signal buffers & repeaters"
+  },
+  {
+   "id": "telecom",
+   "domain": "interface",
+   "ko": "통신선 인터페이스",
+   "en": "Telecom interfaces"
+  },
+  {
+   "id": "isolator",
+   "domain": "interface",
+   "ko": "절연기·포토커플러",
+   "en": "Isolators & optocouplers"
+  },
+  {
+   "id": "if_special",
+   "domain": "interface",
+   "ko": "특수 인터페이스",
+   "en": "Specialized interfaces"
+  },
+  {
+   "id": "rf_amp",
+   "domain": "rf",
+   "ko": "RF 증폭기",
+   "en": "RF amplifiers"
+  },
+  {
+   "id": "rf_mixer",
+   "domain": "rf",
+   "ko": "RF 믹서",
+   "en": "RF mixers"
+  },
+  {
+   "id": "rf_switch",
+   "domain": "rf",
+   "ko": "RF 스위치",
+   "en": "RF switches"
+  },
+  {
+   "id": "rf_receiver",
+   "domain": "rf",
+   "ko": "RF 수신기",
+   "en": "RF receivers"
+  },
+  {
+   "id": "rf_transceiver",
+   "domain": "rf",
+   "ko": "RF 트랜시버 IC",
+   "en": "RF transceiver ICs"
+  },
+  {
+   "id": "rf_module",
+   "domain": "rf",
+   "ko": "무선 모듈·모뎀",
+   "en": "Wireless modules & modems"
+  },
+  {
+   "id": "rfid",
+   "domain": "rf",
+   "ko": "RFID·NFC",
+   "en": "RFID & NFC"
+  },
+  {
+   "id": "rf_misc",
+   "domain": "rf",
+   "ko": "기타 RF",
+   "en": "Other RF"
+  },
+  {
+   "id": "antenna",
+   "domain": "rf",
+   "ko": "안테나",
+   "en": "Antennas"
+  },
+  {
+   "id": "rf_filter",
+   "domain": "rf",
+   "ko": "RF 필터",
+   "en": "RF filters"
+  },
+  {
+   "id": "current_sensor",
+   "domain": "sensor",
+   "ko": "전류 센서",
+   "en": "Current sensors"
+  },
+  {
+   "id": "gas_sensor",
+   "domain": "sensor",
+   "ko": "가스 센서",
+   "en": "Gas sensors"
+  },
+  {
+   "id": "humidity_sensor",
+   "domain": "sensor",
+   "ko": "습도 센서",
+   "en": "Humidity sensors"
+  },
+  {
+   "id": "imu",
+   "domain": "sensor",
+   "ko": "관성·모션 센서",
+   "en": "Motion sensors & IMU"
+  },
+  {
+   "id": "multi_sensor",
+   "domain": "sensor",
+   "ko": "복합 센서",
+   "en": "Multifunction sensors"
+  },
+  {
+   "id": "light_sensor",
+   "domain": "sensor",
+   "ko": "광 센서",
+   "en": "Optical sensors"
+  },
+  {
+   "id": "distance_sensor",
+   "domain": "sensor",
+   "ko": "거리·근접 센서",
+   "en": "Distance & proximity sensors"
+  },
+  {
+   "id": "ir_receiver",
+   "domain": "sensor",
+   "ko": "적외선 수신",
+   "en": "IR receivers"
+  },
+  {
+   "id": "position_sensor",
+   "domain": "sensor",
+   "ko": "위치·자기 센서",
+   "en": "Position & magnetic sensors"
+  },
+  {
+   "id": "pressure_sensor",
+   "domain": "sensor",
+   "ko": "압력 센서",
+   "en": "Pressure sensors"
+  },
+  {
+   "id": "temp_sensor",
+   "domain": "sensor",
+   "ko": "온도 센서",
+   "en": "Temperature sensors"
+  },
+  {
+   "id": "thermistor",
+   "domain": "sensor",
+   "ko": "서미스터·열전대",
+   "en": "Thermistors & thermocouples"
+  },
+  {
+   "id": "diode",
+   "domain": "discrete",
+   "ko": "다이오드",
+   "en": "Diodes"
+  },
+  {
+   "id": "bridge",
+   "domain": "discrete",
+   "ko": "브리지 정류기",
+   "en": "Bridge rectifiers"
+  },
+  {
+   "id": "thyristor",
+   "domain": "discrete",
+   "ko": "사이리스터·TRIAC",
+   "en": "Thyristors & TRIACs"
+  },
+  {
+   "id": "bjt",
+   "domain": "discrete",
+   "ko": "바이폴라 트랜지스터",
+   "en": "Bipolar transistors"
+  },
+  {
+   "id": "bjt_array",
+   "domain": "discrete",
+   "ko": "트랜지스터 어레이",
+   "en": "Transistor arrays"
+  },
+  {
+   "id": "transistor",
+   "domain": "discrete",
+   "ko": "트랜지스터(일반)",
+   "en": "Transistors (general)"
+  },
+  {
+   "id": "fet",
+   "domain": "discrete",
+   "ko": "FET·MOSFET",
+   "en": "FETs & MOSFETs"
+  },
+  {
+   "id": "igbt",
+   "domain": "discrete",
+   "ko": "IGBT",
+   "en": "IGBT"
+  },
+  {
+   "id": "current_diode",
+   "domain": "discrete",
+   "ko": "정전류 소자",
+   "en": "Current-regulating devices"
+  },
+  {
+   "id": "led",
+   "domain": "opto",
+   "ko": "LED",
+   "en": "LEDs"
+  },
+  {
+   "id": "laser",
+   "domain": "opto",
+   "ko": "레이저 다이오드",
+   "en": "Laser diodes"
+  },
+  {
+   "id": "fiber",
+   "domain": "opto",
+   "ko": "광섬유 모듈",
+   "en": "Fiber-optic modules"
+  },
+  {
+   "id": "lcd_char",
+   "domain": "opto",
+   "ko": "문자 LCD·OLED",
+   "en": "Character displays"
+  },
+  {
+   "id": "lcd_graphic",
+   "domain": "opto",
+   "ko": "그래픽 LCD·OLED",
+   "en": "Graphic displays"
+  },
+  {
+   "id": "lamp",
+   "domain": "opto",
+   "ko": "램프·표시등",
+   "en": "Lamps"
+  },
+  {
+   "id": "relay",
+   "domain": "electromech",
+   "ko": "릴레이",
+   "en": "Relays"
+  },
+  {
+   "id": "ssr",
+   "domain": "electromech",
+   "ko": "반도체 릴레이(SSR)",
+   "en": "Solid-state relays"
+  },
+  {
+   "id": "switch",
+   "domain": "electromech",
+   "ko": "스위치",
+   "en": "Switches"
+  },
+  {
+   "id": "motor",
+   "domain": "electromech",
+   "ko": "모터·액추에이터",
+   "en": "Motors & actuators"
+  },
+  {
+   "id": "thermal",
+   "domain": "electromech",
+   "ko": "열 관리",
+   "en": "Thermal management"
+  },
+  {
+   "id": "encoder",
+   "domain": "electromech",
+   "ko": "엔코더",
+   "en": "Encoders"
+  },
+  {
+   "id": "tvs",
+   "domain": "protection",
+   "ko": "TVS·서지 보호",
+   "en": "TVS & surge protection"
+  },
+  {
+   "id": "emi_filter",
+   "domain": "protection",
+   "ko": "EMI·노이즈 필터",
+   "en": "EMI filters"
+  },
+  {
+   "id": "fuse",
+   "domain": "protection",
+   "ko": "퓨즈·차단기",
+   "en": "Fuses & breakers"
+  },
+  {
+   "id": "varistor",
+   "domain": "protection",
+   "ko": "배리스터·방전관",
+   "en": "Varistors & arresters"
+  },
+  {
+   "id": "ferrite",
+   "domain": "protection",
+   "ko": "페라이트 비드",
+   "en": "Ferrite beads"
+  },
+  {
+   "id": "resistor",
+   "domain": "passive",
+   "ko": "저항",
+   "en": "Resistors"
+  },
+  {
+   "id": "capacitor",
+   "domain": "passive",
+   "ko": "커패시터",
+   "en": "Capacitors"
+  },
+  {
+   "id": "inductor",
+   "domain": "passive",
+   "ko": "인덕터",
+   "en": "Inductors"
+  },
+  {
+   "id": "transformer",
+   "domain": "passive",
+   "ko": "변압기",
+   "en": "Transformers"
+  },
+  {
+   "id": "passive_misc",
+   "domain": "passive",
+   "ko": "기타 수동 소자",
+   "en": "Other passives"
+  },
+  {
+   "id": "connector",
+   "domain": "connect",
+   "ko": "커넥터",
+   "en": "Connectors"
+  },
+  {
+   "id": "header",
+   "domain": "connect",
+   "ko": "헤더·점퍼",
+   "en": "Headers & jumpers"
+  },
+  {
+   "id": "mechanical",
+   "domain": "connect",
+   "ko": "기구·방열",
+   "en": "Mechanical"
+  },
+  {
+   "id": "dev_board",
+   "domain": "boards",
+   "ko": "개발 보드·키트",
+   "en": "Boards & kits"
+  },
+  {
+   "id": "specialized_ic",
+   "domain": "other",
+   "ko": "특수 IC",
+   "en": "Specialized ICs"
+  },
+  {
+   "id": "schematic_symbol",
+   "domain": "other",
+   "ko": "회로도 전용 기호",
+   "en": "Schematic-only symbols"
+  }
+ ],
+ "libraries": {
+  "4xxx": {
+   "function": "gates",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "4xxx_IEEE": {
+   "function": "counters",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "74xGxx": {
+   "function": "gates",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "74xx": {
+   "function": "logic_buffer",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "74xx_IEEE": {
+   "function": "counters",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Amplifier_Audio": {
+   "function": "audio_amp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Amplifier_Buffer": {
+   "function": "opamp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Amplifier_Current": {
+   "function": "current_sensor",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Amplifier_Difference": {
+   "function": "opamp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Amplifier_Instrumentation": {
+   "function": "opamp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Amplifier_Operational": {
+   "function": "opamp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Amplifier_Video": {
+   "function": "video",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Analog": {
+   "function": "vf_conv",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Analog_ADC": {
+   "function": "adc",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Analog_DAC": {
+   "function": "dac",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Analog_Switch": {
+   "function": "analog_switch",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Audio": {
+   "function": "audio_codec",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Auxiliary_Items": {
+   "function": "schematic_symbol",
+   "status": "schematic_only",
+   "source": "회로도 전용(구매 부품 아님)",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Battery_Management": {
+   "function": "battery_mgmt",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Buffer": {
+   "function": "logic_buffer",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "CPLD_Altera": {
+   "function": "pld",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "CPLD_Microchip": {
+   "function": "pld",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "CPLD_Renesas": {
+   "function": "pld",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "CPLD_Xilinx": {
+   "function": "pld",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "CPU": {
+   "function": "mpu_soc",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "CPU_NXP_6800": {
+   "function": "mpu_soc",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "CPU_NXP_68000": {
+   "function": "mpu_soc",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "CPU_NXP_IMX": {
+   "function": "mpu_soc",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Comparator": {
+   "function": "comparator",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Connector_Audio": {
+   "function": "connector",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Converter_ACDC": {
+   "function": "acdc",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Converter_DCDC": {
+   "function": "dcdc_module",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Converter_DCDC_Isolated": {
+   "function": "dcdc_module",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "DSP_AnalogDevices": {
+   "function": "dsp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "DSP_Freescale": {
+   "function": "dsp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "DSP_Microchip_DSPIC33": {
+   "function": "dsp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "DSP_Motorola": {
+   "function": "dsp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "DSP_Texas": {
+   "function": "dsp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Diode": {
+   "function": "diode",
+   "status": "confirmed",
+   "source": "DigiKey 실제 부품 증거(2차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Diode_Bridge": {
+   "function": "bridge",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Diode_Laser": {
+   "function": "laser",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Display_Character": {
+   "function": "lcd_char",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Display_Graphic": {
+   "function": "lcd_graphic",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Driver_Display": {
+   "function": "display_driver",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Driver_FET": {
+   "function": "gate_driver",
+   "status": "confirmed",
+   "source": "DigiKey 실제 부품 증거(2차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Driver_LED": {
+   "function": "led_driver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Driver_Motor": {
+   "function": "motor_driver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Altera_MAX10": {
+   "function": "fpga",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "FPGA_CologneChip_GateMate": {
+   "function": "fpga",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Efinix_Trion": {
+   "function": "fpga",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Lattice": {
+   "function": "fpga",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Microsemi": {
+   "function": "fpga",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "FPGA_Xilinx": {
+   "function": "fpga",
+   "status": "confirmed",
+   "source": "DigiKey 실제 부품 증거(2차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Xilinx_Artix7": {
+   "function": "fpga",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "FPGA_Xilinx_Kintex7": {
+   "function": "fpga",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Xilinx_Spartan6": {
+   "function": "fpga",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Xilinx_Virtex5": {
+   "function": "fpga",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "FPGA_Xilinx_Virtex6": {
+   "function": "fpga",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "FPGA_Xilinx_Virtex7": {
+   "function": "fpga",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Fiber_Optic": {
+   "function": "rf_module",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Filter": {
+   "function": "emi_filter",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Graphic": {
+   "function": "schematic_symbol",
+   "status": "schematic_only",
+   "source": "회로도 전용(구매 부품 아님)",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Interface": {
+   "function": "signal_buffer",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Interface_CAN_LIN": {
+   "function": "line_transceiver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Interface_CurrentLoop": {
+   "function": "sensor_if",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Interface_Ethernet": {
+   "function": "if_controller",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Interface_Expansion": {
+   "function": "io_expander",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Interface_HDMI": {
+   "function": "if_special",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Interface_LineDriver": {
+   "function": "line_transceiver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Interface_Optical": {
+   "function": "ir_receiver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Interface_Telecom": {
+   "function": "telecom",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Interface_UART": {
+   "function": "line_transceiver",
+   "status": "confirmed",
+   "source": "DigiKey 실제 부품 증거(2차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Interface_USB": {
+   "function": "uart",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Isolator": {
+   "function": "isolator",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Isolator_Analog": {
+   "function": "isolator",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Jumper": {
+   "function": "connector",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "LED": {
+   "function": "led",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Logic_LevelTranslator": {
+   "function": "level_shifter",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Logic_Programmable": {
+   "function": "pld",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_AnalogDevices": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Cypress": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Dialog": {
+   "function": "mpu_soc",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_Espressif": {
+   "function": "rf_transceiver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Intel": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_8051": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_ATmega": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_ATtiny": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_AVR": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_AVR_Dx": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_PIC10": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_PIC12": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_PIC16": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_PIC18": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_PIC24": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_PIC32": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_SAMA": {
+   "function": "mpu_soc",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_Microchip_SAMD": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Microchip_SAME": {
+   "function": "mcu",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_Microchip_SAML": {
+   "function": "mcu",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_Microchip_SAMV": {
+   "function": "mcu",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_Module": {
+   "function": "module",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_ColdFire": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_HC11": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_HC12": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_HCS12": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_Kinetis": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_LPC": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_MAC7100": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_MCore": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_NTAG": {
+   "function": "rfid",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_NXP_S08": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Nordic": {
+   "function": "mcu",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_Parallax": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Puya": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_RaspberryPi": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Renesas_Synergy_S1": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_STC": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32C0": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32F0": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32F1": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32F2": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32F3": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32F4": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32F7": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32G0": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32G4": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32H5": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32H7": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32L0": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32L1": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32L4": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32L5": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32MP1": {
+   "function": "mpu_soc",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32U0": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32U5": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_ST_STM32WB": {
+   "function": "mcu",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_ST_STM32WL": {
+   "function": "mcu",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_ST_STM8": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_SiFive": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_SiliconLabs": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Texas": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Texas_MSP430": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Texas_SimpleLink": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "MCU_Trident": {
+   "function": "mcu",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "MCU_WCH_RiscV": {
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Memory_EEPROM": {
+   "function": "memory_ic",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Memory_EPROM": {
+   "function": "memory_ic",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Memory_Flash": {
+   "function": "memory_ic",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Memory_NVRAM": {
+   "function": "memory_ic",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Memory_RAM": {
+   "function": "memory_ic",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Memory_ROM": {
+   "function": "memory_ic",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Memory_UniqueID": {
+   "function": "specialized_ic",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Motor": {
+   "function": "motor",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Oscillator": {
+   "function": "oscillator",
+   "status": "confirmed",
+   "source": "DigiKey 실제 부품 증거(2차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Potentiometer_Digital": {
+   "function": "digipot",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Power_Management": {
+   "function": "specialized_ic",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Power_Protection": {
+   "function": "tvs",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Power_Supervisor": {
+   "function": "supervisor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF": {
+   "function": "rf_transceiver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_AM_FM": {
+   "function": "rf_receiver",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_Amplifier": {
+   "function": "rf_amp",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_Bluetooth": {
+   "function": "rf_module",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_Filter": {
+   "function": "rf_filter",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_GPS": {
+   "function": "rf_misc",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "RF_GSM": {
+   "function": "rf_module",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_Mixer": {
+   "function": "rf_mixer",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_Module": {
+   "function": "rf_module",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_NFC": {
+   "function": "rfid",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_RFID": {
+   "function": "rfid",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_Switch": {
+   "function": "rf_switch",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_WiFi": {
+   "function": "rf_module",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "RF_ZigBee": {
+   "function": "rf_module",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Reference_Current": {
+   "function": "current_reg",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Reference_Voltage": {
+   "function": "reference",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Regulator_Controller": {
+   "function": "reg_controller",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Regulator_Current": {
+   "function": "current_diode",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Regulator_Linear": {
+   "function": "ldo",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Regulator_SwitchedCapacitor": {
+   "function": "switching_reg",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Regulator_Switching": {
+   "function": "switching_reg",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Relay": {
+   "function": "relay",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Relay_SolidState": {
+   "function": "ssr",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor": {
+   "function": "multi_sensor",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Sensor_Audio": {
+   "function": "microphone",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Current": {
+   "function": "current_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Distance": {
+   "function": "distance_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Energy": {
+   "function": "metering",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Gas": {
+   "function": "gas_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Humidity": {
+   "function": "humidity_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Magnetic": {
+   "function": "position_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Motion": {
+   "function": "imu",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Optical": {
+   "function": "light_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Pressure": {
+   "function": "pressure_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Proximity": {
+   "function": "distance_sensor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Sensor_Temperature": {
+   "function": "temp_sensor",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Sensor_Touch": {
+   "function": "touch",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Simulation_SPICE": {
+   "function": "schematic_symbol",
+   "status": "schematic_only",
+   "source": "회로도 전용(구매 부품 아님)",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Timer": {
+   "function": "timer_ic",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Timer_PLL": {
+   "function": "clock_gen",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Timer_RTC": {
+   "function": "rtc",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Transformer": {
+   "function": "transformer",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Transistor_Array": {
+   "function": "bjt_array",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Transistor_BJT": {
+   "function": "bjt",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Transistor_FET": {
+   "function": "fet",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Transistor_FET_Other": {
+   "function": "fet",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Transistor_IGBT": {
+   "function": "igbt",
+   "status": "proposed",
+   "source": "독립 검토 답, 근거 보강 전",
+   "approver": "-",
+   "also_ok": []
+  },
+  "Transistor_Power_Module": {
+   "function": "igbt",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Triac_Thyristor": {
+   "function": "thyristor",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "Video": {
+   "function": "video",
+   "status": "confirmed",
+   "source": "독립 검토 + 이름 유사도(1차)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": []
+  },
+  "power": {
+   "function": "schematic_symbol",
+   "status": "schematic_only",
+   "source": "회로도 전용(구매 부품 아님)",
+   "approver": "-",
+   "also_ok": []
+  }
+ },
+ "generic": {
+  "Device": {
+   "R": {
+    "function": "resistor",
+    "ko": "저항",
+    "status": "rule"
+   },
+   "C": {
+    "function": "capacitor",
+    "ko": "커패시터",
+    "status": "rule"
+   },
+   "L": {
+    "function": "inductor",
+    "ko": "인덕터",
+    "status": "rule"
+   },
+   "Transformer": {
+    "function": "transformer",
+    "ko": "변압기",
+    "status": "rule"
+   },
+   "D": {
+    "function": "diode",
+    "ko": "다이오드",
+    "status": "rule"
+   },
+   "Q": {
+    "function": "transistor",
+    "ko": "트랜지스터",
+    "status": "rule"
+   },
+   "LED": {
+    "function": "led",
+    "ko": "발광 다이오드",
+    "status": "rule"
+   },
+   "Lamp": {
+    "function": "lamp",
+    "ko": "램프",
+    "status": "rule"
+   },
+   "Crystal": {
+    "function": "crystal",
+    "ko": "크리스탈",
+    "status": "rule"
+   },
+   "Resonator": {
+    "function": "crystal",
+    "ko": "공진자",
+    "status": "rule"
+   },
+   "Fuse": {
+    "function": "fuse",
+    "ko": "퓨즈",
+    "status": "rule"
+   },
+   "CircuitBreaker": {
+    "function": "fuse",
+    "ko": "차단기",
+    "status": "rule"
+   },
+   "Filter": {
+    "function": "emi_filter",
+    "ko": "필터",
+    "status": "rule"
+   },
+   "Thermistor": {
+    "function": "temp_sensor",
+    "ko": "서미스터",
+    "status": "rule"
+   },
+   "Antenna": {
+    "function": "antenna",
+    "ko": "안테나",
+    "status": "rule"
+   },
+   "Microphone": {
+    "function": "microphone",
+    "ko": "마이크",
+    "status": "rule"
+   },
+   "Speaker": {
+    "function": "microphone",
+    "ko": "스피커",
+    "status": "rule"
+   },
+   "Buzzer": {
+    "function": "microphone",
+    "ko": "부저",
+    "status": "rule"
+   },
+   "RotaryEncoder": {
+    "function": "encoder",
+    "ko": "로터리 엔코더",
+    "status": "rule"
+   },
+   "Battery": {
+    "function": "battery_cell",
+    "ko": "배터리",
+    "status": "rule"
+   },
+   "CP": {
+    "function": "capacitor",
+    "ko": "커패시터",
+    "status": "rule"
+   },
+   "FerriteBead": {
+    "function": "ferrite",
+    "ko": "페라이트 비드",
+    "status": "rule"
+   },
+   "Polyfuse": {
+    "function": "fuse",
+    "ko": "폴리퓨즈",
+    "status": "rule"
+   },
+   "Varistor": {
+    "function": "tvs",
+    "ko": "배리스터",
+    "status": "rule"
+   },
+   "GDT": {
+    "function": "varistor",
+    "ko": "",
+    "status": "rule"
+   },
+   "SparkGap": {
+    "function": "varistor",
+    "ko": "",
+    "status": "rule"
+   },
+   "Thermocouple": {
+    "function": "temp_sensor",
+    "ko": "열전대",
+    "status": "rule"
+   },
+   "HallGenerator": {
+    "function": "position_sensor",
+    "ko": "",
+    "status": "rule"
+   },
+   "DIAC": {
+    "function": "thyristor",
+    "ko": "다이악",
+    "status": "rule"
+   },
+   "Solar": {
+    "function": "solar",
+    "ko": "",
+    "status": "rule"
+   },
+   "Earphone": {
+    "function": "microphone",
+    "ko": "",
+    "status": "rule"
+   },
+   "PeltierElement": {
+    "function": "thermal",
+    "ko": "",
+    "status": "rule"
+   },
+   "Heater": {
+    "function": "thermal",
+    "ko": "",
+    "status": "rule"
+   },
+   "ElectromagneticActor": {
+    "function": "motor",
+    "ko": "",
+    "status": "rule"
+   },
+   "Circulator": {
+    "function": "rf_misc",
+    "ko": "",
+    "status": "rule"
+   },
+   "RFShield": {
+    "function": "rf_misc",
+    "ko": "",
+    "status": "rule"
+   },
+   "DelayLine": {
+    "function": "delay",
+    "ko": "",
+    "status": "rule"
+   },
+   "VoltageDivider": {
+    "function": "resistor",
+    "ko": "",
+    "status": "rule"
+   },
+   "Memristor": {
+    "function": "resistor",
+    "ko": "",
+    "status": "rule"
+   },
+   "Ammeter": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   },
+   "Voltmeter": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   },
+   "Ohmmeter": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   },
+   "Galvanometer": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   },
+   "Oscilloscope": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   },
+   "FrequencyCounter": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   },
+   "NetTie": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   },
+   "Thermal_Jumper": {
+    "function": "schematic_symbol",
+    "ko": "",
+    "status": "rule"
+   }
+  },
+  "Connector": {
+   "*": {
+    "function": "connector",
+    "ko": "",
+    "status": "rule"
+   }
+  },
+  "Connector_Generic": {
+   "*": {
+    "function": "connector",
+    "ko": "",
+    "status": "rule"
+   }
+  },
+  "Connector_Generic_MountingPin": {
+   "*": {
+    "function": "connector",
+    "ko": "",
+    "status": "rule"
+   }
+  },
+  "Connector_Generic_Shielded": {
+   "*": {
+    "function": "connector",
+    "ko": "",
+    "status": "rule"
+   }
+  },
+  "Switch": {
+   "*": {
+    "function": "switch",
+    "ko": "",
+    "status": "rule"
+   }
+  },
+  "Mechanical": {
+   "*": {
+    "function": "mechanical",
+    "ko": "",
+    "status": "rule"
+   }
+  }
+ },
+ "unmapped": [
+  "CPU_PowerPC",
+  "Driver",
+  "GPU",
+  "Interface_HID",
+  "Security",
+  "Sensor_Voltage",
+  "Valve"
+ ]
+}

@@ -29,7 +29,7 @@ details details>summary{font-weight:500;font-size:14px;padding:8px 12px 8px 24px
 </style></head>
 <body>
 <header><h1>부품 테크트리</h1>
-<p>기능 도메인 → DigiKey 분류 → KiCad 라이브러리. 대응은 jung-29·71 위임 합의(사람 검토 전 초안). '검토 필요'는 근거 보강 전, '이름 규칙'은 일반 분류(Device 등)를 부품 이름으로 나눈 것.</p></header>
+<p>도메인 → 기능 → KiCad 라이브러리. 우리 분류 체계(jung-29·71 위임 합의, 사람 검토 전 초안). '검토 필요'는 근거 보강 전, '이름 규칙'은 일반 분류(Device 등)를 부품 이름으로 나눈 것, '회로도 전용'은 구매 부품이 아닌 기호.</p></header>
 <main>
 <div class="bar"><input id="q" type="search" placeholder="찾기: 라이브러리·분류·한국어 개념 (예: LDO, 저항, Interface)" aria-label="찾기">
 <label><input id="onlyok" type="checkbox"> 확정만</label></div>
@@ -39,7 +39,7 @@ details details>summary{font-weight:500;font-size:14px;padding:8px 12px 8px 24px
 <script>
 const $=id=>document.getElementById(id);
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n};
-const STCLS={"확정":"st-확정","검토 필요":"st-검토","이름 규칙":"st-규칙"};
+const STCLS={"확정":"st-확정","검토 필요":"st-검토","이름 규칙":"st-규칙","미분류":"st-검토","회로도 전용":"muted"};
 let DATA=null;
 function libRow(l){
   const r=el("div",null,"lib");r.dataset.text=[l.kicad,(l.ko_concepts||[]).join(" "),(l.examples||[]).join(" ")].join(" ").toLowerCase();r.dataset.status=l.status;
@@ -58,7 +58,7 @@ function render(){
   for(const k of ["확정","검토 필요","이름 규칙"])if(by[k])stat(k,(by[k]/tot*100).toFixed(1)+"%");
   for(const d of DATA.domains){
     const D=el("details");const sm=el("summary",d.ko+" — 라이브러리 "+d.libraries+"개 · 부품 "+d.parts.toLocaleString()+"개");D.append(sm);
-    for(const b of d.branches){const B=el("details");B.append(el("summary",b.digikey_path+" ("+b.libraries.length+")"));for(const l of b.libraries)B.append(libRow(l));D.append(B)}
+    for(const b of d.branches){const B=el("details");B.append(el("summary",b.title+" ("+b.libraries.length+")"));for(const l of b.libraries)B.append(libRow(l));D.append(B)}
     root.append(D)}
   if(DATA.unmapped&&DATA.unmapped.length){const U=el("details");U.append(el("summary","미분류 — "+DATA.unmapped.length+"개 (기호 전용·일반 분류)"));for(const l of DATA.unmapped)U.append(libRow(l));root.append(U)}
   filter()}
