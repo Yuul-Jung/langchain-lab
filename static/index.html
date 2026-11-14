@@ -15,6 +15,7 @@ select,textarea{border:1px solid #475569;background:#1f2937;color:white;padding:
 #chat{flex:1;overflow:auto;display:flex;flex-direction:column;gap:13px;padding:20px}
 .msg{max-width:88%;padding:13px 16px;border-radius:14px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
 .user{background:#1d4ed8;align-self:flex-end}.assistant{background:#26364e;align-self:flex-start}
+.fb{align-self:flex-start;display:flex;gap:6px;flex-wrap:wrap;font-size:12px}.fb button{font-size:12px;padding:2px 8px}
 .sources{font-size:12px;color:#bac8dd;border-left:2px solid #64748b;padding:8px 12px;white-space:pre-wrap;align-self:flex-start;max-width:88%}
 form{display:flex;gap:9px}textarea{flex:1;min-width:0;resize:none}footer small{display:block;margin-top:8px}
 </style></head><body><main>
@@ -30,12 +31,24 @@ form{display:flex;gap:9px}textarea{flex:1;min-width:0;resize:none}footer small{d
 <div id="status" role="status">서비스 상태 확인 중...</div><div id="providerNote" role="note" style="font-size:12px;color:#fcd34d;margin-top:4px"></div></header>
 <section id="chat" aria-live="polite"><div class="msg assistant">질문을 입력하세요. 문서 검색은 RAG 모드를 선택합니다.</div></section>
 <footer><form id="form"><textarea id="question" rows="2" required placeholder="질문 입력 · Enter 전송 / Shift+Enter 줄바꿈"></textarea><button id="send" type="submit">전송</button></form>
-<small>현재 PC에서만 접속하는 개발용 서비스입니다. 대화 기록은 아직 영구 저장하지 않습니다.</small></footer>
+<small>현재 PC에서만 접속하는 개발용 서비스입니다. 대화 기록은 아직 영구 저장하지 않습니다.<br>부품 질문은 평소 말투로 물어보세요 — 답 아래 버튼으로 맞았는지 알려 주시면 개선에 씁니다(평가는 이 PC에만 남습니다).</small></footer>
 </main><script>
 "use strict";
 // (추가) 로그인 세션이 만료되어 401 이 오면 로그인 페이지로 보낸다
 async function api(url,opt){const r=await fetch(url,opt);if(r.status===401){location.href="/login?next="+encodeURIComponent(location.pathname)}return r}
 const $=id=>document.getElementById(id), chat=$("chat");let history=[],busy=false;
+// (추가) 부품 경로 평가 버튼: 기록 번호와 라벨만 보낸다(질문 원문은 다시 보내지 않음). 이 PC의 사용 기록에만 남는다
+function feedbackButtons(logId,isParts){
+ const box=document.createElement("div");box.className="fb";box.setAttribute("role","group");box.setAttribute("aria-label","부품 답 평가");
+ const opts=isParts?[["correct","맞음"],["not_parts","부품 질문 아님"],["wrong_parts","다른 부품을 원함"]]:[["missed_parts","부품을 물었는데 못 알아들음"]];
+ for(const [label,text] of opts){const b=document.createElement("button");b.type="button";b.textContent=text;
+  b.addEventListener("click",async()=>{box.querySelectorAll("button").forEach(x=>x.disabled=true);
+   try{const r=await api("/api/parts/feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({log_id:logId,label})});const d=await r.json();
+    box.replaceChildren(document.createTextNode(r.ok&&d.saved?"평가를 남겼습니다: "+text:"평가를 저장하지 못했습니다"))}
+   catch(e){box.replaceChildren(document.createTextNode("평가를 저장하지 못했습니다"))}});
+  box.appendChild(b)}
+ chat.appendChild(box);chat.scrollTop=chat.scrollHeight;
+}
 function append(cls,value){const node=document.createElement("div");node.className=cls;node.textContent=value;chat.appendChild(node);chat.scrollTop=chat.scrollHeight;return node}
 async function check(){
  $("status").textContent="연결 확인 중...";
@@ -78,6 +91,7 @@ $("form").addEventListener("submit",async e=>{
   const ROUTE={documents:"문서 근거로 답함",library:"부품 라이브러리(KiCad 공식 심볼) 값으로 답함",general:"일반 대화로 답함 — 올려 둔 문서를 근거로 쓰지 않았습니다"};
   if(data.parts_trace&&data.parts_trace.length){append("sources","실행 경로: "+data.parts_trace.join(" → "))}
   if(data.route){append("sources","처리 방식: "+(ROUTE[data.route]||data.route)+(data.route_note?"\n"+data.route_note:"")+(data.route==="documents"&&data.route_strength==="weak"?"\n문서와의 관련이 약합니다. 문서와 무관한 질문이면 위의 응답 모드를 '일반만'으로 바꿔 보세요.":""))}
+  if(data.parts_log_id){feedbackButtons(data.parts_log_id,!!data.parts_backend)}
   if(data.sources?.length){
    // (변경) 문서명·쪽 번호 표시, 긴 근거는 앞 300자만
    const text=data.sources.map((s,i)=>{const where=(s.filename||s.title||"문서")+(s.page?" · p."+s.page:"");const body=s.snippet||(s.text.length>300?s.text.slice(0,300)+"…":s.text);return "[자료 "+(i+1)+"] "+where+" · 점수 "+s.score+"\n"+body;}).join("\n\n");

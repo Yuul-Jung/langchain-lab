@@ -99,5 +99,35 @@ class PartsLogTest(unittest.TestCase):
             self.assertEqual(len(parts_log.read(path)), 1)
 
 
+class FeedbackTest(unittest.TestCase):
+    def test_record_returns_id_and_feedback_refers_to_it(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "log.jsonl"
+            rid = parts_log.record("가젯 알파 부품 추천", {"answered": True}, path=path)
+            self.assertRegex(rid, r"^[0-9a-f]{12}$")
+            self.assertTrue(parts_log.feedback(rid, "not_parts", path=path))
+            self.assertFalse(parts_log.feedback(rid, "anything_else", path=path))
+            rows = parts_log.read(path)
+            self.assertEqual(rows[0]["id"], rid)
+            self.assertEqual(rows[1], {**rows[1], "type": "feedback", "ref": rid, "label": "not_parts"})
+            self.assertNotIn("question", rows[1])            # 평가 줄에는 질문 원문을 다시 쓰지 않는다
+            self.assertEqual(len(rows), 2)
+
+    def test_endpoint_saves_only_known_labels_and_valid_ids(self):
+        from fastapi.testclient import TestClient
+        import app
+        client = TestClient(app.app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000))
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "log.jsonl"
+            with mock.patch.object(parts_log, "DEFAULT_PATH", path), mock.patch.object(settings, "PARTS_ROUTE_LOG", True):
+                ok = client.post("/api/parts/feedback", json={"log_id": "a1b2c3d4e5f6", "label": "missed_parts"})
+                self.assertEqual(ok.json(), {"saved": True})
+                self.assertEqual(client.post("/api/parts/feedback", json={"log_id": "a1b2c3d4e5f6", "label": "x"}).status_code, 400)
+                self.assertEqual(client.post("/api/parts/feedback", json={"log_id": "../etc", "label": "correct"}).status_code, 422)
+            with mock.patch.object(parts_log, "DEFAULT_PATH", path), mock.patch.object(settings, "PARTS_ROUTE_LOG", False):
+                self.assertEqual(client.post("/api/parts/feedback", json={"log_id": "a1b2c3d4e5f6", "label": "correct"}).json(), {"saved": False})
+            self.assertEqual(len(parts_log.read(path)), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

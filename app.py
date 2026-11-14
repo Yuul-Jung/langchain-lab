@@ -19,6 +19,7 @@ from chat_search import format_context, search_for_chat
 import kicad_parts
 import answer_cite
 import parts_chat
+import parts_log
 import fallback_log
 import graph_views
 import ontology_review
@@ -543,6 +544,21 @@ def decide_route(question: str, previous: str | None = None) -> dict:
     return base
 
 
+class PartsFeedbackRequest(BaseModel):
+    log_id: str = Field(pattern=r"^[0-9a-f]{12}$")
+    label: str = Field(max_length=32)
+
+
+@app.post("/api/parts/feedback")
+def parts_feedback(body: PartsFeedbackRequest):
+    """답 아래 평가 버튼: 사용 기록(이 PC 전용)에 라벨 한 줄을 덧붙인다. 질문 원문은 다시 받지 않는다."""
+    if body.label not in parts_log.FEEDBACK_LABELS:
+        raise HTTPException(status_code=400, detail="지원하지 않는 평가입니다.")
+    if not settings.PARTS_ROUTE_LOG:
+        return {"saved": False}
+    return {"saved": parts_log.feedback(body.log_id, body.label)}
+
+
 @app.post("/api/chat")
 def chat(body: ChatRequest):
     if body.mode not in ("auto", "chat", "rag"):
@@ -553,6 +569,7 @@ def chat(body: ChatRequest):
         raise HTTPException(status_code=400, detail="허용되지 않는 메시지 역할입니다.")
 
     question = body.messages[-1].content
+    parts_log_id = None
     mode, route, route_note, auto_sources, route_strength = body.mode, None, None, None, None   # mode: 실제 처리 방식(chat · rag)
     if body.mode in ("auto", "chat"):
         result = clock_answer(question)
@@ -562,10 +579,11 @@ def chat(body: ChatRequest):
         if result is not None:
             return {"model": "system-policy", "mode": body.mode, "route": routing.GENERAL, "answer": result, "sources": []}
         # (추가) 부품 종류·추천 질문은 카탈로그 의미 검색 결과로 답한다 (기본 꺼짐: PARTS_SEMANTIC_SEARCH=true 로 켠다). 해당 없으면 원래 흐름
-        parts_hit = parts_chat.answer(question) if settings.PARTS_SEMANTIC_SEARCH else None
+        parts_hit, parts_log_id = parts_chat.answer_logged(question) if settings.PARTS_SEMANTIC_SEARCH else (None, None)
         if parts_hit is not None:
             return {"model": "kicad-library", "mode": body.mode, "route": routing.LIBRARY, "answer": parts_hit["answer"],
-                    "sources": [], "parts_backend": parts_hit["backend"], "parts_trace": parts_hit["trace"]}
+                    "sources": [], "parts_backend": parts_hit["backend"], "parts_trace": parts_hit["trace"],
+                    "parts_log_id": parts_log_id}   # 답 아래 평가 버튼용(기록했을 때만 값이 있음)
     if body.mode == "auto":
         earlier = [m.content for m in body.messages[:-1] if m.role == "user"]
         decision = decide_route(question, earlier[-1] if earlier else None)
@@ -671,4 +689,6 @@ def chat(body: ChatRequest):
         "hanja_fixed": hanja_fixed,
         # (추가) 출처 보강 결과: kept(모델이 이미 표시) · added(붙인 근거 번호) · removed_bad(없는 번호 삭제 수). 끄면 None
         "cite": cite_info,
+        # (추가) 부품 경로가 보고 넘긴 질문의 사용 기록 번호: '부품을 물었는데 못 알아들음' 버튼용
+        "parts_log_id": parts_log_id,
     }

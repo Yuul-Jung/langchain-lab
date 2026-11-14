@@ -62,9 +62,15 @@ def run(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> d
 
 def answer(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> dict | None:
     """부품 추천 질문이면 {'answer', 'backend', 'trace'}, 아니면 None. 인자는 시험용으로만 바꾼다."""
-    result = run(question, es=es, embed=embed, ontology=ontology, catalog=catalog)
+    return answer_logged(question, es=es, embed=embed, ontology=ontology, catalog=catalog)[0]
+
+
+def answer_logged(question: str, **kw) -> tuple[dict | None, str | None]:
+    """answer() 와 같고, 사용 기록 번호(기록했을 때만)를 함께 돌려준다 — 답 아래 평가 버튼이 이 번호로 남는다."""
+    result = run(question, **kw)
+    log_id = None
     if result is not None and settings.PARTS_ROUTE_LOG and parts_log.in_server_process():
-        parts_log.record(question, result)      # 처리하지 않은 질문도 남긴다(놓친 질문을 찾는 재료). 이 PC 전용
+        log_id = parts_log.record(question, result)      # 처리하지 않은 질문도 남긴다(놓친 질문을 찾는 재료). 이 PC 전용
     if not result or not result.get("answered"):
-        return None
-    return {"answer": result["answer"], "backend": result["backend"], "trace": result["trace"]}
+        return None, log_id
+    return {"answer": result["answer"], "backend": result["backend"], "trace": result["trace"]}, log_id

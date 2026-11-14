@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import secrets
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -23,23 +24,48 @@ def in_server_process() -> bool:
     return "uvicorn" in sys.modules
 
 
-def entry(question: str, state: dict) -> dict:
+FEEDBACK_LABELS = {
+    "correct": "맞음",                        # 부품 답이 맞았다
+    "not_parts": "부품 질문 아님",            # 부품 질문이 아닌데 부품으로 답했다(오처리)
+    "wrong_parts": "다른 부품을 원함",        # 부품 질문은 맞지만 결과가 틀렸다
+    "missed_parts": "부품을 물었는데 못 알아들음",   # 부품 질문인데 일반·문서 답으로 갔다(놓침)
+}
+
+
+def new_id() -> str:
+    return secrets.token_hex(6)
+
+
+def entry(question: str, state: dict, entry_id: str | None = None) -> dict:
     parts = state.get("parts") or []
     anchor = state.get("anchor") or {}
-    return {"time": datetime.now().isoformat(timespec="seconds"), "question": question,
+    return {"id": entry_id or new_id(), "time": datetime.now().isoformat(timespec="seconds"), "question": question,
             "handled": bool(state.get("answered")), "concepts": state.get("concepts", []),
             "backend": state.get("backend"), "anchor": anchor.get("lib_id"),
             "libraries": sorted({p.get("library") or str(p.get("lib_id", "")).split(":")[0] for p in parts}),
             "trace": [t[:80] for t in state.get("trace", [])]}
 
 
-def record(question: str, state: dict, path: Path | None = None) -> bool:
-    """한 건을 덧붙여 쓴다. 실패하면 False (예외를 밖으로 내지 않는다)."""
+def record(question: str, state: dict, path: Path | None = None) -> str | None:
+    """한 건을 덧붙여 쓰고 그 기록 번호(id)를 돌려준다. 실패하면 None (예외를 밖으로 내지 않는다)."""
+    row = entry(question, state)
+    return row["id"] if _append(row, path) else None
+
+
+def feedback(entry_id: str, label: str, path: Path | None = None) -> bool:
+    """사용자가 답 아래 버튼으로 남긴 평가 한 건(기록 번호와 라벨만, 질문 원문은 다시 쓰지 않는다)."""
+    if label not in FEEDBACK_LABELS or not entry_id:
+        return False
+    return _append({"type": "feedback", "ref": entry_id, "label": label,
+                    "time": datetime.now().isoformat(timespec="seconds")}, path)
+
+
+def _append(row: dict, path: Path | None) -> bool:
     try:
         path = path or DEFAULT_PATH
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry(question, state), ensure_ascii=False) + "\n")
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
         if path.stat().st_size > MAX_BYTES:
             _trim(path)
         return True

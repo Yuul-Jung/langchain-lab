@@ -17,7 +17,9 @@ def main():
     ap.add_argument("--show", choices=["handled", "unhandled", "all"], default=None)
     ap.add_argument("--limit", type=int, default=30)
     args = ap.parse_args()
-    rows = parts_log.read()
+    allrows = parts_log.read()
+    rows = [r for r in allrows if r.get("type") != "feedback" and "question" in r]
+    fb = [r for r in allrows if r.get("type") == "feedback"]
     if not rows:
         print("기록이 없습니다 (data/diagnostics/parts_route.jsonl). 채팅에서 질문을 보내면 쌓입니다.")
         return 0
@@ -32,6 +34,13 @@ def main():
     maybe = [r for r in rows if not r["handled"] and pg.INTENT.search(r["question"]) and not pg.EXPLAIN.search(r["question"])
              and not pg.NONPART.search(r["question"]) and not pg.DOC_WORDS.search(r["question"])]
     print(f"처리 안 했지만 부품을 찾는 말이 든 질문(놓쳤을 가능성) {len(maybe)}건")
+    last = {}
+    for f in fb:                       # 같은 답에 여러 번 누르면 마지막 것만
+        last[f["ref"]] = f["label"]
+    print(f"사용자 평가 {len(last)}건:", {parts_log.FEEDBACK_LABELS.get(k, k): v for k, v in Counter(last.values()).items()})
+    # 사전 등록(2026-11-14): 실제 질문 holdout = 부품 관련 기록 처음 30건 또는 평가가 처음 10건 쌓인 시점까지의 기록. 개선 전에 한 번만 잰다
+    print(f"실제 질문 holdout 조건: 처리한 기록 {len(handled)}/30, 평가 {len(last)}/10 → "
+          + ("모임(개선 전 1회 측정 가능)" if len(handled) >= 30 or len(last) >= 10 else "아직 모으는 중"))
     if args.show:
         pick = {"handled": handled, "unhandled": maybe, "all": rows}[args.show][-args.limit:]
         for r in pick:
