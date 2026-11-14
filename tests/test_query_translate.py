@@ -21,5 +21,14 @@ class QueryTranslateTest(unittest.TestCase):
         self.assertEqual(settings.DOCUMENT_QUERY_TRANSLATE, "off")
 
 
+
+class HangulRatioTest(unittest.TestCase):
+    def test_ratio(self):
+        import document_pipeline as dp
+        self.assertEqual(dp.hangul_ratio(""), 0.0)
+        self.assertLess(dp.hangul_ratio("Rise time of SDA and SCL"), 0.2)
+        self.assertGreater(dp.hangul_ratio("상승 시간은 SDA 기준"), 0.5)
+
+
 if __name__ == "__main__":
     unittest.main()
