@@ -1208,4 +1208,8 @@ def search_uploaded(query, limit=5, document_id=None):
             source["score"] = cosine_score(vector, source.pop("embedding"))
             extra.append(source)
         hits = merge_candidates(hits, extra)
-    return rerank_by_terms(hits, query, settings.SEARCH_TERM_WEIGHT)[:limit]
+    ranked = rerank_by_terms(hits, query, settings.SEARCH_TERM_WEIGHT)
+    if settings.DOCUMENT_RERANKER:   # (추가) 교차 인코더 재순위(기본 꺼짐, 실패하면 원래 순서)
+        import reranker
+        ranked = reranker.rerank(query, ranked)
+    return ranked[:limit]

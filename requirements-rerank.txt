@@ -1,0 +1,5 @@
+# 선택 설치: 문서 검색 교차 인코더 재순위(DOCUMENT_RERANKER=true 일 때만 필요). CPU 휠.
+#   .venv/bin/pip install -r requirements-rerank.txt --extra-index-url https://download.pytorch.org/whl/cpu
+# 모델(Apache-2.0)은 data/tools/models/mmarco-mMiniLMv2-L12-H384-v1 에 따로 내려받는다(커밋하지 않음).
+torch==2.15.0+cpu
+transformers==5.23.0
