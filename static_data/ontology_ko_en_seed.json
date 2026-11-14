@@ -4,7 +4,7 @@
     {"ko": ["저전압 강하 레귤레이터", "저드롭아웃 레귤레이터", "엘디오", "LDO"], "kw": ["ldo", "regulator"], "lib": ["Regulator_Linear"]},
     {"ko": ["선형 레귤레이터", "리니어 레귤레이터", "선형 전압 조정기"], "kw": ["linear", "regulator"], "lib": ["Regulator_Linear"]},
     {"ko": ["스위칭 레귤레이터", "스위칭 전원"], "kw": ["switching", "regulator"], "lib": ["Regulator_Switching"]},
-    {"ko": ["강압 컨버터", "벅 컨버터", "스텝다운"], "kw": ["buck", "step-down"]},
+    {"ko": ["강압 컨버터", "강압 레귤레이터", "벅 컨버터", "스텝다운"], "kw": ["buck", "step-down"]},
     {"ko": ["승압 컨버터", "부스트 컨버터", "스텝업"], "kw": ["boost", "step-up"]},
     {"ko": ["DC-DC 컨버터", "직류 변환기", "디씨디씨"], "kw": ["dc-dc", "converter"], "lib": ["Converter_DCDC"]},
     {"ko": ["절연형 DC-DC", "절연 컨버터"], "kw": ["isolated", "converter"], "lib": ["Converter_DCDC_Isolated"]},

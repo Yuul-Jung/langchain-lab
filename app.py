@@ -18,6 +18,7 @@ from document_pipeline import DOCUMENT_INDEX, search_uploaded, trim_by_margin
 from chat_search import format_context, search_for_chat
 import kicad_parts
 import answer_cite
+import parts_chat
 import fallback_log
 import hanja_ko
 import routing
@@ -529,6 +530,11 @@ def chat(body: ChatRequest):
         result = unavailable_live_answer(question)
         if result is not None:
             return {"model": "system-policy", "mode": body.mode, "route": routing.GENERAL, "answer": result, "sources": []}
+        # (추가) 부품 종류·추천 질문은 카탈로그 의미 검색 결과로 답한다 (기본 꺼짐: PARTS_SEMANTIC_SEARCH=true 로 켠다). 해당 없으면 원래 흐름
+        parts_hit = parts_chat.answer(question) if settings.PARTS_SEMANTIC_SEARCH else None
+        if parts_hit is not None:
+            return {"model": "kicad-library", "mode": body.mode, "route": routing.LIBRARY, "answer": parts_hit["answer"],
+                    "sources": [], "parts_backend": parts_hit["backend"], "parts_trace": parts_hit["trace"]}
     if body.mode == "auto":
         earlier = [m.content for m in body.messages[:-1] if m.role == "user"]
         decision = decide_route(question, earlier[-1] if earlier else None)

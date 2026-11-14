@@ -107,6 +107,10 @@ CHAT_AUTO_CITE = get("CHAT_AUTO_CITE", "true").lower() in ("1", "true", "yes")
 CHAT_PARTS_LIBREPCB = get("CHAT_PARTS_LIBREPCB", "true").lower() in ("1", "true", "yes")
 # 일반 채팅에서 부품 핀 질문은 KiCad 라이브러리 값으로 바로 답한다(모델을 거치지 않음). 끄려면 CHAT_PARTS_LOOKUP=false
 CHAT_PARTS_LOOKUP = get("CHAT_PARTS_LOOKUP", "true").lower() in ("1", "true", "yes")
+# 부품 의미 검색(ES kicad_parts_v2 임베딩). 효과가 평가로 확인되기 전까지 기본 꺼짐 — 켜려면 PARTS_SEMANTIC_SEARCH=true. 실패하면 파일 카탈로그로 대체
+PARTS_SEMANTIC_SEARCH = get("PARTS_SEMANTIC_SEARCH", "false").lower() in ("1", "true", "yes")
+# 한·영 사전의 승인 전(proposed) 개념도 부품 추천 질문 이해에 쓴다. 원칙은 승인된 개념만이므로 시험할 때만 켠다
+PARTS_ONTOLOGY_INCLUDE_PROPOSED = get("PARTS_ONTOLOGY_INCLUDE_PROPOSED", "false").lower() in ("1", "true", "yes")
 
 # ---- 공개 시작 페이지가 /api/status 를 읽을 수 있는 출처
 STATUS_ALLOWED_ORIGINS = frozenset(get_list("STATUS_ALLOWED_ORIGINS", "https://yuul-jung.github.io"))

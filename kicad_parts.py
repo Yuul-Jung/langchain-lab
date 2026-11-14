@@ -319,6 +319,31 @@ def es_search_body(query: str, limit: int = 10) -> dict | None:
                   + [{"prefix": {"name.lower": {"value": w, "boost": 3}}} for w in words]}}}
 
 
+# ---- 의미 검색(v2 인덱스: 임베딩) — 설정 PARTS_SEMANTIC_SEARCH 로 켠다(기본 꺼짐). 실패하면 파일 카탈로그로 대체 ----
+ES_PARTS_V2 = "kicad_parts_v2"
+
+
+def es_semantic_body(vector: list[float], limit: int = 10, num_candidates: int = 200) -> dict:
+    return {"size": limit, "_source": {"excludes": ["embedding"]},
+            "knn": {"field": "embedding", "query_vector": vector, "k": limit, "num_candidates": num_candidates}}
+
+
+def find_parts(query: str, parts: list[dict], limit: int = 10, *, semantic: bool = False,
+               embed=None, es=None, index: str = ES_PARTS_V2) -> tuple[list[dict], str]:
+    """(부품 목록, 쓴 방식). semantic 이 켜져 있고 embed·es 가 있으면 v2 인덱스 의미 검색을 시도하고,
+    인덱스가 없거나 서버·임베딩이 실패하거나 결과가 비면 파일 카탈로그 낱말 검색(search_parts)으로 대체한다.
+    방식은 'es-semantic' 또는 'file' — 호출한 쪽이 추적(trace)에 남겨 어느 경로로 답했는지 알 수 있게 한다."""
+    if semantic and embed is not None and es is not None and query.strip():
+        try:
+            resp = es.search(index=index, **es_semantic_body(embed(query), limit))
+            rows = [h["_source"] for h in resp["hits"]["hits"]]
+            if rows:
+                return rows, "es-semantic"
+        except Exception:
+            pass
+    return search_parts(parts, query, limit), "file"
+
+
 def es_bulk_actions(parts: list[dict], index: str = ES_PARTS_INDEX):
     for p in parts:
         yield {"_index": index, "_id": p["lib_id"], "_source": p}
