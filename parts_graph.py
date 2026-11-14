@@ -21,6 +21,7 @@ from langgraph.graph import END, START, StateGraph
 
 import kicad_parts as kp
 import ontology_graph as og
+import part_conditions as pc
 
 # 부품을 찾거나 추천해 달라는 말 (너무 넓지 않게: '문서에서' 같은 말이 있으면 통과시키지 않는다)
 # 부품을 찾는 말. 맨 '알려줘'는 설명을 묻는 질문에도 흔해서 뺐다(dev 시험에서 'ADC 해상도가 뭔지 알려줘'를 잘못 처리)
@@ -56,6 +57,7 @@ class PartsState(TypedDict, total=False):
     concept_ids: list[str]
     anchor: dict
     parts: list[dict]
+    conditions: list[str]   # 여러 조건 질문: 질문에서 뽑은 조건 이름(부품마다 checks 에 ✓·✗·? 판정)
     backend: str
     answered: bool
     answer: str
@@ -71,6 +73,8 @@ class PartsDeps:
     catalog: Optional[list] = None   # 부품 목록(영문 부품 이름으로 '비슷한 부품'을 찾을 때 씀)
     expand: bool = False          # 검색어에 개념의 영어 키워드·분류 이름을 덧붙인다(짧은 한국어 질문의 의미 검색 보강)
     semantic_concepts: Optional[Callable[[str], list[str]]] = None   # 문구가 사전과 다를 때 의미가 가까운 개념(문턱 넘는 것만)
+    conditions: bool = False      # 여러 조건 질문(인터페이스·전압·패키지 …)을 뽑아 순서·답에 반영(설정 PARTS_CONDITIONS, 기본 꺼짐)
+    veto: Optional[Callable[[str], bool]] = None   # 규칙이 부품 질문이라 본 뒤의 보조 거부(학습 모델, parts_gate.veto). True 면 부품 질문 아님
 
 
 def parts_concepts(question: str, ontology, include_proposed: bool = False, semantic=None) -> list[str]:
@@ -158,18 +162,43 @@ def ontology_search(ontology, concept_ids: list[str], limit: int) -> list[dict]:
     return out[:limit]
 
 
-def format_answer(parts: list[dict], backend: str, concepts: list[str]) -> str:
-    lines = [f"KiCad 부품 라이브러리에서 찾은 후보입니다 ({BACKEND_LABEL.get(backend, backend)}, 이해한 개념: {', '.join(concepts)}).", ""]
+def format_answer(parts: list[dict], backend: str, concepts: list[str], conditions: list[str] | None = None) -> str:
+    lines = [f"KiCad 부품 라이브러리에서 찾은 후보입니다 ({BACKEND_LABEL.get(backend, backend)}, 이해한 개념: {', '.join(concepts)})."]
+    if conditions:
+        lines.append(f"질문의 조건: {', '.join(conditions)} — 부품마다 ✓ 카탈로그에 근거 있음 · ✗ 맞지 않는 값 · ? 카탈로그에 정보 없음")
+    lines.append("")
     for i, p in enumerate(parts, 1):
         desc = (p.get("description") or "").strip() or "설명 없음"
         pins = f", 핀 {p['pin_count']}개" if p.get("pin_count") else ""
         lines.append(f"{i}. **{p.get('name', p.get('lib_id', ''))}** (`{p.get('lib_id', '')}`{pins}) — {desc}")
+        if conditions and p.get("checks"):
+            lines.append("   조건: " + " · ".join(f"{k} {v}" for k, v in p["checks"].items()))
+    if conditions and any(v == pc.UNKNOWN for p in parts for v in (p.get("checks") or {}).values()):
+        lines += ["", "? 표시 조건은 KiCad 라이브러리 값에 없어 확인하지 못했습니다(예: MCU 의 CAN·USB 같은 주변장치는 카탈로그에 없음). 데이터시트로 꼭 확인하세요."]
     lines += ["", "라이브러리 설명 그대로이며, 설계에 쓰기 전에 데이터시트로 확인하세요. 특정 부품의 핀 배치는 부품 번호와 함께 물어보세요."]
     return "\n".join(lines)
 
 
+def order_by_position(ontology, question: str, concept_ids: list[str]) -> list[str]:
+    """개념을 질문에 나온 순서로(한국어는 머리 명사가 끝에 오므로 마지막 개념을 찾는 대상으로 본다)."""
+    lowered = question.lower()
+
+    def first_pos(c):
+        pos = [m.start() for n in ontology.neighbors(c) if ontology.nodes[n].get("kind") == "term"
+               for m in [og._term_regex(ontology.nodes[n]["label"]).search(lowered)] if m]
+        return min(pos) if pos else len(question)
+    return sorted(concept_ids, key=first_pos)
+
+
 def build_parts_graph(deps: PartsDeps):
     def classify(state: PartsState) -> PartsState:
+        out = rule_classify(state)
+        if (out.get("concepts") or out.get("anchor")) and deps.veto is not None and deps.veto(state["question"]):
+            return {"concepts": [], "concept_ids": [], "anchor": None,
+                    "trace": out["trace"] + ["classify: 학습 관문이 부품 질문이 아니라고 판단 → 기존 흐름"]}
+        return out
+
+    def rule_classify(state: PartsState) -> PartsState:
         anchor = find_anchor(state["question"], deps.catalog)
         if anchor:
             return {"anchor": anchor, "concepts": [anchor["lib_id"]], "concept_ids": [],
@@ -193,23 +222,38 @@ def build_parts_graph(deps: PartsDeps):
             parts = [r for r in rows if r.get("lib_id") != anchor["lib_id"] and not r.get("name", "").lower().startswith(base)][:deps.limit]
             return {"parts": parts, "backend": backend, "trace": [f"search[{backend}]: 비슷한 부품 {len(parts)}건"]}
         query = state["question"]
-        if deps.expand:
-            extra = expansion_terms(deps.ontology, state.get("concept_ids", []))
-            query = f"{query} {' '.join(extra)}".strip() if extra else query
-        libs = concept_libraries(deps.ontology, state.get("concept_ids", []))
+        ids = state.get("concept_ids", [])
+        if deps.conditions and deps.ontology is not None and len(ids) > 1:
+            ids = order_by_position(deps.ontology, query, ids)
+            ids = ids[-1:] + ids[:-1]          # 찾는 대상(마지막 개념)을 앞에, 나머지는 조건
+        conds = pc.parse(query, deps.ontology, ids) if deps.conditions else []
+        if deps.expand:   # 덧붙일 낱말 순서는 원래 개념 순서(상한 6개 안에서 바뀌지 않게) + 조건 낱말
+            extra = expansion_terms(deps.ontology, state.get("concept_ids", [])) + [w for c in conds for w in c.words]
+            query = f"{query} {' '.join(dict.fromkeys(extra))}".strip() if extra else query
+        # 분류·후보 수는 조건이 없을 때와 같게 둔다(세트 10에서 찾는 대상만 앞세우자 단일 개념 질문의 적중이 떨어짐 — 2026-11-14).
+        # 조건은 같은 후보 안에서 순서만 바꾼다: 분류에 든 부품 중 조건을 더 채운 것이 먼저.
+        libs = concept_libraries(deps.ontology, ids)
         rows, backend = deps.find(query, deps.limit * 4 if libs else deps.limit)
-        parts = rerank_by_library(rows, libs)[:deps.limit]
+        rows = rerank_by_library(rows, libs)
+        if conds:
+            lib_of = lambda r: r.get("library") or r.get("lib_id", "").split(":", 1)[0]
+            in_lib = [r for r in rows if lib_of(r) in libs] if libs else rows
+            rows = pc.rank(conds, in_lib) + [r for r in rows if r not in in_lib] if in_lib else pc.rank(conds, rows)
+        parts = rows[:deps.limit]
         if not parts:   # ES·임베딩이 안 되고 한국어 낱말 검색도 비면: 온톨로지의 영어 키워드·분류로 대체
-            parts = ontology_search(deps.ontology, state.get("concept_ids", []), deps.limit)
+            parts = ontology_search(deps.ontology, ids, deps.limit)
+            parts = pc.rank(conds, parts) if conds else parts
             backend = "ontology" if parts else backend
-        return {"parts": parts, "backend": backend, "trace": [f"search[{backend}]: {len(parts)}건"]}
+        labels = [c.label for c in conds]
+        note = f", 조건 {labels}" if labels else ""
+        return {"parts": parts, "backend": backend, "conditions": labels, "trace": [f"search[{backend}]: {len(parts)}건{note}"]}
 
     def after_search(state: PartsState) -> str:
         return "answer" if state.get("parts") else "end"
 
     def answer(state: PartsState) -> PartsState:
         anchor = state.get("anchor")
-        text = format_answer(state["parts"], state["backend"], state["concepts"])
+        text = format_answer(state["parts"], state["backend"], state["concepts"], state.get("conditions"))
         if anchor:
             text = text.replace("찾은 후보입니다", f"찾은 후보입니다 — `{anchor['lib_id']}`와 설명이 비슷한 부품(성능·핀 호환은 보장하지 않음)", 1)
         return {"answer": text, "answered": True, "trace": ["answer: 검색된 부품 값으로 답함 (모델 호출 없음)"]}

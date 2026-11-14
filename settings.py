@@ -58,6 +58,9 @@ DOCUMENT_NORI = get("DOCUMENT_NORI", "false").lower() in ("1", "true", "yes")
 DOCUMENT_RERANKER = get("DOCUMENT_RERANKER", "false").lower() in ("1", "true", "yes")
 DOCUMENT_RERANKER_MODEL = get("DOCUMENT_RERANKER_MODEL", str(ROOT / "data" / "tools" / "models" / "mmarco-mMiniLMv2-L12-H384-v1"))
 DOCUMENT_RERANKER_POOL = int(get("DOCUMENT_RERANKER_POOL", "20"))
+# (추가) 한국어 질문을 영어로 번역해 영어 데이터시트 검색을 보강한다(query_translate.py): off · lexical(낱말 검색에만) · dual(번역문 임베딩도). 기본 off
+DOCUMENT_QUERY_TRANSLATE = get("DOCUMENT_QUERY_TRANSLATE", "off").lower()
+DOCUMENT_TRANSLATE_MODEL = get("DOCUMENT_TRANSLATE_MODEL", str(ROOT / "data" / "tools" / "models" / "opus-mt-ko-en"))
 # (추가) 접근 제어 (access_control.py). ACCESS_PASSWORD 를 비우면 이 PC 에서만 쓸 수 있다.
 ACCESS_PASSWORD = get("ACCESS_PASSWORD")
 SESSION_HOURS = get_int("SESSION_HOURS", 12)
@@ -118,6 +121,10 @@ CHAT_PARTS_LOOKUP = get("CHAT_PARTS_LOOKUP", "true").lower() in ("1", "true", "y
 PARTS_SEMANTIC_SEARCH = get("PARTS_SEMANTIC_SEARCH", "false").lower() in ("1", "true", "yes")
 # 한·영 사전의 승인 전(proposed) 개념도 부품 추천 질문 이해에 쓴다. 원칙은 승인된 개념만이므로 시험할 때만 켠다
 PARTS_ONTOLOGY_INCLUDE_PROPOSED = get("PARTS_ONTOLOGY_INCLUDE_PROPOSED", "false").lower() in ("1", "true", "yes")
+# (추가) 여러 조건 부품 질문: 조건을 뽑아 같은 후보 안에서 조건을 더 채운 부품을 앞으로, 답에 ✓·✗·? 표시(part_conditions.py). 기본 꺼짐
+PARTS_CONDITIONS = get("PARTS_CONDITIONS", "false").lower() in ("1", "true", "yes")
+# (추가) 부품 관문의 보조 거부: 학습 모델이 부품 질문일 확률을 아주 낮게 볼 때만 되돌림(data/parts_gate/model.npz, 없으면 원래 동작). 끄려면 PARTS_GATE_ML=false
+PARTS_GATE_ML = get("PARTS_GATE_ML", "true").lower() in ("1", "true", "yes")
 # 부품 경로의 판단(질문·처리 여부·개념·검색 방식)을 data/diagnostics/parts_route.jsonl 에 남긴다(이 PC 전용, 질문 원문 포함 — 공유 금지). 끄려면 PARTS_ROUTE_LOG=false
 PARTS_ROUTE_LOG = get("PARTS_ROUTE_LOG", "true").lower() in ("1", "true", "yes")
 

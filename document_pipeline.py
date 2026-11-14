@@ -1179,6 +1179,19 @@ def search_uploaded(query, limit=5, document_id=None):
     if not es.indices.exists(index=DOCUMENT_INDEX):
         return []
     vector = embed_query(query)
+    # (추가) 영어 번역(설정 DOCUMENT_QUERY_TRANSLATE): 낱말 검색·재순위에 번역 내용어를 덧붙이고, dual 이면 번역문 임베딩으로도 후보를 찾는다
+    lex_query, en_vector = query, None
+    if settings.DOCUMENT_QUERY_TRANSLATE in ("lexical", "dual"):
+        import query_translate
+        english = query_translate.translate(query)
+        words = query_translate.content_words(english)
+        if words:
+            lex_query = f"{query} {' '.join(words)}"
+        if english and settings.DOCUMENT_QUERY_TRANSLATE == "dual":
+            try:
+                en_vector = embed_query(english)
+            except Exception:
+                en_vector = None
     # (변경) 후보를 넉넉히 가져와 낱말 포함 여부로 다시 정렬한 뒤 상위 limit 개를 돌려준다
     pool = max(SEARCH_POOL, limit)
     knn = {"field": "embedding", "query_vector": vector,
@@ -1194,8 +1207,22 @@ def search_uploaded(query, limit=5, document_id=None):
     hits = [{
         **hit["_source"], "score": round(hit["_score"], 4),
     } for hit in response["hits"]["hits"]]
+    if en_vector is not None:   # 번역문 임베딩 후보: 점수는 두 질의 중 높은 코사인 점수
+        en_knn = {**knn, "query_vector": en_vector}
+        found = es.search(index=DOCUMENT_INDEX, size=pool, knn=en_knn,
+                          source=["document_id", "chunk_id", "section_id", "filename",
+                                  "title", "page", "text", "source_order", "provenance", "embedding"])
+        extra = []
+        for hit in found["hits"]["hits"]:
+            source = dict(hit["_source"])
+            emb = source.pop("embedding")
+            source["score"] = max(cosine_score(vector, emb), round(hit["_score"], 4))
+            extra.append(source)
+        by_key = {(h.get("document_id"), h.get("chunk_id")): h for h in extra}
+        hits = [{**h, "score": max(h["score"], by_key.get((h.get("document_id"), h.get("chunk_id")), h)["score"])} for h in hits]
+        hits = merge_candidates(hits, extra)
     # (추가) 낱말이 든 청크도 후보에 넣는다. 재순위를 끈 경우(가중치 0)에는 이전과 같게 건너뛴다.
-    lexical = lexical_candidates_query(query, document_id) if settings.SEARCH_TERM_WEIGHT > 0 else None
+    lexical = lexical_candidates_query(lex_query, document_id) if settings.SEARCH_TERM_WEIGHT > 0 else None
     if lexical:
         found = es.search(
             index=DOCUMENT_INDEX, size=pool, query=lexical,
@@ -1205,10 +1232,11 @@ def search_uploaded(query, limit=5, document_id=None):
         extra = []
         for hit in found["hits"]["hits"]:
             source = dict(hit["_source"])
-            source["score"] = cosine_score(vector, source.pop("embedding"))
+            emb = source.pop("embedding")
+            source["score"] = max(cosine_score(vector, emb), cosine_score(en_vector, emb)) if en_vector is not None else cosine_score(vector, emb)
             extra.append(source)
         hits = merge_candidates(hits, extra)
-    ranked = rerank_by_terms(hits, query, settings.SEARCH_TERM_WEIGHT)
+    ranked = rerank_by_terms(hits, lex_query, settings.SEARCH_TERM_WEIGHT)
     if settings.DOCUMENT_RERANKER:   # (추가) 교차 인코더 재순위(기본 꺼짐, 실패하면 원래 순서)
         import reranker
         ranked = reranker.rerank(query, ranked)

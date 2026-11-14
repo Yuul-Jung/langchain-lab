@@ -97,7 +97,8 @@ $('f').addEventListener('submit',async e=>{
   const add=(t,bold)=>{const x=document.createElement('div');x.textContent=t;if(bold)x.style.fontWeight='600';box.appendChild(x)};
   add(d.enabled?(d.answered?'부품 경로로 처리됨':'부품 경로가 처리하지 않음 → 원래 흐름(일반 대화·문서)'):(d.note||'꺼져 있음'),true);
   if(d.concepts&&d.concepts.length)add('이해한 개념: '+d.concepts.join(', '));
-  if(d.parts&&d.parts.length)add('후보: '+d.parts.join(', '));
+  if(d.conditions&&d.conditions.length)add('질문의 조건: '+d.conditions.join(', ')+'  (✓ 근거 있음 · ✗ 맞지 않음 · ? 카탈로그에 없음)');
+  if(d.parts&&d.parts.length)add('후보: '+d.parts.map(id=>{const c=(d.checks||{})[id];return c?id+' ['+Object.entries(c).map(([k,v])=>k+' '+v).join(' · ')+']':id}).join(', '));
   if(d.trace&&d.trace.length){const ol=document.createElement('ol');for(const t of d.trace){const li=document.createElement('li');li.textContent=t;ol.appendChild(li)}box.appendChild(ol)}
   draw($('parts'),graphs.parts,d.nodes||[]);
 });

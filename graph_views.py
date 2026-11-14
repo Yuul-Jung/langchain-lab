@@ -55,4 +55,7 @@ def explain_parts(question: str) -> dict:
     return {"enabled": True, "answered": bool(state.get("answered")), "trace": state.get("trace", []), "nodes": nodes,
             "backend": state.get("backend"), "concepts": state.get("concepts", []),
             "parts": [p.get("lib_id") for p in state.get("parts", [])],
+            # (추가) 여러 조건 질문: 뽑은 조건과 부품별 판정(✓ 근거 있음 · ✗ 맞지 않음 · ? 카탈로그에 없음)
+            "conditions": state.get("conditions", []),
+            "checks": {p.get("lib_id"): p.get("checks", {}) for p in state.get("parts", []) if p.get("checks")},
             "mermaid": highlight(base, nodes)}

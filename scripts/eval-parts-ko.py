@@ -8,10 +8,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-import kicad_parts as kp, ontology_graph as og, parts_graph as pg, rag_search  # noqa: E402
+import kicad_parts as kp, ontology_graph as og, parts_gate, parts_graph as pg, rag_search  # noqa: E402
+import settings  # noqa: E402
 
 Q = ROOT / "data" / "eval" / "parts-ko-questions.jsonl"
 INCLUDE = True
+GATE = True
 OUT = ROOT / "data" / "eval" / "graph-results"
 
 
@@ -24,8 +26,9 @@ def run(part, items, parts, g, es, verbose):
     find_sem = lambda q, n: kp.find_parts(q, parts, n, semantic=True, embed=rag_search.embed_query, es=es)
     vecs = og.load_term_vecs(ROOT / "data" / "ontology" / "term_vecs.npz")
     sem = (lambda q: og.semantic_concepts(g, q, rag_search.embed_query, vecs, include_proposed=INCLUDE)) if vecs else None
-    graph = pg.build_parts_graph(pg.PartsDeps(find=find_sem, ontology=g, include_proposed=INCLUDE, semantic_concepts=sem, catalog=parts))
-    graph_e = pg.build_parts_graph(pg.PartsDeps(find=find_sem, ontology=g, include_proposed=INCLUDE, semantic_concepts=sem, expand=True, catalog=parts))
+    veto = (lambda q: parts_gate.veto(q, embed=rag_search.embed_query)) if GATE else None   # 서비스와 같게 학습 관문 포함(--no-gate 로 끔)
+    graph = pg.build_parts_graph(pg.PartsDeps(find=find_sem, ontology=g, include_proposed=INCLUDE, semantic_concepts=sem, catalog=parts, veto=veto))
+    graph_e = pg.build_parts_graph(pg.PartsDeps(find=find_sem, ontology=g, include_proposed=INCLUDE, semantic_concepts=sem, expand=True, catalog=parts, veto=veto))
     # D: ES·임베딩이 없을 때(낱말 검색 + 온톨로지 영어 키워드 대체)
     graph_d = pg.build_parts_graph(pg.PartsDeps(find=lambda q, n: (kp.search_parts(parts, q, n), "file"),
                                                 ontology=g, include_proposed=INCLUDE))
@@ -82,6 +85,7 @@ def main():
     ap.add_argument("--graph", default=str(ROOT / "data" / "ontology" / "graph_ko.json"))
     ap.add_argument("--approved-only", action="store_true", help="승인된 개념만 쓴다(승인 전 개념 제외)")
     ap.add_argument("--as-dev", action="store_true", help="split 이 없는 파일 전체를 dev 로 본다(이미 본 세트에만 쓴다 — holdout 은 열지 않고 기록도 안 남김)")
+    ap.add_argument("--no-gate", action="store_true", help="학습 관문(parts_gate) 없이 규칙만")
     ap.add_argument("--file", default=str(Q), help="질문 파일(split 칸이 없으면 전체를 holdout 하나로 본다)")
     args = ap.parse_args()
     qfile = Path(args.file)
@@ -90,8 +94,9 @@ def main():
         for i in items:
             i["split"] = "dev" if args.as_dev else "holdout"
     parts, g, es = kp.default_catalog(), og.load_graph(args.graph), rag_search.es_client()
-    global INCLUDE
+    global INCLUDE, GATE
     INCLUDE = not args.approved_only
+    GATE = settings.PARTS_GATE_ML and not args.no_gate
     if any(i.get("split") == "dev" for i in items):
         run("dev", items, parts, g, es, args.verbose)
     if args.holdout:

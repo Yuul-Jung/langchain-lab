@@ -30,6 +30,23 @@ class PartsGraphTest(unittest.TestCase):
     def run_graph(self, d, q):
         return pg.ask_parts(pg.build_parts_graph(d), q)
 
+    def test_learned_veto_turns_part_question_into_not_handled(self):
+        seen = []
+        d = deps(ontology=onto("approved"), veto=lambda q: seen.append(q) or True)
+        r = self.run_graph(d, "가젯 알파 부품 추천")
+        self.assertFalse(r["answered"])
+        self.assertEqual(d.calls, [])                       # 검색하지 않음
+        self.assertEqual(seen, ["가젯 알파 부품 추천"])
+        self.assertTrue(any("학습 관문" in t for t in r["trace"]))
+
+    def test_veto_is_asked_only_after_rules_accept(self):
+        seen = []
+        d = deps(ontology=onto("approved"), veto=lambda q: seen.append(q) or False)
+        self.assertTrue(self.run_graph(d, "가젯 알파 부품 추천")["answered"])
+        self.assertFalse(self.run_graph(deps(ontology=onto("approved"), veto=lambda q: seen.append(q) or False),
+                                        "오늘 점심 뭐 먹지")["answered"])
+        self.assertEqual(seen, ["가젯 알파 부품 추천"])     # 규칙이 거른 질문에는 모델을 부르지 않음
+
     def test_answers_from_search_results_without_model(self):
         d = deps(ontology=onto(), include_proposed=True)
         r = self.run_graph(d, "가젯 알파 부품 추천해줘")
