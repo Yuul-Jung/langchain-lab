@@ -177,11 +177,18 @@ class Taxonomy:
             w = word.strip().lower()
             if len(w) >= 2 and w not in _GENERIC_KO:
                 out.append((w, fid))
+        def add_phrases(text: str, fid: str):           # 띄어쓰기·슬래시가 든 이름 토막은 통째로도 낱말로 쓴다('냉각 팬', 'I/O 확장')
+            for seg in re.split(r"[·(),]+", text):
+                seg = seg.strip().lower()
+                if (" " in seg or "/" in seg) and len(seg) >= 3:
+                    out.append((seg, fid))
         for fid, f in self.funcs.items():
+            add_phrases(f["ko"], fid)
             for tok in re.split(r"[·()\s,/]+", f["ko"]):
                 add(tok, fid)
         for lib, e in self.libs.items():
             for key, r in (e.get("part_rules") or {}).items():
+                add_phrases(r.get("ko", ""), r["function"])
                 for tok in re.split(r"[·()\s,/]+", r.get("ko", "")):
                     add(tok, r["function"])
                 if len(key) >= 4:
@@ -215,6 +222,24 @@ class Taxonomy:
         if len({self.funcs[f]["domain"] for f in ranked}) > 1:
             return []
         return ranked[:limit]
+
+    def phrase_covered(self, question: str) -> bool:
+        """짧은 명사구의 모든 내용어가 분류 체계 낱말로 덮이는가(부품을 찾는 말 없이도 받는 조건).
+        4낱말·30자 이하. 분류 체계 낱말(긴 것부터)을 지우고 남은 말이 중립어(칩·IC·부품)나 조사 한 글자뿐이어야 하고, 기능을 가리키는 낱말은 하나 이상 있어야 한다."""
+        q = question.strip().lower()
+        words = re.findall(r"[가-힣a-z0-9+\-/]+", q)
+        if not words or len(words) > 4 or len(q) > 30 or not self.question_functions(question):
+            return False
+        by_word: dict[str, set[str]] = {}
+        for w, fid in self.aliases():
+            by_word.setdefault(w, set()).add(fid)
+        usable = sorted((w for w, fs in by_word.items() if len({self.funcs[f]["domain"] for f in fs}) == 1), key=len, reverse=True)
+        rest = q
+        for w in usable:
+            rx = r"(?<![a-z0-9])" + re.escape(w) + r"(?![a-z0-9])" if w.isascii() else r"(?<![가-힣a-z0-9])" + re.escape(w)
+            rest = re.sub(rx, " ", rest)
+        left = [t for t in re.findall(r"[가-힣a-z0-9+\-/]+", rest) if len(t) > 1 and t not in _GENERIC_KO and t not in ("부품", "칩", "ic")]
+        return not left
 
     def libraries_for(self, fids) -> set[str]:
         want = set(fids)

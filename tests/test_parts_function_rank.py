@@ -94,6 +94,22 @@ class GraphTest(unittest.TestCase):
         self.assertEqual([p["name"] for p in r["parts"]], ["7400", "74192"])
         self.assertIn("분류:", r["answer"])
 
+    def test_bare_phrase_needs_every_content_word_covered(self):
+        t = pt.Taxonomy(TAX)
+        self.assertTrue(t.phrase_covered("냉각 팬"))                  # 규칙의 한국어 이름 통째로
+        self.assertTrue(t.phrase_covered("카운터 칩"))                 # 칩은 중립어
+        self.assertFalse(t.phrase_covered("전기 자전거 카운터"))         # 덮이지 않는 낱말('전기', '자전거')
+        self.assertFalse(t.phrase_covered("카운터 직원 월급 얼마나 받아"))  # 4낱말을 넘음
+        self.assertFalse(t.phrase_covered("오늘 날씨"))
+        self.assertTrue(pg.function_gate("냉각 팬", t))
+        self.assertFalse(pg.function_gate("냉각 팬 소음", t))             # 소음 이 덮이지 않음
+        self.assertFalse(pg.function_gate("냉각 팬", None))               # 분류 체계가 없으면 INTENT 만
+
+    def test_bare_phrase_is_answered_only_with_the_flag(self):
+        self.assertTrue(run("냉각 팬")["answered"])
+        self.assertFalse(run("냉각 팬", rank=False)["answered"])
+        self.assertFalse(run("냉각 팬 소음")["answered"])
+
     def test_alias_rules_block_compound_and_cross_domain_words(self):
         t = pt.Taxonomy(TAX)
         self.assertEqual(t.question_functions("색카운터 칩"), [])                  # 앞에 다른 한글이 붙은 낱말

@@ -121,12 +121,15 @@ def rerank_by_library(rows: list[dict], libs: set[str]) -> list[dict]:
     return [r for r in rows if lib_of(r) in libs] + [r for r in rows if lib_of(r) not in libs]
 
 
-def function_gate(question: str) -> bool:
-    """분류 체계 이름으로 찾는 길의 관문: 설명·문서·비부품 말이 없고, 부품을 찾는 말(INTENT)이 있어야 한다.
-    개념 사전을 거치지 않는 길이라 짧은 명사구는 받지 않는다(소비자 제품·잡담에 기능 낱말이 섞여 오처리되는 것을 막는다)."""
+def function_gate(question: str, taxonomy=None) -> bool:
+    """분류 체계 이름으로 찾는 길의 관문: 설명·문서·비부품 말이 없고, 부품을 찾는 말(INTENT)이 있거나,
+    짧은 명사구의 모든 내용어가 분류 체계 낱말로 덮이면(부품을 찾는 말이 없어도) 받는다. 소비자 제품·잡담은 덮이지 않아 걸러진다."""
     if DOC_WORDS.search(question) or EXPLAIN.search(question) or NONPART.search(question):
         return False
-    return bool(INTENT.search(question.strip()))
+    q = question.strip()
+    if INTENT.search(q):
+        return True
+    return bool(taxonomy is not None and not re.search(r"[?？]|알려|말해|가르쳐", q) and taxonomy.phrase_covered(q))
 
 
 def _lib_of(p: dict) -> str:
@@ -236,12 +239,16 @@ def build_parts_graph(deps: PartsDeps):
                     "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}"]}
         ids = parts_concepts(state["question"], deps.ontology, deps.include_proposed, deps.semantic_concepts)
         concepts = [deps.ontology.nodes[c]["label"] for c in ids]
-        if not concepts and deps.function_rank and deps.taxonomy is not None and function_gate(state["question"]):
+        overridden = False
+        if ids and deps.function_rank and deps.taxonomy is not None and function_gate(state["question"], deps.taxonomy) \
+                and not og.translate_query(deps.ontology, state["question"], deps.include_proposed) and deps.taxonomy.question_functions(state["question"]):
+            ids, concepts, overridden = [], [], True     # 개념이 임베딩 추측(정확히 맞는 사전 용어 없음)뿐이고 분류 체계 낱말이 정확히 맞으면 분류 체계를 앞세운다
+        if not concepts and deps.function_rank and deps.taxonomy is not None and function_gate(state["question"], deps.taxonomy):
             fids = deps.taxonomy.question_functions(state["question"])
             if fids:
                 names = [deps.taxonomy.funcs[f]["ko"] for f in fids]
                 return {"concepts": names, "concept_ids": [], "functions": fids,
-                        "plain_base": plain_parts_request(state["question"], deps.ontology),
+                        "plain_base": overridden or plain_parts_request(state["question"], deps.ontology),
                         "trace": [f"classify: 개념 사전에는 없지만 분류 체계의 기능 이름으로 부품 질문을 찾음, 기능 {names}"]}
         if not concepts and plain_parts_request(state["question"], deps.ontology):
             return {"concepts": [NO_CONCEPT], "concept_ids": [],
