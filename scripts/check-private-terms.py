@@ -25,6 +25,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 EVAL_DIR = ROOT / "data" / "eval"
+# (추가) 지울 예정으로 옮겨 둔 평가 자료(테스트 문서 9개에서 나온 것). 지우기 전까지는 여기 낱말도 계속 대조한다
+PENDING_DELETE_EVAL = ROOT / "data" / "_pending_delete" / "test-docs-20261114" / "eval"
 MIN_CHARS = 3
 TEXT_SUFFIXES = {".py", ".md", ".html", ".json", ".txt", ".sh", ".yml", ".yaml", ".css", ".js", ".svg", ".example"}
 
@@ -34,11 +36,11 @@ def norm(text) -> str:
     return "".join(str(text).split()).lower()
 
 
-def collect_terms(eval_dir) -> set[str]:
-    """평가 자료에서 내 문서의 낱말을 모은다 (허용 목록에 적은 것은 뺀다)."""
+def collect_terms(eval_dir, extra_dirs=()) -> set[str]:
+    """평가 자료에서 내 문서의 낱말을 모은다 (허용 목록에 적은 것은 뺀다). extra_dirs 의 자료도 함께 모은다."""
     eval_dir = Path(eval_dir)
     terms: set[str] = set()
-    for path in sorted(eval_dir.glob("*.jsonl")):
+    for path in sorted(p for d in (eval_dir, *map(Path, extra_dirs)) if d.is_dir() for p in d.glob("*.jsonl")):
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip() or line.lstrip().startswith("#"):
                 continue
@@ -49,8 +51,7 @@ def collect_terms(eval_dir) -> set[str]:
             for group in item.get("answer_keys") or []:
                 terms.update(str(alt) for alt in group)
             terms.update(str(word) for word in item.get("keywords") or [])
-    for name in ("keywords.txt",):
-        path = eval_dir / name
+    for path in [d / "keywords.txt" for d in (eval_dir, *map(Path, extra_dirs))]:
         if path.exists():
             terms.update(line.strip() for line in path.read_text(encoding="utf-8").splitlines()
                          if line.strip() and not line.startswith("#"))
@@ -121,7 +122,8 @@ def main():
     if not Path(args.eval_dir).is_dir():
         print("대조할 평가 자료가 없습니다:", args.eval_dir)
         return 0
-    terms = collect_terms(args.eval_dir)
+    extra = [PENDING_DELETE_EVAL] if Path(args.eval_dir).resolve() == EVAL_DIR.resolve() else []
+    terms = collect_terms(args.eval_dir, extra)
     names = args.files or (all_files() if args.all else changed_files())
     found = 0
     checked = 0
