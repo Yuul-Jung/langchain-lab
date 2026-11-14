@@ -1172,6 +1172,13 @@ def merge_candidates(vector_hits, lexical_hits):
     return merged
 
 
+def hangul_ratio(text):
+    """글자(한글·영문) 가운데 한글의 비율. 글자가 없으면 0."""
+    ko = len(re.findall(r"[가-힣]", text))
+    en = len(re.findall(r"[A-Za-z]", text))
+    return ko / (ko + en) if ko + en else 0.0
+
+
 def search_uploaded(query, limit=5, document_id=None):
     if not query.strip() or len(query) > 2000:
         raise ValueError("검색어는 1~2000자여야 합니다.")
@@ -1179,19 +1186,7 @@ def search_uploaded(query, limit=5, document_id=None):
     if not es.indices.exists(index=DOCUMENT_INDEX):
         return []
     vector = embed_query(query)
-    # (추가) 영어 번역(설정 DOCUMENT_QUERY_TRANSLATE): 낱말 검색·재순위에 번역 내용어를 덧붙이고, dual 이면 번역문 임베딩으로도 후보를 찾는다
     lex_query, en_vector = query, None
-    if settings.DOCUMENT_QUERY_TRANSLATE in ("lexical", "dual"):
-        import query_translate
-        english = query_translate.translate(query)
-        words = query_translate.content_words(english)
-        if words:
-            lex_query = f"{query} {' '.join(words)}"
-        if english and settings.DOCUMENT_QUERY_TRANSLATE == "dual":
-            try:
-                en_vector = embed_query(english)
-            except Exception:
-                en_vector = None
     # (변경) 후보를 넉넉히 가져와 낱말 포함 여부로 다시 정렬한 뒤 상위 limit 개를 돌려준다
     pool = max(SEARCH_POOL, limit)
     knn = {"field": "embedding", "query_vector": vector,
@@ -1207,6 +1202,22 @@ def search_uploaded(query, limit=5, document_id=None):
     hits = [{
         **hit["_source"], "score": round(hit["_score"], 4),
     } for hit in response["hits"]["hits"]]
+    # (추가) 영어 번역(설정 DOCUMENT_QUERY_TRANSLATE): 낱말 검색·재순위에 번역 내용어를 덧붙이고, dual·auto 면 번역문 임베딩으로도 후보를 찾는다.
+    # auto: 원래 질문으로 찾은 상위 3개가 영어 본문(한글 비율 0.2 미만)일 때만 번역을 쓴다 — 한국어 문서 결과를 건드리지 않게(2026-11-14, 측정 전 고정)
+    mode = settings.DOCUMENT_QUERY_TRANSLATE
+    if mode == "auto":
+        mode = "dual" if hits and hangul_ratio(" ".join(h.get("text", "") for h in hits[:3])) < 0.2 else "off"
+    if mode in ("lexical", "dual"):
+        import query_translate
+        english = query_translate.translate(query)
+        words = query_translate.content_words(english)
+        if words:
+            lex_query = f"{query} {' '.join(words)}"
+        if english and mode == "dual":
+            try:
+                en_vector = embed_query(english)
+            except Exception:
+                en_vector = None
     if en_vector is not None:   # 번역문 임베딩 후보: 점수는 두 질의 중 높은 코사인 점수
         en_knn = {**knn, "query_vector": en_vector}
         found = es.search(index=DOCUMENT_INDEX, size=pool, knn=en_knn,

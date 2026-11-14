@@ -58,7 +58,7 @@ DOCUMENT_NORI = get("DOCUMENT_NORI", "false").lower() in ("1", "true", "yes")
 DOCUMENT_RERANKER = get("DOCUMENT_RERANKER", "false").lower() in ("1", "true", "yes")
 DOCUMENT_RERANKER_MODEL = get("DOCUMENT_RERANKER_MODEL", str(ROOT / "data" / "tools" / "models" / "mmarco-mMiniLMv2-L12-H384-v1"))
 DOCUMENT_RERANKER_POOL = int(get("DOCUMENT_RERANKER_POOL", "20"))
-# (추가) 한국어 질문을 영어로 번역해 영어 데이터시트 검색을 보강한다(query_translate.py): off · lexical(낱말 검색에만) · dual(번역문 임베딩도). 기본 off
+# (추가) 한국어 질문을 영어로 번역해 영어 데이터시트 검색을 보강한다(query_translate.py): off · lexical(낱말 검색에만) · dual(번역문 임베딩도) · auto(원래 검색 상위가 영어 본문일 때만 dual). 기본 off
 DOCUMENT_QUERY_TRANSLATE = get("DOCUMENT_QUERY_TRANSLATE", "off").lower()
 DOCUMENT_TRANSLATE_MODEL = get("DOCUMENT_TRANSLATE_MODEL", str(ROOT / "data" / "tools" / "models" / "opus-mt-ko-en"))
 # (추가) 접근 제어 (access_control.py). ACCESS_PASSWORD 를 비우면 이 PC 에서만 쓸 수 있다.
