@@ -50,7 +50,7 @@ def page_texts(path: Path) -> dict[int, str]:
     return out
 
 
-def candidates_from_pages(pages: dict[int, str], max_page: int = 12) -> list[dict]:
+def candidates_from_pages(pages: dict[int, str], max_page: int | None = None) -> list[dict]:
     """쪽별 텍스트 → 후보 목록 [{field, value, page, quote, rule}]. 같은 값·같은 쪽 중복은 하나로."""
     out, seen = [], set()
 
@@ -61,7 +61,7 @@ def candidates_from_pages(pages: dict[int, str], max_page: int = 12) -> list[dic
             out.append({"field": field, "value": value, "page": page, "quote": quote, "rule": rule})
 
     for page in sorted(pages):
-        if page > max_page:
+        if max_page is not None and page > max_page:
             continue
         text = pages[page]
         # 절대 최대: 'Absolute Maximum Ratings' 머리 뒤 구간의 전원 라벨

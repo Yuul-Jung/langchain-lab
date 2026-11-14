@@ -39,7 +39,8 @@ class Extract(unittest.TestCase):
         self.assertEqual(cands("Supply voltage is applied to pin 3."), [])
 
     def test_pages_after_limit_are_ignored(self):
-        self.assertEqual(de.candidates_from_pages({40: REC}), [])
+        self.assertEqual(de.candidates_from_pages({40: REC}, max_page=12), [])
+        self.assertTrue(de.candidates_from_pages({40: REC}))   # 기본은 모든 쪽
 
     def test_evidence_uses_extracted_source(self):
         # 추출값은 사람이 확인한 데이터시트 값이 아니다
