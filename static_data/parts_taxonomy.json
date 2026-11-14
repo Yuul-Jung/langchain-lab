@@ -945,11 +945,17 @@
    "also_functions": []
   },
   "74xx": {
-   "function": "logic_buffer",
+   "function": "gates",
    "status": "confirmed",
-   "source": "독립 검토 + 이름 유사도(1차)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [],
+   "mixed": true,
+   "also_functions": [
+    "logic_buffer",
+    "counters",
+    "level_shifter"
+   ]
   },
   "74xx_IEEE": {
    "function": "gates",
@@ -1069,6 +1075,7 @@
    "also_functions": [
     "antenna",
     "battery_cell",
+    "connector",
     "fuse"
    ],
    "mixed": true,
@@ -1084,6 +1091,14 @@
     "Fuse": {
      "function": "fuse",
      "ko": "퓨즈"
+    },
+    "SIM_Card": {
+     "function": "connector",
+     "ko": "카드 소켓"
+    },
+    "SD_Card": {
+     "function": "connector",
+     "ko": "카드 소켓"
     }
    }
   },
@@ -1185,9 +1200,13 @@
   "Converter_DCDC": {
    "function": "dcdc_module",
    "status": "confirmed",
-   "source": "독립 검토 + 이름 유사도(1차)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [],
+   "mixed": true,
+   "also_functions": [
+    "switching_reg"
+   ]
   },
   "Converter_DCDC_Isolated": {
    "function": "dcdc_module",
@@ -1199,9 +1218,15 @@
   "DSP_AnalogDevices": {
    "function": "dsp",
    "status": "confirmed",
-   "source": "독립 검토 + 이름 유사도(1차)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [
+    "analog"
+   ],
+   "mixed": true,
+   "also_functions": [
+    "audio_codec"
+   ]
   },
   "DSP_Freescale": {
    "function": "dsp",
@@ -1213,9 +1238,13 @@
   "DSP_Microchip_DSPIC33": {
    "function": "dsp",
    "status": "confirmed",
-   "source": "독립 검토 + 이름 유사도(1차)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [],
+   "mixed": true,
+   "also_functions": [
+    "mcu"
+   ]
   },
   "DSP_Motorola": {
    "function": "dsp",
@@ -1277,11 +1306,17 @@
   "Driver_Display": {
    "function": "display_driver",
    "status": "confirmed",
-   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": [],
-   "mixed": false,
-   "also_functions": []
+   "also_ok": [
+    "interface",
+    "opto"
+   ],
+   "mixed": true,
+   "also_functions": [
+    "touch",
+    "lcd_graphic"
+   ]
   },
   "Driver_FET": {
    "function": "gate_driver",
@@ -1430,7 +1465,7 @@
   "Interface": {
    "function": "if_controller",
    "status": "confirmed",
-   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
    "also_ok": [
     "logic",
@@ -1440,7 +1475,8 @@
     "io_expander",
     "rfid",
     "clock_buffer",
-    "uart"
+    "uart",
+    "line_transceiver"
    ],
    "mixed": true
   },
@@ -1491,9 +1527,18 @@
   "Interface_Optical": {
    "function": "ir_receiver",
    "status": "confirmed",
-   "source": "독립 검토 + 이름 유사도(1차)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [
+    "connect",
+    "opto"
+   ],
+   "mixed": true,
+   "also_functions": [
+    "light_sensor",
+    "fiber",
+    "connector"
+   ]
   },
   "Interface_Telecom": {
    "function": "telecom",
@@ -2211,11 +2256,17 @@
    "also_ok": []
   },
   "RF": {
-   "function": "rf_transceiver",
+   "function": "rf_misc",
    "status": "confirmed",
-   "source": "독립 검토 + 이름 유사도(1차)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [],
+   "mixed": true,
+   "also_functions": [
+    "rf_transceiver",
+    "rf_filter",
+    "rf_module"
+   ]
   },
   "RF_AM_FM": {
    "function": "rf_receiver",
@@ -2469,9 +2520,14 @@
   "Sensor_Proximity": {
    "function": "distance_sensor",
    "status": "confirmed",
-   "source": "독립 검토 + 이름 유사도(1차)",
+   "source": "71의 두 번째 블라인드 표본에서 드러난 혼합 + 카탈로그 확인(jung-29)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [],
+   "mixed": true,
+   "also_functions": [
+    "ir_receiver",
+    "light_sensor"
+   ]
   },
   "Sensor_Temperature": {
    "function": "temp_sensor",
@@ -2958,6 +3014,12 @@
    "date": "2026-11-15",
    "by": "jung-29 (71 결정)",
    "change": "기능마다 kind 추가(허용: ic·discrete·passive·electromech·module·mechanical·symbol·tube), vacuum_tube 를 기타 도메인으로, 외부 테크트리와 다른 배치의 이유(notes), 외부 이름 목록(external_names_not_in_catalog) 추가"
+  },
+  {
+   "date": "2026-11-15",
+   "by": "jung-29",
+   "change": "71의 두 번째 표본(새 표본, 기능 89.7%·도메인 94.2%·종류 96.9%)에서 드러난 혼합 반영: RF(대표 rf_misc)·Converter_DCDC·Interface_Optical·Sensor_Proximity·74xx(대표 gates)·Driver_Display·DSP 2종을 mixed 로, Interface 에 line_transceiver 추가, Auxiliary_Items 의 SIM/SD 카드를 커넥터 규칙으로. 이 수정은 그 표본을 본 뒤에 한 것이라 세 번째 표본에서 다시 잰다.",
+   "measured_before": "기능 대표 200/223 (89.7%), 도메인 210/223 (94.2%), 종류 216/223 (96.9%)"
   }
  ],
  "notes": [
@@ -3010,6 +3072,31 @@
    "library": "Display_Graphic",
    "decision": "표시기는 모듈(종류 module). IC 가 아님.",
    "reason": "외부 테크트리와 다르게 두는 이유(2026-11-15, 71·jung-29 합의)"
+  },
+  {
+   "library": "DSP_Microchip_DSPIC33",
+   "decision": "dsPIC33 는 디지털 신호 컨트롤러(DSC)라 DSP 와 MCU 의 중간. 대표는 dsp, MCU 와 섞임으로 표시.",
+   "reason": "두 번째 블라인드 표본 후속(2026-11-15, jung-29)"
+  },
+  {
+   "library": "DSP_AnalogDevices",
+   "decision": "SigmaDSP 오디오 프로세서가 많아 오디오 처리와 섞임으로 표시.",
+   "reason": "두 번째 블라인드 표본 후속(2026-11-15, jung-29)"
+  },
+  {
+   "library": "Filter",
+   "decision": "EMI 억제 커패시터도 일부 들어 있음(커패시터로 볼 수 있음). 이름 규칙이 분명하지 않아 대표 기능만 두고 메모.",
+   "reason": "두 번째 블라인드 표본 후속(2026-11-15, jung-29)"
+  },
+  {
+   "library": "Jumper",
+   "decision": "SolderJumper 계열은 납땜 점퍼 기호로 구매 부품이 아님에 가깝다. 이름 규칙은 두지 않고 메모만.",
+   "reason": "두 번째 블라인드 표본 후속(2026-11-15, jung-29)"
+  },
+  {
+   "library": "74xx",
+   "decision": "카운터·플립플롭·디코더 143개, 게이트 85개, 버퍼·드라이버 67개가 섞여 있어 대표는 게이트(가장 대표적인 74 계열 소자), 나머지는 also_functions.",
+   "reason": "두 번째 블라인드 표본 후속(2026-11-15, jung-29)"
   }
  ],
  "external_names_not_in_catalog": [
