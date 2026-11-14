@@ -4,7 +4,7 @@
 - 시드(static_data/ontology_ko_en_seed.json)는 바꾸지 않는다. 같은 개념이 여러 줄이면 마지막 줄이 이긴다
   (ontology_graph.apply_approvals 와 같은 규칙). 그래서 사람의 클릭은 앞선 위임 승인을 덮어쓴다.
 - 기록: approver = "human: 사용자 (승인 화면)", 날짜·시각, 이유(선택), 직전 줄의 위험 용어 표시를 이어받는다.
-- 화면은 저장만 한다. 그래프 반영은 scripts/build-ontology-ko.py 실행 뒤 서버 재시작(화면에 '반영 대기' 수 표시).
+- 화면은 저장만 한다. 그래프 반영은 scripts/build-ontology-ko.py 실행(서버는 graph_ko.json 이 바뀌면 다음 질문 때 다시 읽음, 재시작 불필요). 화면에 '반영 대기' 수 표시.
 - 근거 파일(검토 시트·독립 검토)이 없어도 화면은 시드만으로 동작한다. 접근 제어는 app.py 의 access_guard 가 맡는다.
 """
 from __future__ import annotations
