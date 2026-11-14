@@ -74,18 +74,23 @@ def main() -> int:
     neg = [i for i in items if i["kind"] == "not_parts"]
     handled = hits = 0
     fails = []
+    grp = {}     # 질문 번호 첫 글자별(예: b·c 명사구, w 부품 찾는 말 있음): [개수, 처리, 적중]
     for it in pos:
         r = pg.ask_parts(graph, it["question"])
         if r["answered"]:
             handled += 1
             ok = any(is_gold(p, it, text_of) for p in r["parts"][:5])
             hits += ok
+            g_ = grp.setdefault(it["id"][0], [0, 0, 0]); g_[1] += 1; g_[2] += ok
             if not ok:
                 fails.append((it["id"], it["question"], [function_of(p.get("library", ""), p.get("name", "")) for p in r["parts"][:5]]))
         else:
             fails.append((it["id"], it["question"], "처리 못함"))
+    for it in pos:
+        grp.setdefault(it["id"][0], [0, 0, 0])[0] += 1
     wrong = [i["id"] for i in neg if pg.ask_parts(graph, i["question"])["answered"]]
     print(f"부품 질문 {len(pos)}개: 처리 {handled}/{len(pos)} · 처리한 것 중 상위 5 적중 {hits}/{handled} · 전체 적중 {hits}/{len(pos)}")
+    print("유형별(첫 글자: 개수/처리/적중):", {k: tuple(v) for k, v in sorted(grp.items())})
     print(f"부품 아닌 질문 {len(neg)}개 중 잘못 처리 {len(wrong)}", wrong)
     if args.verbose:
         for f in fails:
