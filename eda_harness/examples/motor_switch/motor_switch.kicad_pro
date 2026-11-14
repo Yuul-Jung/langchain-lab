@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "filename": "motor_switch.kicad_pro",
+    "version": 1
+  },
+  "schematic": {
+    "legacy_lib_dir": "",
+    "legacy_lib_list": []
+  },
+  "sheets": [
+    [
+      "c5117a01-1ffc-51b1-a1f6-21361b1fd6bd",
+      "Root"
+    ]
+  ],
+  "boards": [],
+  "text_variables": {},
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "project": "blocked_question",
+  "overall": "BLOCKED",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "BLOCKED",
+      "input_sha256": "26202c36998dd4a5c277881c0efc2f6e852d3e90dba49bb531fce22c3647ba29",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "INTENT_QUESTION",
+          "severity": "ERROR",
+          "message": "Q1: 레귤레이터 출력 전압이 명시되지 않았습니다. 몇 V가 필요합니까?",
+          "where": ""
+        }
+      ],
+      "metrics": {
+        "blocking_questions": 1
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "text": "레귤레이터 출력 전압이 명시되지 않았습니다. 몇 V가 필요합니까?",
+      "blocking": true
+    }
+  ],
+  "assumptions": [],
+  "files": {
+    "intent": "intent.json"
+  }
+}

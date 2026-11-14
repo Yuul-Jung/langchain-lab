@@ -1,0 +1,40 @@
+{
+  "schema": "eda.intent/1",
+  "source": {
+    "kind": "text",
+    "text": "USB-C 5V 입력에서 3.3V LDO로 300mA 출력, 전원 LED 초록색"
+  },
+  "power_input": {
+    "connector": "usb_c",
+    "voltage_v": 5.0
+  },
+  "blocks": [
+    {
+      "id": "B1",
+      "type": "ldo",
+      "params": {
+        "rail_in": "INPUT",
+        "vout_v": 3.3,
+        "iout_max_a": 0.3
+      }
+    },
+    {
+      "id": "B2",
+      "type": "led_indicator",
+      "params": {
+        "rail": "B1",
+        "color": "green",
+        "current_a": 0.002
+      }
+    }
+  ],
+  "assumptions": [
+    {
+      "field": "blocks.led_indicator.current_a",
+      "value": 0.002,
+      "reason": "표시용 LED 전류 2mA 가정"
+    }
+  ],
+  "questions": [],
+  "unparsed": []
+}

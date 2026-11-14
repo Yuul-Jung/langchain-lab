@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1188" viewBox="0 0 1680 1188" font-family="monospace">
+<rect width="1680" height="1188" fill="#fffdf6"/>
+<text x="101.6" y="121.9" font-size="22" fill="#555">P0: power_input</text>
+<text x="467.4" y="121.9" font-size="22" fill="#555">PWR: power_flags</text>
+<text x="833.1" y="121.9" font-size="22" fill="#555">B1: blinker_555</text>
+<rect x="177.8" y="218.4" width="10.2" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="162.6" y1="223.5" x2="177.8" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="162.6" y1="233.7" x2="177.8" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="177.8" y="203.2" font-size="13" fill="#00666b">J1</text>
+<text x="177.8" y="213.4" font-size="13" fill="#00666b">PWR_IN</text>
+<rect x="337.3" y="220.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="208.3" x2="345.4" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="238.8" x2="345.4" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="360.7" y="213.4" font-size="13" fill="#00666b">C1</text>
+<text x="360.7" y="233.7" font-size="13" fill="#00666b">10u/16V</text>
+<polyline points="548.6,223.5 548.6,218.4 544.6,215.9 548.6,213.4 552.7,215.9 548.6,218.4" fill="none" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="548.6" y1="223.5" x2="548.6" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="558.8" y="228.6" font-size="13" fill="#00666b">PWR_FLAG</text>
+<polyline points="711.2,223.5 711.2,218.4 707.1,215.9 711.2,213.4 715.3,215.9 711.2,218.4" fill="none" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="711.2" y1="223.5" x2="711.2" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="721.4" y="228.6" font-size="13" fill="#00666b">PWR_FLAG</text>
+<rect x="883.9" y="182.9" width="61.0" height="81.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="914.4" y1="274.3" x2="914.4" y2="264.2" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="914.4" y="261.8" font-size="10" fill="#1b4f8a" text-anchor="middle" dominant-baseline="middle">GND</text>
+<line x1="873.8" y1="213.4" x2="883.9" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="886.3" y="213.4" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">TRIG</text>
+<line x1="955.0" y1="213.4" x2="944.9" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="942.5" y="213.4" font-size="10" fill="#1b4f8a" text-anchor="end" dominant-baseline="middle">OUT</text>
+<line x1="873.8" y1="193.0" x2="883.9" y2="193.0" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="886.3" y="193.0" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">RST</text>
+<line x1="873.8" y1="254.0" x2="883.9" y2="254.0" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="886.3" y="254.0" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">CONT</text>
+<line x1="873.8" y1="233.7" x2="883.9" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="886.3" y="233.7" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">THRES</text>
+<line x1="955.0" y1="233.7" x2="944.9" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="942.5" y="233.7" font-size="10" fill="#1b4f8a" text-anchor="end" dominant-baseline="middle">DISCH</text>
+<line x1="914.4" y1="172.7" x2="914.4" y2="182.9" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="914.4" y="185.3" font-size="10" fill="#1b4f8a" text-anchor="middle" dominant-baseline="middle">VCC</text>
+<text x="950.0" y="177.8" font-size="13" fill="#00666b">U1</text>
+<text x="950.0" y="269.2" font-size="13" fill="#00666b">NE555P</text>
+<rect x="1072.9" y="213.4" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1077.0" y1="208.3" x2="1077.0" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1077.0" y1="238.8" x2="1077.0" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1087.1" y="208.3" font-size="13" fill="#00666b">R1</text>
+<text x="1087.1" y="238.8" font-size="13" fill="#00666b">1k</text>
+<rect x="1235.5" y="213.4" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="208.3" x2="1239.5" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="238.8" x2="1239.5" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1249.7" y="208.3" font-size="13" fill="#00666b">R2</text>
+<text x="1249.7" y="238.8" font-size="13" fill="#00666b">36k</text>
+<rect x="1394.0" y="220.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1402.1" y1="208.3" x2="1402.1" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1402.1" y1="238.8" x2="1402.1" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1417.3" y="213.4" font-size="13" fill="#00666b">C2</text>
+<text x="1417.3" y="233.7" font-size="13" fill="#00666b">10u/16V</text>
+<rect x="906.3" y="423.7" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="914.4" y1="411.5" x2="914.4" y2="416.6" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="914.4" y1="442.0" x2="914.4" y2="436.9" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="929.6" y="416.6" font-size="13" fill="#00666b">C3</text>
+<text x="929.6" y="436.9" font-size="13" fill="#00666b">10n/16V</text>
+<rect x="1068.8" y="423.7" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1077.0" y1="411.5" x2="1077.0" y2="416.6" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1077.0" y1="442.0" x2="1077.0" y2="436.9" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1092.2" y="416.6" font-size="13" fill="#00666b">C4</text>
+<text x="1092.2" y="436.9" font-size="13" fill="#00666b">100n/16V</text>
+<rect x="1235.5" y="416.6" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="411.5" x2="1239.5" y2="416.6" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="442.0" x2="1239.5" y2="436.9" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1249.7" y="411.5" font-size="13" fill="#00666b">R3</text>
+<text x="1249.7" y="442.0" font-size="13" fill="#00666b">1.1k</text>
+<rect x="1391.9" y="421.6" width="20.3" height="10.2" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1386.8" y1="426.7" x2="1391.9" y2="426.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1417.3" y1="426.7" x2="1412.2" y2="426.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1391.9" y="406.4" font-size="13" fill="#00666b">D1</text>
+<text x="1391.9" y="416.6" font-size="13" fill="#00666b">LED_red</text>
+<line x1="162.6" y1="223.5" x2="152.4" y2="223.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="233.7" x2="152.4" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="208.3" x2="345.4" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="238.8" x2="345.4" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="548.6" y1="223.5" x2="548.6" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="711.2" y1="223.5" x2="711.2" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="914.4" y1="274.3" x2="914.4" y2="284.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="873.8" y1="213.4" x2="863.6" y2="213.4" stroke="#007a00" stroke-width="1.5"/>
+<line x1="955.0" y1="213.4" x2="965.2" y2="213.4" stroke="#007a00" stroke-width="1.5"/>
+<line x1="873.8" y1="193.0" x2="863.6" y2="193.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="873.8" y1="254.0" x2="863.6" y2="254.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="873.8" y1="233.7" x2="863.6" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="955.0" y1="233.7" x2="965.2" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="914.4" y1="172.7" x2="914.4" y2="162.6" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1077.0" y1="208.3" x2="1077.0" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1077.0" y1="238.8" x2="1077.0" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="208.3" x2="1239.5" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="238.8" x2="1239.5" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1402.1" y1="208.3" x2="1402.1" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1402.1" y1="238.8" x2="1402.1" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="914.4" y1="411.5" x2="914.4" y2="401.3" stroke="#007a00" stroke-width="1.5"/>
+<line x1="914.4" y1="442.0" x2="914.4" y2="452.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1077.0" y1="411.5" x2="1077.0" y2="401.3" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1077.0" y1="442.0" x2="1077.0" y2="452.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="411.5" x2="1239.5" y2="401.3" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="442.0" x2="1239.5" y2="452.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1386.8" y1="426.7" x2="1376.7" y2="426.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1417.3" y1="426.7" x2="1427.5" y2="426.7" stroke="#007a00" stroke-width="1.5"/>
+<text x="152.4" y="223.5" font-size="11" fill="#222" text-anchor="end">+9V</text>
+<text x="152.4" y="233.7" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="345.4" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 345.4 198.1)">+9V</text>
+<text x="345.4" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 345.4 248.9)">GND</text>
+<text x="548.6" y="233.7" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 548.6 233.7)">+9V</text>
+<text x="711.2" y="233.7" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 711.2 233.7)">GND</text>
+<text x="914.4" y="284.5" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 914.4 284.5)">GND</text>
+<text x="863.6" y="213.4" font-size="11" fill="#222" text-anchor="end">N_B1_TRIG</text>
+<text x="965.2" y="213.4" font-size="11" fill="#222" text-anchor="start">N_B1_OUT</text>
+<text x="863.6" y="193.0" font-size="11" fill="#222" text-anchor="end">+9V</text>
+<text x="863.6" y="254.0" font-size="11" fill="#222" text-anchor="end">N_B1_CV</text>
+<text x="863.6" y="233.7" font-size="11" fill="#222" text-anchor="end">N_B1_TRIG</text>
+<text x="965.2" y="233.7" font-size="11" fill="#222" text-anchor="start">N_B1_DIS</text>
+<text x="914.4" y="162.6" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 914.4 162.6)">+9V</text>
+<text x="1077.0" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1077.0 198.1)">+9V</text>
+<text x="1077.0" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1077.0 248.9)">N_B1_DIS</text>
+<text x="1239.5" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1239.5 198.1)">N_B1_DIS</text>
+<text x="1239.5" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1239.5 248.9)">N_B1_TRIG</text>
+<text x="1402.1" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1402.1 198.1)">N_B1_TRIG</text>
+<text x="1402.1" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1402.1 248.9)">GND</text>
+<text x="914.4" y="401.3" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 914.4 401.3)">N_B1_CV</text>
+<text x="914.4" y="452.1" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 914.4 452.1)">GND</text>
+<text x="1077.0" y="401.3" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1077.0 401.3)">+9V</text>
+<text x="1077.0" y="452.1" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1077.0 452.1)">GND</text>
+<text x="1239.5" y="401.3" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1239.5 401.3)">N_B1_OUT</text>
+<text x="1239.5" y="452.1" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1239.5 452.1)">N_B1_LED_A</text>
+<text x="1376.7" y="426.7" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="1427.5" y="426.7" font-size="11" fill="#222" text-anchor="start">N_B1_LED_A</text>
+</svg>

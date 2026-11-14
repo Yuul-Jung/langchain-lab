@@ -1,0 +1,9 @@
+refs,qty,part,value,footprint
+J1,1,Conn_01x02,PWR_IN,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical
+C1,1,C,10u/25V,Capacitor_SMD:C_0805_2012Metric
+J2,1,Conn_01x02,LOAD,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical
+Q1,1,AO3400A,AO3400A,Package_TO_SOT_SMD:SOT-23
+R1,1,R,100,Resistor_SMD:R_0603_1608Metric
+R2,1,R,100k,Resistor_SMD:R_0603_1608Metric
+J3,1,Conn_01x02,CTRL,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical
+D1,1,SS34,SS34,Diode_SMD:D_SMA

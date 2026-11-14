@@ -1,0 +1,10 @@
+refs,qty,part,value,footprint
+J1,1,Conn_01x02,PWR_IN,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical
+C1 C2,2,C,10u/16V,Capacitor_SMD:C_0805_2012Metric
+U1,1,NE555P,NE555P,Package_DIP:DIP-8_W7.62mm
+R1,1,R,1k,Resistor_SMD:R_0603_1608Metric
+R2,1,R,36k,Resistor_SMD:R_0603_1608Metric
+C3,1,C,10n/16V,Capacitor_SMD:C_0603_1608Metric
+C4,1,C,100n/16V,Capacitor_SMD:C_0603_1608Metric
+R3,1,R,1.1k,Resistor_SMD:R_0603_1608Metric
+D1,1,LED,LED_red,LED_SMD:LED_0603_1608Metric

@@ -1,0 +1,105 @@
+{
+  "schema": "eda.intent/1",
+  "source": {
+    "kind": "manual"
+  },
+  "power_input": {
+    "connector": "dc",
+    "voltage_v": 5.0
+  },
+  "blocks": [
+    {
+      "id": "B1",
+      "type": "logic_module",
+      "params": {
+        "pins": [
+          {
+            "number": "1",
+            "role": "vcc",
+            "label": "VCC",
+            "rail": "INPUT",
+            "min_v": 4.5,
+            "max_v": 5.5,
+            "current_a": 0.02
+          },
+          {
+            "number": "2",
+            "role": "in",
+            "label": "TRIG",
+            "host_voh_min_v": 2.9,
+            "host_voh_max_v": 3.3,
+            "vih_min_v": 2.0,
+            "vmax_v": 5.5
+          },
+          {
+            "number": "3",
+            "role": "out",
+            "label": "ECHO",
+            "voh_v": 5.0,
+            "voh_tol": 0.1,
+            "iout_max_a": 0.001,
+            "sink_vih_min_v": 2.0,
+            "sink_vmax_v": 3.45,
+            "signal_max_hz": 10000.0,
+            "sink_cin_f": 8e-12
+          },
+          {
+            "number": "4",
+            "role": "gnd",
+            "label": "GND"
+          }
+        ],
+        "pin_order_verified": false
+      }
+    }
+  ],
+  "assumptions": [
+    {
+      "field": "모듈 핀 TRIG.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사양서에 입력 인식 전압 없음(10µs 'TTL pulse'만 명시) — TTL 일반값 2.0V 가정 (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG.vmax_v",
+      "value": 5.5,
+      "reason": "[derived] 입력 한계 사양 없음 — 모듈 전원 최대 5.5V 이내로 가정 (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] DS181 Table 8 LVCMOS33 VOH 최소 = VCCO−0.400, VCCO 3.3V (Basys3 JA) (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] VCCO 3.3V (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.voh_v",
+      "value": 5.0,
+      "reason": "[derived] 사양서에 Echo High 전압 수치는 없고 '5V TTL' 표기와 동작전압 4.5~5.5V(기준 5V)에서 유도 (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.voh_tol",
+      "value": 0.1,
+      "reason": "[derived] 동작전압 4.5~5.5V를 5V 기준 ±10%로 환산 (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.iout_max_a",
+      "value": 0.001,
+      "reason": "[assumed] Echo 출력 구동 전류 사양 없음 — 1mA 보수적 가정 (미검증)"
+    },
+    {
+      "field": "signal_max_hz",
+      "value": 10000,
+      "reason": "사용자/설계자가 지정한 최대 신호 속도"
+    },
+    {
+      "field": "모듈.pin_order_verified",
+      "value": false,
+      "reason": "핀 순서를 실제 기판에서 확인하지 못함 (미검증)"
+    }
+  ],
+  "questions": [],
+  "unparsed": []
+}

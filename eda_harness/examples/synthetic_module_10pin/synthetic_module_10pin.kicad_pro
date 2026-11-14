@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "filename": "synthetic_module_10pin.kicad_pro",
+    "version": 1
+  },
+  "schematic": {
+    "legacy_lib_dir": "",
+    "legacy_lib_list": []
+  },
+  "sheets": [
+    [
+      "54a39482-7bc1-54ca-bcd4-66fc06af6402",
+      "Root"
+    ]
+  ],
+  "boards": [],
+  "text_variables": {},
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  }
+}

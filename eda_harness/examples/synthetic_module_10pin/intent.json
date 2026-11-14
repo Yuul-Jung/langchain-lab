@@ -1,0 +1,219 @@
+{
+  "schema": "eda.intent/1",
+  "source": {
+    "kind": "manual"
+  },
+  "power_input": {
+    "connector": "dc",
+    "voltage_v": 5.0
+  },
+  "blocks": [
+    {
+      "id": "B1",
+      "type": "ldo",
+      "params": {
+        "rail_in": "INPUT",
+        "vout_v": 3.3,
+        "iout_max_a": 0.3
+      }
+    },
+    {
+      "id": "B2",
+      "type": "logic_module",
+      "params": {
+        "pins": [
+          {
+            "number": "1",
+            "role": "gnd",
+            "label": "G1"
+          },
+          {
+            "number": "2",
+            "role": "in",
+            "label": "SDA_IN",
+            "host_voh_min_v": 2.9,
+            "host_voh_max_v": 3.3,
+            "vih_min_v": 2.0,
+            "vmax_v": 5.5
+          },
+          {
+            "number": "3",
+            "role": "vcc",
+            "label": "V5",
+            "rail": "INPUT",
+            "min_v": 4.5,
+            "max_v": 5.5,
+            "current_a": 0.02
+          },
+          {
+            "number": "4",
+            "role": "out",
+            "label": "OUT_A",
+            "voh_v": 5.0,
+            "voh_tol": 0.1,
+            "iout_max_a": 0.001,
+            "sink_vih_min_v": 2.0,
+            "sink_vmax_v": 3.45,
+            "signal_max_hz": 10000.0,
+            "sink_cin_f": 8e-12
+          },
+          {
+            "number": "5",
+            "role": "in",
+            "label": "CLK",
+            "host_voh_min_v": 2.9,
+            "host_voh_max_v": 3.3,
+            "vih_min_v": 2.0,
+            "vmax_v": 5.5
+          },
+          {
+            "number": "6",
+            "role": "vcc",
+            "label": "V33",
+            "rail": "B1",
+            "min_v": 3.0,
+            "max_v": 3.6,
+            "current_a": 0.005
+          },
+          {
+            "number": "7",
+            "role": "out",
+            "label": "OUT_B",
+            "voh_v": 5.0,
+            "voh_tol": 0.1,
+            "iout_max_a": 0.001,
+            "sink_vih_min_v": 2.0,
+            "sink_vmax_v": 3.45,
+            "signal_max_hz": 10000.0,
+            "sink_cin_f": 8e-12
+          },
+          {
+            "number": "8",
+            "role": "gnd",
+            "label": "G2"
+          },
+          {
+            "number": "9",
+            "role": "nc",
+            "label": "RSV",
+            "reason": "제조사 예약 핀"
+          },
+          {
+            "number": "10",
+            "role": "in",
+            "label": "EN",
+            "host_voh_min_v": 2.9,
+            "host_voh_max_v": 3.3,
+            "vih_min_v": 2.0,
+            "vmax_v": 3.6
+          }
+        ],
+        "pin_order_verified": true
+      }
+    }
+  ],
+  "assumptions": [
+    {
+      "field": "모듈 핀 SDA_IN.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 SDA_IN.vmax_v",
+      "value": 5.5,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 SDA_IN를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 SDA_IN를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_A.voh_v",
+      "value": 5.0,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_A.voh_tol",
+      "value": 0.1,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_A.iout_max_a",
+      "value": 0.001,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "signal_max_hz",
+      "value": 10000,
+      "reason": "사용자/설계자가 지정한 최대 신호 속도 [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK.vmax_v",
+      "value": 5.5,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_B.voh_v",
+      "value": 5.0,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_B.voh_tol",
+      "value": 0.1,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_B.iout_max_a",
+      "value": 0.001,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "signal_max_hz",
+      "value": 10000,
+      "reason": "사용자/설계자가 지정한 최대 신호 속도 [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN.vmax_v",
+      "value": 3.6,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    }
+  ],
+  "questions": [],
+  "unparsed": []
+}

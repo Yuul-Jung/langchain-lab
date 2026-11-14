@@ -1,0 +1,338 @@
+{
+  "project": "synthetic_module_10pin",
+  "overall": "PASS",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "PASS",
+      "input_sha256": "77003ac5e73a46c4b9283fca83d901a8848c6a4c4bda5b6b3c0e0c753561c361",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "blocks": 2,
+        "assumptions": 20
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "PASS",
+      "input_sha256": "77003ac5e73a46c4b9283fca83d901a8848c6a4c4bda5b6b3c0e0c753561c361",
+      "output_sha256": "d1f3367d35ff840f9431b8bf1d6831bb4a760e113d6d9e903d56b8ec0c00245e",
+      "findings": [],
+      "metrics": {
+        "components": 15,
+        "nets": 10
+      }
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "PASS",
+      "input_sha256": "d1f3367d35ff840f9431b8bf1d6831bb4a760e113d6d9e903d56b8ec0c00245e",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "PASS",
+      "input_sha256": "d1f3367d35ff840f9431b8bf1d6831bb4a760e113d6d9e903d56b8ec0c00245e",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "PART_DATA_UNVERIFIED",
+          "severity": "WARN",
+          "message": "U1 (AMS1117-3.3) 파라미터가 시드값 — 구매 부품 데이터시트로 검증 필요",
+          "where": "/components/B1.U"
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 SDA_IN.vih_min_v=2.0: [assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 SDA_IN.vmax_v=5.5: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 SDA_IN를 구동하는 호스트 출력.voh_min_v=2.9: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 SDA_IN를 구동하는 호스트 출력.voh_max_v=3.3: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.OUT_A.voh_v=5.0: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.OUT_A.voh_tol=0.1: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.OUT_A.iout_max_a=0.001: [assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "signal_max_hz=10000: 사용자/설계자가 지정한 최대 신호 속도 [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 CLK.vih_min_v=2.0: [assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 CLK.vmax_v=5.5: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 CLK를 구동하는 호스트 출력.voh_min_v=2.9: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 CLK를 구동하는 호스트 출력.voh_max_v=3.3: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.OUT_B.voh_v=5.0: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.OUT_B.voh_tol=0.1: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.OUT_B.iout_max_a=0.001: [assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "signal_max_hz=10000: 사용자/설계자가 지정한 최대 신호 속도 [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 EN.vih_min_v=2.0: [assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 EN.vmax_v=3.6: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 EN를 구동하는 호스트 출력.voh_min_v=2.9: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 EN를 구동하는 호스트 출력.voh_max_v=3.3: [derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]",
+          "where": ""
+        }
+      ],
+      "metrics": {
+        "errors": 0,
+        "warnings": 1
+      }
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "PASS",
+      "input_sha256": "d1f3367d35ff840f9431b8bf1d6831bb4a760e113d6d9e903d56b8ec0c00245e",
+      "output_sha256": "c80244fe3d95fa60887ec978f7da60ccd29692fc14e0bc6559513b1b3a7ebf2e",
+      "findings": [],
+      "metrics": {
+        "bytes": 56955
+      }
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "PASS",
+      "input_sha256": "c80244fe3d95fa60887ec978f7da60ccd29692fc14e0bc6559513b1b3a7ebf2e",
+      "output_sha256": "d1f3367d35ff840f9431b8bf1d6831bb4a760e113d6d9e903d56b8ec0c00245e",
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "PASS",
+      "input_sha256": "c80244fe3d95fa60887ec978f7da60ccd29692fc14e0bc6559513b1b3a7ebf2e",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "PASS",
+      "input_sha256": "d1f3367d35ff840f9431b8bf1d6831bb4a760e113d6d9e903d56b8ec0c00245e",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "symbols_checked": 7,
+        "footprints_checked": 7
+      }
+    }
+  ],
+  "questions": [],
+  "assumptions": [
+    {
+      "field": "모듈 핀 SDA_IN.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 SDA_IN.vmax_v",
+      "value": 5.5,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 SDA_IN를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 SDA_IN를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_A.voh_v",
+      "value": 5.0,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_A.voh_tol",
+      "value": 0.1,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_A.iout_max_a",
+      "value": 0.001,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "signal_max_hz",
+      "value": 10000,
+      "reason": "사용자/설계자가 지정한 최대 신호 속도 [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK.vmax_v",
+      "value": 5.5,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 CLK를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_B.voh_v",
+      "value": 5.0,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_B.voh_tol",
+      "value": 0.1,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "보내는 쪽.OUT_B.iout_max_a",
+      "value": 0.001,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "signal_max_hz",
+      "value": 10000,
+      "reason": "사용자/설계자가 지정한 최대 신호 속도 [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN.vmax_v",
+      "value": 3.6,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    },
+    {
+      "field": "모듈 핀 EN를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] 사유 미기재 (미검증) [합성 시험 사양, 실제 부품 아님]"
+    }
+  ],
+  "files": {
+    "intent": "intent.json",
+    "design_ir": "design_ir.json",
+    "schematic": "synthetic_module_10pin.kicad_sch",
+    "project": "synthetic_module_10pin.kicad_pro",
+    "symbols": "eda.kicad_sym",
+    "sym_lib_table": "sym-lib-table",
+    "bom": "bom.csv",
+    "preview": "preview.svg"
+  }
+}

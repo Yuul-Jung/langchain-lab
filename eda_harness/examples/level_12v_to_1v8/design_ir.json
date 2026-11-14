@@ -1,0 +1,211 @@
+{
+  "schema": "eda.ir/1",
+  "project": {
+    "name": "level_12v_to_1v8"
+  },
+  "intent_sha256": "046b45a07acdbbb69418566b3452d4c739169c4a704b767aca10c040e374803f",
+  "assumptions": [
+    {
+      "field": "blocks.B1.params",
+      "value": "예시 값",
+      "reason": "일반성 확인용 가상 사양 — 실제 부품 아님(미검증)"
+    }
+  ],
+  "nets": {
+    "GND": {
+      "kind": "ground",
+      "voltage_v": 0.0,
+      "external_supply": true,
+      "current_a": 0.0
+    },
+    "+5V": {
+      "kind": "power",
+      "voltage_v": 5.0,
+      "external_supply": true,
+      "current_a": 0.0
+    },
+    "N_B1_IN": {
+      "kind": "signal",
+      "voltage_v": 12.0,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_OUT": {
+      "kind": "signal",
+      "voltage_v": 1.5652,
+      "external_supply": false,
+      "current_a": 0.0
+    }
+  },
+  "components": {
+    "P0.J_IN": {
+      "id": "P0.J_IN",
+      "ref": "J1",
+      "part": "Conn_01x02",
+      "value": "PWR_IN",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "P0",
+      "role": "J_IN",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "+5V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "P0.C_BULK": {
+      "id": "P0.C_BULK",
+      "ref": "C1",
+      "part": "C",
+      "value": "10u/10V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "P0",
+      "role": "C_BULK",
+      "params": {
+        "c_f": 1e-05,
+        "voltage_rating_v": 10
+      },
+      "pins": {
+        "1": "+5V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_5V": {
+      "id": "PWR.FLAG_5V",
+      "ref": "#FLG01",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_5V",
+      "params": {},
+      "pins": {
+        "1": "+5V"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_GND": {
+      "id": "PWR.FLAG_GND",
+      "ref": "#FLG02",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_GND",
+      "params": {},
+      "pins": {
+        "1": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.J_SRC": {
+      "id": "B1.J_SRC",
+      "ref": "J2",
+      "part": "Conn_01x02",
+      "value": "SRC",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "B1",
+      "role": "J_SRC",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "N_B1_IN",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.R_TOP": {
+      "id": "B1.R_TOP",
+      "ref": "R1",
+      "part": "R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_TOP",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 10000.0,
+        "purpose": "분압 위쪽"
+      },
+      "pins": {
+        "1": "N_B1_IN",
+        "2": "N_B1_OUT"
+      },
+      "no_connect": {}
+    },
+    "B1.R_BOT": {
+      "id": "B1.R_BOT",
+      "ref": "R2",
+      "part": "R",
+      "value": "1.5k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_BOT",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 1500.0,
+        "purpose": "분압 아래쪽"
+      },
+      "pins": {
+        "1": "N_B1_OUT",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.J_SNK": {
+      "id": "B1.J_SNK",
+      "ref": "J3",
+      "part": "Conn_01x02",
+      "value": "SNK",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "B1",
+      "role": "J_SNK",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "N_B1_OUT",
+        "2": "GND"
+      },
+      "no_connect": {}
+    }
+  },
+  "blocks": {
+    "B1": {
+      "type": "level_shift_divider",
+      "params": {
+        "src_high_v": 12.0,
+        "src_tol": 0.05,
+        "src_iout_max_a": 0.005,
+        "sink_vih_min_v": 1.17,
+        "sink_vmax_v": 1.98,
+        "signal_max_hz": 100000.0,
+        "sink_cin_f": 5e-12
+      },
+      "design": {
+        "r_top_ohm": 10000.0,
+        "r_bot_ohm": 1500.0,
+        "vout_worst_min_v": 1.4613,
+        "vout_worst_max_v": 1.6723,
+        "why": "최악 조건에서 [High 인식 전압, 받는 쪽 최대 전압] 창 안에 들고 창 중앙에 가장 가까운 E24 쌍. 단방향·저속 신호 전용"
+      }
+    },
+    "P0": {
+      "type": "power_input",
+      "params": {
+        "connector": "dc",
+        "voltage_v": 5.0
+      },
+      "design": {
+        "connector": "Conn_01x02",
+        "i_total_a": 0.0
+      }
+    }
+  }
+}

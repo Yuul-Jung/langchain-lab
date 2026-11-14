@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "filename": "level_5v_to_3v3.kicad_pro",
+    "version": 1
+  },
+  "schematic": {
+    "legacy_lib_dir": "",
+    "legacy_lib_list": []
+  },
+  "sheets": [
+    [
+      "d5179706-8a7e-50d0-af9f-f591d13aab08",
+      "Root"
+    ]
+  ],
+  "boards": [],
+  "text_variables": {},
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  }
+}

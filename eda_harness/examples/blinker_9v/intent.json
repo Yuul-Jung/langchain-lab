@@ -1,0 +1,32 @@
+{
+  "schema": "eda.intent/1",
+  "source": {
+    "kind": "text",
+    "text": "9V 입력 LED 2Hz 깜빡이"
+  },
+  "power_input": {
+    "connector": "dc",
+    "voltage_v": 9.0
+  },
+  "blocks": [
+    {
+      "id": "B1",
+      "type": "blinker_555",
+      "params": {
+        "rail": "INPUT",
+        "freq_hz": 2.0,
+        "color": "red",
+        "led_current_a": 0.005
+      }
+    }
+  ],
+  "assumptions": [
+    {
+      "field": "led.color",
+      "value": "red",
+      "reason": "LED 색상 미지정 — 빨강(Vf≈2.0V)으로 가정"
+    }
+  ],
+  "questions": [],
+  "unparsed": []
+}

@@ -1,0 +1,313 @@
+{
+  "schema": "eda.ir/1",
+  "project": {
+    "name": "hcsr04_module_basys3_ja1"
+  },
+  "intent_sha256": "01b2322beee2489ea661a5938abcad89cfe25f426275f21b899ae9e2f7a21241",
+  "assumptions": [
+    {
+      "field": "모듈 핀 TRIG.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사양서에 입력 인식 전압 없음(10µs 'TTL pulse'만 명시) — TTL 일반값 2.0V 가정 (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG.vmax_v",
+      "value": 5.5,
+      "reason": "[derived] 입력 한계 사양 없음 — 모듈 전원 최대 5.5V 이내로 가정 (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] DS181 Table 8 LVCMOS33 VOH 최소 = VCCO−0.400, VCCO 3.3V (Basys3 JA) (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] VCCO 3.3V (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.voh_v",
+      "value": 5.0,
+      "reason": "[derived] 사양서에 Echo High 전압 수치는 없고 '5V TTL' 표기와 동작전압 4.5~5.5V(기준 5V)에서 유도 (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.voh_tol",
+      "value": 0.1,
+      "reason": "[derived] 동작전압 4.5~5.5V를 5V 기준 ±10%로 환산 (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.iout_max_a",
+      "value": 0.001,
+      "reason": "[assumed] Echo 출력 구동 전류 사양 없음 — 1mA 보수적 가정 (미검증)"
+    },
+    {
+      "field": "signal_max_hz",
+      "value": 10000,
+      "reason": "사용자/설계자가 지정한 최대 신호 속도"
+    },
+    {
+      "field": "모듈.pin_order_verified",
+      "value": false,
+      "reason": "핀 순서를 실제 기판에서 확인하지 못함 (미검증)"
+    }
+  ],
+  "nets": {
+    "GND": {
+      "kind": "ground",
+      "voltage_v": 0.0,
+      "external_supply": true,
+      "current_a": 0.0
+    },
+    "+5V": {
+      "kind": "power",
+      "voltage_v": 5.0,
+      "external_supply": true,
+      "current_a": 0.02
+    },
+    "N_B1_S1": {
+      "kind": "signal",
+      "voltage_v": 3.3,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_S2_MOD": {
+      "kind": "signal",
+      "voltage_v": 5.0,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_S2_HOST": {
+      "kind": "signal",
+      "voltage_v": 2.7215,
+      "external_supply": false,
+      "current_a": 0.0
+    }
+  },
+  "components": {
+    "P0.J_IN": {
+      "id": "P0.J_IN",
+      "ref": "J1",
+      "part": "Conn_01x02",
+      "value": "PWR_IN",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "P0",
+      "role": "J_IN",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "+5V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "P0.C_BULK": {
+      "id": "P0.C_BULK",
+      "ref": "C1",
+      "part": "C",
+      "value": "10u/10V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "P0",
+      "role": "C_BULK",
+      "params": {
+        "c_f": 1e-05,
+        "voltage_rating_v": 10
+      },
+      "pins": {
+        "1": "+5V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_5V": {
+      "id": "PWR.FLAG_5V",
+      "ref": "#FLG01",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_5V",
+      "params": {},
+      "pins": {
+        "1": "+5V"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_GND": {
+      "id": "PWR.FLAG_GND",
+      "ref": "#FLG02",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_GND",
+      "params": {},
+      "pins": {
+        "1": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.J_MOD": {
+      "id": "B1.J_MOD",
+      "ref": "J2",
+      "part": "Conn_01x04",
+      "value": "MODULE",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical",
+      "block": "B1",
+      "role": "J_MOD",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "+5V",
+        "4": "GND",
+        "2": "N_B1_S1",
+        "3": "N_B1_S2_MOD"
+      },
+      "no_connect": {}
+    },
+    "B1.J_HOST": {
+      "id": "B1.J_HOST",
+      "ref": "J3",
+      "part": "Conn_01x03",
+      "value": "HOST",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical",
+      "block": "B1",
+      "role": "J_HOST",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "N_B1_S1",
+        "2": "N_B1_S2_HOST",
+        "3": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.R_TOP_2": {
+      "id": "B1.R_TOP_2",
+      "ref": "R1",
+      "part": "R",
+      "value": "3.6k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_TOP_2",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 3600.0,
+        "purpose": "신호 2 분압 위쪽"
+      },
+      "pins": {
+        "1": "N_B1_S2_MOD",
+        "2": "N_B1_S2_HOST"
+      },
+      "no_connect": {}
+    },
+    "B1.R_BOT_2": {
+      "id": "B1.R_BOT_2",
+      "ref": "R2",
+      "part": "R",
+      "value": "4.3k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_BOT_2",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 4300.0,
+        "purpose": "신호 2 분압 아래쪽"
+      },
+      "pins": {
+        "1": "N_B1_S2_HOST",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.C_DEC_1": {
+      "id": "B1.C_DEC_1",
+      "ref": "C2",
+      "part": "C",
+      "value": "100n/10V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "block": "B1",
+      "role": "C_DEC_1",
+      "params": {
+        "c_f": 1e-07,
+        "voltage_rating_v": 10
+      },
+      "pins": {
+        "1": "+5V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    }
+  },
+  "blocks": {
+    "B1": {
+      "type": "logic_module",
+      "params": {
+        "pins": [
+          {
+            "number": "1",
+            "role": "vcc",
+            "label": "VCC",
+            "rail": "INPUT",
+            "min_v": 4.5,
+            "max_v": 5.5,
+            "current_a": 0.02
+          },
+          {
+            "number": "2",
+            "role": "in",
+            "label": "TRIG",
+            "host_voh_min_v": 2.9,
+            "host_voh_max_v": 3.3,
+            "vih_min_v": 2.0,
+            "vmax_v": 5.5
+          },
+          {
+            "number": "3",
+            "role": "out",
+            "label": "ECHO",
+            "voh_v": 5.0,
+            "voh_tol": 0.1,
+            "iout_max_a": 0.001,
+            "sink_vih_min_v": 2.0,
+            "sink_vmax_v": 3.45,
+            "signal_max_hz": 10000.0,
+            "sink_cin_f": 8e-12
+          },
+          {
+            "number": "4",
+            "role": "gnd",
+            "label": "GND"
+          }
+        ],
+        "pin_order_verified": false
+      },
+      "design": {
+        "dividers": {
+          "S2": {
+            "r_top_ohm": 3600.0,
+            "r_bot_ohm": 4300.0,
+            "vout_worst_min_v": 2.427,
+            "vout_worst_max_v": 3.0209
+          }
+        },
+        "why": "핀 역할별로 연결: vcc 범위 확인·디커플링, in 직결 전압 호환 확인, out 최악 조건 분압 탐색. 100nF 디커플링은 설계 관례(데이터시트 요구 아님)"
+      }
+    },
+    "P0": {
+      "type": "power_input",
+      "params": {
+        "connector": "dc",
+        "voltage_v": 5.0
+      },
+      "design": {
+        "connector": "Conn_01x02",
+        "i_total_a": 0.02
+      }
+    }
+  }
+}

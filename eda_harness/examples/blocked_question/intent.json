@@ -1,0 +1,21 @@
+{
+  "schema": "eda.intent/1",
+  "source": {
+    "kind": "text",
+    "text": "5V 입력 LDO"
+  },
+  "power_input": {
+    "connector": "dc",
+    "voltage_v": 5.0
+  },
+  "blocks": [],
+  "assumptions": [],
+  "questions": [
+    {
+      "id": "Q1",
+      "text": "레귤레이터 출력 전압이 명시되지 않았습니다. 몇 V가 필요합니까?",
+      "blocking": true
+    }
+  ],
+  "unparsed": []
+}

@@ -1,0 +1,7 @@
+refs,qty,part,value,footprint
+J1,1,Conn_01x02,PWR_IN,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical
+C1,1,C,10u/10V,Capacitor_SMD:C_0805_2012Metric
+J2,1,Conn_01x02,SRC,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical
+R1,1,R,3.6k,Resistor_SMD:R_0603_1608Metric
+R2,1,R,4.3k,Resistor_SMD:R_0603_1608Metric
+J3,1,Conn_01x02,SNK,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical

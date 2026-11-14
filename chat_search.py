@@ -28,6 +28,9 @@ def from_uploaded(hit: dict) -> dict:
         "filename": hit.get("filename"),
         "title": hit.get("title"),
         "page": hit.get("page"),
+        # 자동 모드의 처리 방식 판단에 쓰는 신호 (질문 낱말이 본문에 실제로 있었는가)
+        "matched_terms": hit.get("matched_terms"),
+        "vector_score": hit.get("vector_score"),
     }
 
 

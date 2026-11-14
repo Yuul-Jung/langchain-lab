@@ -1,0 +1,135 @@
+{
+  "project": "usb_ldo_led",
+  "overall": "PASS",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "PASS",
+      "input_sha256": "b46dcf451df511db869107609691531b61d637cb81cabd8f202a06ecb0d43dc6",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "blocks": 2,
+        "assumptions": 1
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "PASS",
+      "input_sha256": "b46dcf451df511db869107609691531b61d637cb81cabd8f202a06ecb0d43dc6",
+      "output_sha256": "5deb112ac262d34438dd6c69459b53ab80004484640aa3169f501ce1f02f5759",
+      "findings": [],
+      "metrics": {
+        "components": 11,
+        "nets": 6
+      }
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "PASS",
+      "input_sha256": "5deb112ac262d34438dd6c69459b53ab80004484640aa3169f501ce1f02f5759",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "PASS",
+      "input_sha256": "5deb112ac262d34438dd6c69459b53ab80004484640aa3169f501ce1f02f5759",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "PART_DATA_UNVERIFIED",
+          "severity": "WARN",
+          "message": "J1 (USB_C_Power_6P) 파라미터가 시드값 — 구매 부품 데이터시트로 검증 필요",
+          "where": "/components/P0.J_IN"
+        },
+        {
+          "code": "PART_DATA_UNVERIFIED",
+          "severity": "WARN",
+          "message": "U1 (AMS1117-3.3) 파라미터가 시드값 — 구매 부품 데이터시트로 검증 필요",
+          "where": "/components/B1.U"
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "blocks.led_indicator.current_a=0.002: 표시용 LED 전류 2mA 가정",
+          "where": ""
+        }
+      ],
+      "metrics": {
+        "errors": 0,
+        "warnings": 2
+      }
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "PASS",
+      "input_sha256": "5deb112ac262d34438dd6c69459b53ab80004484640aa3169f501ce1f02f5759",
+      "output_sha256": "b25200c4a3e04d75bbf05ebaa722a4feff51b3e51a75c001f139717a6930979a",
+      "findings": [],
+      "metrics": {
+        "bytes": 40585
+      }
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "PASS",
+      "input_sha256": "b25200c4a3e04d75bbf05ebaa722a4feff51b3e51a75c001f139717a6930979a",
+      "output_sha256": "5deb112ac262d34438dd6c69459b53ab80004484640aa3169f501ce1f02f5759",
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "PASS",
+      "input_sha256": "b25200c4a3e04d75bbf05ebaa722a4feff51b3e51a75c001f139717a6930979a",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "PASS",
+      "input_sha256": "5deb112ac262d34438dd6c69459b53ab80004484640aa3169f501ce1f02f5759",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "symbols_checked": 6,
+        "footprints_checked": 5
+      }
+    }
+  ],
+  "questions": [],
+  "assumptions": [
+    {
+      "field": "blocks.led_indicator.current_a",
+      "value": 0.002,
+      "reason": "표시용 LED 전류 2mA 가정"
+    }
+  ],
+  "files": {
+    "intent": "intent.json",
+    "design_ir": "design_ir.json",
+    "schematic": "usb_ldo_led.kicad_sch",
+    "project": "usb_ldo_led.kicad_pro",
+    "symbols": "eda.kicad_sym",
+    "sym_lib_table": "sym-lib-table",
+    "bom": "bom.csv",
+    "preview": "preview.svg"
+  }
+}

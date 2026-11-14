@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1188" viewBox="0 0 1680 1188" font-family="monospace">
+<rect width="1680" height="1188" fill="#fffdf6"/>
+<text x="101.6" y="121.9" font-size="22" fill="#555">P0: power_input</text>
+<text x="467.4" y="121.9" font-size="22" fill="#555">PWR: power_flags</text>
+<text x="833.1" y="121.9" font-size="22" fill="#555">B1: lowside_switch</text>
+<rect x="177.8" y="218.4" width="10.2" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="162.6" y1="223.5" x2="177.8" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="162.6" y1="233.7" x2="177.8" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="177.8" y="203.2" font-size="13" fill="#00666b">J1</text>
+<text x="177.8" y="213.4" font-size="13" fill="#00666b">PWR_IN</text>
+<rect x="337.3" y="220.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="208.3" x2="345.4" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="238.8" x2="345.4" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="360.7" y="213.4" font-size="13" fill="#00666b">C1</text>
+<text x="360.7" y="233.7" font-size="13" fill="#00666b">10u/25V</text>
+<polyline points="548.6,223.5 548.6,218.4 544.6,215.9 548.6,213.4 552.7,215.9 548.6,218.4" fill="none" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="548.6" y1="223.5" x2="548.6" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="558.8" y="228.6" font-size="13" fill="#00666b">PWR_FLAG</text>
+<polyline points="711.2,223.5 711.2,218.4 707.1,215.9 711.2,213.4 715.3,215.9 711.2,218.4" fill="none" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="711.2" y1="223.5" x2="711.2" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="721.4" y="228.6" font-size="13" fill="#00666b">PWR_FLAG</text>
+<rect x="909.3" y="218.4" width="10.2" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="894.1" y1="223.5" x2="909.3" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="894.1" y1="233.7" x2="909.3" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="909.3" y="203.2" font-size="13" fill="#00666b">J2</text>
+<text x="909.3" y="213.4" font-size="13" fill="#00666b">LOAD</text>
+<rect x="1066.8" y="213.4" width="25.4" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1056.6" y1="223.5" x2="1066.8" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1069.2" y="223.5" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">G</text>
+<line x1="1087.1" y1="203.2" x2="1087.1" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1087.1" y="215.8" font-size="10" fill="#1b4f8a" text-anchor="middle" dominant-baseline="middle">D</text>
+<line x1="1087.1" y1="243.8" x2="1087.1" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1087.1" y="231.3" font-size="10" fill="#1b4f8a" text-anchor="middle" dominant-baseline="middle">S</text>
+<text x="1097.3" y="208.3" font-size="13" fill="#00666b">Q1</text>
+<text x="1097.3" y="238.8" font-size="13" fill="#00666b">AO3400A</text>
+<rect x="1235.5" y="213.4" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="208.3" x2="1239.5" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="238.8" x2="1239.5" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1249.7" y="208.3" font-size="13" fill="#00666b">R1</text>
+<text x="1249.7" y="238.8" font-size="13" fill="#00666b">100</text>
+<rect x="1398.0" y="213.4" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1402.1" y1="208.3" x2="1402.1" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1402.1" y1="238.8" x2="1402.1" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1412.2" y="208.3" font-size="13" fill="#00666b">R2</text>
+<text x="1412.2" y="238.8" font-size="13" fill="#00666b">100k</text>
+<rect x="909.3" y="421.6" width="10.2" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="894.1" y1="426.7" x2="909.3" y2="426.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="894.1" y1="436.9" x2="909.3" y2="436.9" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="909.3" y="406.4" font-size="13" fill="#00666b">J3</text>
+<text x="909.3" y="416.6" font-size="13" fill="#00666b">CTRL</text>
+<rect x="1066.8" y="421.6" width="20.3" height="10.2" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1061.7" y1="426.7" x2="1066.8" y2="426.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1092.2" y1="426.7" x2="1087.1" y2="426.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1066.8" y="406.4" font-size="13" fill="#00666b">D1</text>
+<text x="1066.8" y="416.6" font-size="13" fill="#00666b">SS34</text>
+<line x1="162.6" y1="223.5" x2="152.4" y2="223.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="233.7" x2="152.4" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="208.3" x2="345.4" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="238.8" x2="345.4" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="548.6" y1="223.5" x2="548.6" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="711.2" y1="223.5" x2="711.2" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="894.1" y1="223.5" x2="883.9" y2="223.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="894.1" y1="233.7" x2="883.9" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1056.6" y1="223.5" x2="1046.5" y2="223.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1087.1" y1="203.2" x2="1087.1" y2="193.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1087.1" y1="243.8" x2="1087.1" y2="254.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="208.3" x2="1239.5" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="238.8" x2="1239.5" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1402.1" y1="208.3" x2="1402.1" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1402.1" y1="238.8" x2="1402.1" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="894.1" y1="426.7" x2="883.9" y2="426.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="894.1" y1="436.9" x2="883.9" y2="436.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1061.7" y1="426.7" x2="1051.6" y2="426.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1092.2" y1="426.7" x2="1102.4" y2="426.7" stroke="#007a00" stroke-width="1.5"/>
+<text x="152.4" y="223.5" font-size="11" fill="#222" text-anchor="end">+12V</text>
+<text x="152.4" y="233.7" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="345.4" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 345.4 198.1)">+12V</text>
+<text x="345.4" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 345.4 248.9)">GND</text>
+<text x="548.6" y="233.7" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 548.6 233.7)">+12V</text>
+<text x="711.2" y="233.7" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 711.2 233.7)">GND</text>
+<text x="883.9" y="223.5" font-size="11" fill="#222" text-anchor="end">+12V</text>
+<text x="883.9" y="233.7" font-size="11" fill="#222" text-anchor="end">N_B1_DRAIN</text>
+<text x="1046.5" y="223.5" font-size="11" fill="#222" text-anchor="end">N_B1_GATE</text>
+<text x="1087.1" y="193.0" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1087.1 193.0)">N_B1_DRAIN</text>
+<text x="1087.1" y="254.0" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1087.1 254.0)">GND</text>
+<text x="1239.5" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1239.5 198.1)">N_B1_CTRL</text>
+<text x="1239.5" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1239.5 248.9)">N_B1_GATE</text>
+<text x="1402.1" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1402.1 198.1)">N_B1_GATE</text>
+<text x="1402.1" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1402.1 248.9)">GND</text>
+<text x="883.9" y="426.7" font-size="11" fill="#222" text-anchor="end">N_B1_CTRL</text>
+<text x="883.9" y="436.9" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="1051.6" y="426.7" font-size="11" fill="#222" text-anchor="end">+12V</text>
+<text x="1102.4" y="426.7" font-size="11" fill="#222" text-anchor="start">N_B1_DRAIN</text>
+</svg>

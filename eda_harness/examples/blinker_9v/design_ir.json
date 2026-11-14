@@ -1,0 +1,316 @@
+{
+  "schema": "eda.ir/1",
+  "project": {
+    "name": "blinker_9v"
+  },
+  "intent_sha256": "b31b2539fa7fe78c043400ea2998f56dfd89a8173fd0f430dd52dca851e0db90",
+  "assumptions": [
+    {
+      "field": "led.color",
+      "value": "red",
+      "reason": "LED 색상 미지정 — 빨강(Vf≈2.0V)으로 가정"
+    }
+  ],
+  "nets": {
+    "GND": {
+      "kind": "ground",
+      "voltage_v": 0.0,
+      "external_supply": true,
+      "current_a": 0.0
+    },
+    "+9V": {
+      "kind": "power",
+      "voltage_v": 9.0,
+      "external_supply": true,
+      "current_a": 0.014818
+    },
+    "N_B1_DIS": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_TRIG": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_CV": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_OUT": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_LED_A": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    }
+  },
+  "components": {
+    "P0.J_IN": {
+      "id": "P0.J_IN",
+      "ref": "J1",
+      "part": "Conn_01x02",
+      "value": "PWR_IN",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "P0",
+      "role": "J_IN",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "+9V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "P0.C_BULK": {
+      "id": "P0.C_BULK",
+      "ref": "C1",
+      "part": "C",
+      "value": "10u/16V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "P0",
+      "role": "C_BULK",
+      "params": {
+        "c_f": 1e-05,
+        "voltage_rating_v": 16
+      },
+      "pins": {
+        "1": "+9V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_9V": {
+      "id": "PWR.FLAG_9V",
+      "ref": "#FLG01",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_9V",
+      "params": {},
+      "pins": {
+        "1": "+9V"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_GND": {
+      "id": "PWR.FLAG_GND",
+      "ref": "#FLG02",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_GND",
+      "params": {},
+      "pins": {
+        "1": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.U": {
+      "id": "B1.U",
+      "ref": "U1",
+      "part": "NE555P",
+      "value": "NE555P",
+      "footprint": "Package_DIP:DIP-8_W7.62mm",
+      "block": "B1",
+      "role": "U",
+      "params": {
+        "vcc_min_v": 4.5,
+        "vcc_max_v": 16.0,
+        "iout_max_a": 0.2,
+        "icc_a": 0.01
+      },
+      "pins": {
+        "8": "+9V",
+        "4": "+9V",
+        "1": "GND",
+        "7": "N_B1_DIS",
+        "2": "N_B1_TRIG",
+        "6": "N_B1_TRIG",
+        "5": "N_B1_CV",
+        "3": "N_B1_OUT"
+      },
+      "no_connect": {}
+    },
+    "B1.R_A": {
+      "id": "B1.R_A",
+      "ref": "R1",
+      "part": "R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_A",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 1000.0,
+        "purpose": "타이밍 Ra"
+      },
+      "pins": {
+        "1": "+9V",
+        "2": "N_B1_DIS"
+      },
+      "no_connect": {}
+    },
+    "B1.R_B": {
+      "id": "B1.R_B",
+      "ref": "R2",
+      "part": "R",
+      "value": "36k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_B",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 36000.0,
+        "purpose": "타이밍 Rb"
+      },
+      "pins": {
+        "1": "N_B1_DIS",
+        "2": "N_B1_TRIG"
+      },
+      "no_connect": {}
+    },
+    "B1.C_T": {
+      "id": "B1.C_T",
+      "ref": "C2",
+      "part": "C",
+      "value": "10u/16V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "B1",
+      "role": "C_T",
+      "params": {
+        "c_f": 1e-05,
+        "voltage_rating_v": 16
+      },
+      "pins": {
+        "1": "N_B1_TRIG",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.C_CV": {
+      "id": "B1.C_CV",
+      "ref": "C3",
+      "part": "C",
+      "value": "10n/16V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "block": "B1",
+      "role": "C_CV",
+      "params": {
+        "c_f": 1e-08,
+        "voltage_rating_v": 16
+      },
+      "pins": {
+        "1": "N_B1_CV",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.C_DEC": {
+      "id": "B1.C_DEC",
+      "ref": "C4",
+      "part": "C",
+      "value": "100n/16V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "block": "B1",
+      "role": "C_DEC",
+      "params": {
+        "c_f": 1e-07,
+        "voltage_rating_v": 16
+      },
+      "pins": {
+        "1": "+9V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.R_LED": {
+      "id": "B1.R_LED",
+      "ref": "R3",
+      "part": "R",
+      "value": "1.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_LED",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 1100.0,
+        "purpose": "LED 전류 제한"
+      },
+      "pins": {
+        "1": "N_B1_OUT",
+        "2": "N_B1_LED_A"
+      },
+      "no_connect": {}
+    },
+    "B1.LED": {
+      "id": "B1.LED",
+      "ref": "D1",
+      "part": "LED",
+      "value": "LED_red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "block": "B1",
+      "role": "LED",
+      "params": {
+        "if_max_a": 0.02,
+        "vf_v": 2.0,
+        "color": "red"
+      },
+      "pins": {
+        "2": "N_B1_LED_A",
+        "1": "GND"
+      },
+      "no_connect": {}
+    }
+  },
+  "blocks": {
+    "B1": {
+      "type": "blinker_555",
+      "params": {
+        "rail": "INPUT",
+        "freq_hz": 2.0,
+        "color": "red",
+        "led_current_a": 0.005
+      },
+      "design": {
+        "ra_ohm": 1000.0,
+        "rb_ohm": 36000.0,
+        "ct_f": 1e-05,
+        "f_target_hz": 2.0,
+        "f_actual_hz": 1.972603,
+        "f_error": 0.013699,
+        "voh_v": 7.3,
+        "i_led_a": 0.004818,
+        "p_r_led_w": 0.025536,
+        "why": "f = 1.44 / ((Ra + 2Rb)·C), C는 Rb가 1k~1M에 들도록 큰 값부터 선택"
+      }
+    },
+    "P0": {
+      "type": "power_input",
+      "params": {
+        "connector": "dc",
+        "voltage_v": 9.0
+      },
+      "design": {
+        "connector": "Conn_01x02",
+        "i_total_a": 0.014818
+      }
+    }
+  }
+}

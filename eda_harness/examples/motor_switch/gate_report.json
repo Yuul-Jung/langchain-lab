@@ -1,0 +1,123 @@
+{
+  "project": "motor_switch",
+  "overall": "PASS",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "PASS",
+      "input_sha256": "ef7e3a4906dffdd1b25e1088f299bd456526b8ea7a75780cec46bd58c1bb0c43",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "blocks": 1,
+        "assumptions": 0
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "PASS",
+      "input_sha256": "ef7e3a4906dffdd1b25e1088f299bd456526b8ea7a75780cec46bd58c1bb0c43",
+      "output_sha256": "810428911b4afccae0ecdfc332d4cf254457afe16c31beae679f053d38f33da0",
+      "findings": [],
+      "metrics": {
+        "components": 10,
+        "nets": 5
+      }
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "PASS",
+      "input_sha256": "810428911b4afccae0ecdfc332d4cf254457afe16c31beae679f053d38f33da0",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "PASS",
+      "input_sha256": "810428911b4afccae0ecdfc332d4cf254457afe16c31beae679f053d38f33da0",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "PART_DATA_UNVERIFIED",
+          "severity": "WARN",
+          "message": "Q1 (AO3400A) 파라미터가 시드값 — 구매 부품 데이터시트로 검증 필요",
+          "where": "/components/B1.Q"
+        },
+        {
+          "code": "PART_DATA_UNVERIFIED",
+          "severity": "WARN",
+          "message": "D1 (SS34) 파라미터가 시드값 — 구매 부품 데이터시트로 검증 필요",
+          "where": "/components/B1.D_FLY"
+        }
+      ],
+      "metrics": {
+        "errors": 0,
+        "warnings": 2
+      }
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "PASS",
+      "input_sha256": "810428911b4afccae0ecdfc332d4cf254457afe16c31beae679f053d38f33da0",
+      "output_sha256": "f62e8cbfa1d1fddd0c997421bf6e7b51250ebef37795d1f593cabea8d0d36803",
+      "findings": [],
+      "metrics": {
+        "bytes": 34171
+      }
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "PASS",
+      "input_sha256": "f62e8cbfa1d1fddd0c997421bf6e7b51250ebef37795d1f593cabea8d0d36803",
+      "output_sha256": "810428911b4afccae0ecdfc332d4cf254457afe16c31beae679f053d38f33da0",
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "PASS",
+      "input_sha256": "f62e8cbfa1d1fddd0c997421bf6e7b51250ebef37795d1f593cabea8d0d36803",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "PASS",
+      "input_sha256": "810428911b4afccae0ecdfc332d4cf254457afe16c31beae679f053d38f33da0",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "symbols_checked": 6,
+        "footprints_checked": 5
+      }
+    }
+  ],
+  "questions": [],
+  "assumptions": [],
+  "files": {
+    "intent": "intent.json",
+    "design_ir": "design_ir.json",
+    "schematic": "motor_switch.kicad_sch",
+    "project": "motor_switch.kicad_pro",
+    "symbols": "eda.kicad_sym",
+    "sym_lib_table": "sym-lib-table",
+    "bom": "bom.csv",
+    "preview": "preview.svg"
+  }
+}

@@ -20,7 +20,7 @@ form{display:flex;gap:9px}textarea{flex:1;min-width:0;resize:none}footer small{d
 </style></head><body><main>
 <header><h1>LangChain Lab</h1><small>FastAPI · LM Studio · Elasticsearch (로컬 통합 서비스)</small>
 <div class="toolbar"><label for="mode">응답 모드</label>
-<select id="mode"><option value="chat">일반 채팅</option><option value="rag">RAG 문서 검색</option></select>
+<select id="mode"><option value="auto" selected>자동 (질문마다 판단)</option><option value="rag">문서만</option><option value="chat">일반만</option></select>
 <label for="provider">모델</label><select id="provider"><option value="">기본 모델</option></select>
 <a href="/documents" style="display:inline-block;padding:10px 14px;border-radius:9px;background:#34445d;color:white;text-decoration:none;font-size:15px">문서 업로드·관리</a>
 <button id="check" class="secondary" type="button">연결 상태</button>
@@ -72,9 +72,12 @@ $("form").addEventListener("submit",async e=>{
   const data=await r.json();if(!r.ok)throw Error(data.detail||"API 오류");
   result.textContent=data.answer||"응답 없음";
   history=[...messages,{role:"assistant",content:data.answer||""}];
-  if(mode==="rag"&&data.sources?.length){
+  // (추가) 어떤 방식으로 처리했는지 한 줄로 보여 준다. 자동 판단이 틀렸다면 "문서만"·"일반만"으로 고정해서 쓴다
+  const ROUTE={documents:"문서 근거로 답함",library:"부품 라이브러리(KiCad 공식 심볼) 값으로 답함",general:"일반 대화로 답함 — 올려 둔 문서를 근거로 쓰지 않았습니다"};
+  if(data.route){append("sources","처리 방식: "+(ROUTE[data.route]||data.route)+(data.route_note?"\n"+data.route_note:"")+(data.route==="documents"&&data.route_strength==="weak"?"\n문서와의 관련이 약합니다. 문서와 무관한 질문이면 위의 응답 모드를 '일반만'으로 바꿔 보세요.":""))}
+  if(data.sources?.length){
    // (변경) 문서명·쪽 번호 표시, 긴 근거는 앞 300자만
-   const text=data.sources.map((s,i)=>{const where=(s.filename||s.title||"문서")+(s.page?" · p."+s.page:"");const body=s.snippet||(s.text.length>300?s.text.slice(0,300)+"…":s.text);return "["+(i+1)+"] "+where+" · 점수 "+s.score+"\n"+body;}).join("\n\n");
+   const text=data.sources.map((s,i)=>{const where=(s.filename||s.title||"문서")+(s.page?" · p."+s.page:"");const body=s.snippet||(s.text.length>300?s.text.slice(0,300)+"…":s.text);return "[자료 "+(i+1)+"] "+where+" · 점수 "+s.score+"\n"+body;}).join("\n\n");
    append("sources","검색 근거\n"+text);
   }
  }catch(err){result.textContent="오류: "+err.message}

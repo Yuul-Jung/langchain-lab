@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "filename": "blinker_9v.kicad_pro",
+    "version": 1
+  },
+  "schematic": {
+    "legacy_lib_dir": "",
+    "legacy_lib_list": []
+  },
+  "sheets": [
+    [
+      "43508ac0-3814-56ca-a4cc-86656a33c084",
+      "Root"
+    ]
+  ],
+  "boards": [],
+  "text_variables": {},
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  }
+}

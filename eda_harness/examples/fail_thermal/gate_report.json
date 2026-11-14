@@ -1,0 +1,138 @@
+{
+  "project": "fail_thermal",
+  "overall": "FAIL",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "PASS",
+      "input_sha256": "cab87bbc9ae981361a7ac256d100e9944cd072e82e9849ad2b58b3b4ad889454",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "blocks": 2,
+        "assumptions": 2
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "PASS",
+      "input_sha256": "cab87bbc9ae981361a7ac256d100e9944cd072e82e9849ad2b58b3b4ad889454",
+      "output_sha256": "fef0cc7e0ab3e337dbfaa5009bf778ba26ffa9679c7f61a03700b27f4ffcd430",
+      "findings": [],
+      "metrics": {
+        "components": 9,
+        "nets": 4
+      }
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "PASS",
+      "input_sha256": "fef0cc7e0ab3e337dbfaa5009bf778ba26ffa9679c7f61a03700b27f4ffcd430",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "FAIL",
+      "input_sha256": "fef0cc7e0ab3e337dbfaa5009bf778ba26ffa9679c7f61a03700b27f4ffcd430",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "LDO_THERMAL",
+          "severity": "ERROR",
+          "message": "U1: 손실 2.61W > 허용 0.94W (Ta=40°C, θja=90.0) — 출력 전류를 줄이거나 벅 컨버터가 필요",
+          "where": "/blocks/B1"
+        },
+        {
+          "code": "LED_HEADROOM",
+          "severity": "ERROR",
+          "message": "D1: 전류제한 여유 0.30V < 0.5V — Vf 편차로 밝기/전류가 크게 변함",
+          "where": "/blocks/B2"
+        },
+        {
+          "code": "PART_DATA_UNVERIFIED",
+          "severity": "WARN",
+          "message": "U1 (AMS1117-3.3) 파라미터가 시드값 — 구매 부품 데이터시트로 검증 필요",
+          "where": "/components/B1.U"
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "blocks.ldo.iout_max_a=0.3: 출력 전류 미지정 — 300mA로 가정",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "blocks.led_indicator.current_a=0.002: 표시용 LED 전류 2mA 가정",
+          "where": ""
+        }
+      ],
+      "metrics": {
+        "errors": 2,
+        "warnings": 1
+      }
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "NOT_RUN",
+      "input_sha256": null,
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {}
+    }
+  ],
+  "questions": [],
+  "assumptions": [
+    {
+      "field": "blocks.ldo.iout_max_a",
+      "value": 0.3,
+      "reason": "출력 전류 미지정 — 300mA로 가정"
+    },
+    {
+      "field": "blocks.led_indicator.current_a",
+      "value": 0.002,
+      "reason": "표시용 LED 전류 2mA 가정"
+    }
+  ],
+  "files": {
+    "intent": "intent.json",
+    "design_ir": "design_ir.json"
+  }
+}

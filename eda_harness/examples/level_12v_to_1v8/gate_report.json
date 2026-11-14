@@ -1,0 +1,123 @@
+{
+  "project": "level_12v_to_1v8",
+  "overall": "PASS",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "PASS",
+      "input_sha256": "046b45a07acdbbb69418566b3452d4c739169c4a704b767aca10c040e374803f",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "blocks": 1,
+        "assumptions": 1
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "PASS",
+      "input_sha256": "046b45a07acdbbb69418566b3452d4c739169c4a704b767aca10c040e374803f",
+      "output_sha256": "ff665afe0515794d91f8705f95bcc71d56e4d2e7fbdbc63ccee26bda41bbc115",
+      "findings": [],
+      "metrics": {
+        "components": 8,
+        "nets": 4
+      }
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "PASS",
+      "input_sha256": "ff665afe0515794d91f8705f95bcc71d56e4d2e7fbdbc63ccee26bda41bbc115",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "PASS",
+      "input_sha256": "ff665afe0515794d91f8705f95bcc71d56e4d2e7fbdbc63ccee26bda41bbc115",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "blocks.B1.params=예시 값: 일반성 확인용 가상 사양 — 실제 부품 아님(미검증)",
+          "where": ""
+        }
+      ],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "PASS",
+      "input_sha256": "ff665afe0515794d91f8705f95bcc71d56e4d2e7fbdbc63ccee26bda41bbc115",
+      "output_sha256": "03030ba4615ad74062155aff2e632e7a90e0a0ca04147ef55d79947e0f10270d",
+      "findings": [],
+      "metrics": {
+        "bytes": 25042
+      }
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "PASS",
+      "input_sha256": "03030ba4615ad74062155aff2e632e7a90e0a0ca04147ef55d79947e0f10270d",
+      "output_sha256": "ff665afe0515794d91f8705f95bcc71d56e4d2e7fbdbc63ccee26bda41bbc115",
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "PASS",
+      "input_sha256": "03030ba4615ad74062155aff2e632e7a90e0a0ca04147ef55d79947e0f10270d",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "PASS",
+      "input_sha256": "ff665afe0515794d91f8705f95bcc71d56e4d2e7fbdbc63ccee26bda41bbc115",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "symbols_checked": 4,
+        "footprints_checked": 3
+      }
+    }
+  ],
+  "questions": [],
+  "assumptions": [
+    {
+      "field": "blocks.B1.params",
+      "value": "예시 값",
+      "reason": "일반성 확인용 가상 사양 — 실제 부품 아님(미검증)"
+    }
+  ],
+  "files": {
+    "intent": "intent.json",
+    "design_ir": "design_ir.json",
+    "schematic": "level_12v_to_1v8.kicad_sch",
+    "project": "level_12v_to_1v8.kicad_pro",
+    "symbols": "eda.kicad_sym",
+    "sym_lib_table": "sym-lib-table",
+    "bom": "bom.csv",
+    "preview": "preview.svg"
+  }
+}

@@ -1,0 +1,306 @@
+{
+  "schema": "eda.ir/1",
+  "project": {
+    "name": "usb_ldo_led"
+  },
+  "intent_sha256": "b46dcf451df511db869107609691531b61d637cb81cabd8f202a06ecb0d43dc6",
+  "assumptions": [
+    {
+      "field": "blocks.led_indicator.current_a",
+      "value": 0.002,
+      "reason": "표시용 LED 전류 2mA 가정"
+    }
+  ],
+  "nets": {
+    "GND": {
+      "kind": "ground",
+      "voltage_v": 0.0,
+      "external_supply": true,
+      "current_a": 0.0
+    },
+    "+5V": {
+      "kind": "power",
+      "voltage_v": 5.0,
+      "external_supply": true,
+      "current_a": 0.31
+    },
+    "+3V3": {
+      "kind": "power",
+      "voltage_v": 3.3,
+      "external_supply": false,
+      "current_a": 0.001935
+    },
+    "N_B2_LED_A": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_P0_CC1": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_P0_CC2": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    }
+  },
+  "components": {
+    "P0.J_IN": {
+      "id": "P0.J_IN",
+      "ref": "J1",
+      "part": "USB_C_Power_6P",
+      "value": "USB_C",
+      "footprint": "Connector_USB:USB_C_Receptacle_GCT_USB4125-xx-x_6P_TopMnt_Horizontal",
+      "block": "P0",
+      "role": "J_IN",
+      "params": {
+        "current_max_a": 3.0,
+        "default_power_a": 0.5
+      },
+      "pins": {
+        "A9": "+5V",
+        "B9": "+5V",
+        "A12": "GND",
+        "B12": "GND",
+        "SH": "GND",
+        "A5": "N_P0_CC1",
+        "B5": "N_P0_CC2"
+      },
+      "no_connect": {}
+    },
+    "P0.R_CC1": {
+      "id": "P0.R_CC1",
+      "ref": "R1",
+      "part": "R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "P0",
+      "role": "R_CC1",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 5100.0,
+        "purpose": "USB-C 싱크 Rd"
+      },
+      "pins": {
+        "1": "N_P0_CC1",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "P0.R_CC2": {
+      "id": "P0.R_CC2",
+      "ref": "R2",
+      "part": "R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "P0",
+      "role": "R_CC2",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 5100.0,
+        "purpose": "USB-C 싱크 Rd"
+      },
+      "pins": {
+        "1": "N_P0_CC2",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "P0.C_BULK": {
+      "id": "P0.C_BULK",
+      "ref": "C1",
+      "part": "C",
+      "value": "10u/10V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "P0",
+      "role": "C_BULK",
+      "params": {
+        "c_f": 1e-05,
+        "voltage_rating_v": 10
+      },
+      "pins": {
+        "1": "+5V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_5V": {
+      "id": "PWR.FLAG_5V",
+      "ref": "#FLG01",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_5V",
+      "params": {},
+      "pins": {
+        "1": "+5V"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_GND": {
+      "id": "PWR.FLAG_GND",
+      "ref": "#FLG02",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_GND",
+      "params": {},
+      "pins": {
+        "1": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.U": {
+      "id": "B1.U",
+      "ref": "U1",
+      "part": "AMS1117-3.3",
+      "value": "AMS1117-3.3",
+      "footprint": "Package_TO_SOT_SMD:SOT-223-3_TabPin2",
+      "block": "B1",
+      "role": "U",
+      "params": {
+        "vout_v": 3.3,
+        "dropout_v": 1.3,
+        "iout_max_a": 1.0,
+        "vin_max_v": 15.0,
+        "tj_max_c": 125.0,
+        "theta_ja_c_per_w": 90.0,
+        "quiescent_a": 0.01,
+        "cin_min_f": 1e-05,
+        "cout_min_f": 2.2e-05
+      },
+      "pins": {
+        "3": "+5V",
+        "2": "+3V3",
+        "1": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.C_IN": {
+      "id": "B1.C_IN",
+      "ref": "C2",
+      "part": "C",
+      "value": "10u/10V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "B1",
+      "role": "C_IN",
+      "params": {
+        "c_f": 1e-05,
+        "voltage_rating_v": 10
+      },
+      "pins": {
+        "1": "+5V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.C_OUT": {
+      "id": "B1.C_OUT",
+      "ref": "C3",
+      "part": "C",
+      "value": "22u/6.3V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "B1",
+      "role": "C_OUT",
+      "params": {
+        "c_f": 2.2e-05,
+        "voltage_rating_v": 6.3
+      },
+      "pins": {
+        "1": "+3V3",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B2.R_LED": {
+      "id": "B2.R_LED",
+      "ref": "R3",
+      "part": "R",
+      "value": "620",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B2",
+      "role": "R_LED",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 620.0,
+        "purpose": "LED 전류 제한"
+      },
+      "pins": {
+        "1": "+3V3",
+        "2": "N_B2_LED_A"
+      },
+      "no_connect": {}
+    },
+    "B2.LED": {
+      "id": "B2.LED",
+      "ref": "D1",
+      "part": "LED",
+      "value": "LED_green",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "block": "B2",
+      "role": "LED",
+      "params": {
+        "if_max_a": 0.02,
+        "vf_v": 2.1,
+        "color": "green"
+      },
+      "pins": {
+        "2": "N_B2_LED_A",
+        "1": "GND"
+      },
+      "no_connect": {}
+    }
+  },
+  "blocks": {
+    "B1": {
+      "type": "ldo",
+      "params": {
+        "rail_in": "INPUT",
+        "vout_v": 3.3,
+        "iout_max_a": 0.3
+      },
+      "design": {
+        "part": "AMS1117-3.3",
+        "vin_v": 5.0,
+        "pd_worst_w": 0.51,
+        "why": "AMS1117 고정 출력. 데이터시트 최소 Cin/Cout 적용."
+      }
+    },
+    "B2": {
+      "type": "led_indicator",
+      "params": {
+        "rail": "B1",
+        "color": "green",
+        "current_a": 0.002
+      },
+      "design": {
+        "r_ohm": 620.0,
+        "i_led_a": 0.001935,
+        "headroom_v": 1.2,
+        "p_r_w": 0.002323,
+        "why": "R = (Vrail - Vf) / I, E24 올림 선택 (전류가 목표 이하)"
+      }
+    },
+    "P0": {
+      "type": "power_input",
+      "params": {
+        "connector": "usb_c",
+        "voltage_v": 5.0
+      },
+      "design": {
+        "connector": "USB_C_Power_6P",
+        "i_total_a": 0.31
+      }
+    }
+  }
+}

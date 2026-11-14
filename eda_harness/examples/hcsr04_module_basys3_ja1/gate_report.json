@@ -1,0 +1,217 @@
+{
+  "project": "hcsr04_module_basys3_ja1",
+  "overall": "PASS",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "PASS",
+      "input_sha256": "01b2322beee2489ea661a5938abcad89cfe25f426275f21b899ae9e2f7a21241",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "blocks": 1,
+        "assumptions": 9
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "PASS",
+      "input_sha256": "01b2322beee2489ea661a5938abcad89cfe25f426275f21b899ae9e2f7a21241",
+      "output_sha256": "34a55b41d3c1a36e7aed792831d1f3b708560be0a4e899cc8ebc81c54fee26b8",
+      "findings": [],
+      "metrics": {
+        "components": 9,
+        "nets": 5
+      }
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "PASS",
+      "input_sha256": "34a55b41d3c1a36e7aed792831d1f3b708560be0a4e899cc8ebc81c54fee26b8",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "PASS",
+      "input_sha256": "34a55b41d3c1a36e7aed792831d1f3b708560be0a4e899cc8ebc81c54fee26b8",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "MODULE_PIN_ORDER_UNVERIFIED",
+          "severity": "WARN",
+          "message": "모듈 핀 순서가 실제 기판에서 확인되지 않음 — 잘못되면 전원 핀 역접속 위험, 제작 전 확인 필요",
+          "where": "/blocks/B1"
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 TRIG.vih_min_v=2.0: [assumed] 사양서에 입력 인식 전압 없음(10µs 'TTL pulse'만 명시) — TTL 일반값 2.0V 가정 (미검증)",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 TRIG.vmax_v=5.5: [derived] 입력 한계 사양 없음 — 모듈 전원 최대 5.5V 이내로 가정 (미검증)",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_min_v=2.9: [derived] DS181 Table 8 LVCMOS33 VOH 최소 = VCCO−0.400, VCCO 3.3V (Basys3 JA) (미검증)",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_max_v=3.3: [derived] VCCO 3.3V (미검증)",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.ECHO.voh_v=5.0: [derived] 사양서에 Echo High 전압 수치는 없고 '5V TTL' 표기와 동작전압 4.5~5.5V(기준 5V)에서 유도 (미검증)",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.ECHO.voh_tol=0.1: [derived] 동작전압 4.5~5.5V를 5V 기준 ±10%로 환산 (미검증)",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "보내는 쪽.ECHO.iout_max_a=0.001: [assumed] Echo 출력 구동 전류 사양 없음 — 1mA 보수적 가정 (미검증)",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "signal_max_hz=10000: 사용자/설계자가 지정한 최대 신호 속도",
+          "where": ""
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "모듈.pin_order_verified=False: 핀 순서를 실제 기판에서 확인하지 못함 (미검증)",
+          "where": ""
+        }
+      ],
+      "metrics": {
+        "errors": 0,
+        "warnings": 1
+      }
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "PASS",
+      "input_sha256": "34a55b41d3c1a36e7aed792831d1f3b708560be0a4e899cc8ebc81c54fee26b8",
+      "output_sha256": "b0f985140f4a73c65a7b89a136b3e0026bc71940660e60ec3d7feda7fc21d4e1",
+      "findings": [],
+      "metrics": {
+        "bytes": 33981
+      }
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "PASS",
+      "input_sha256": "b0f985140f4a73c65a7b89a136b3e0026bc71940660e60ec3d7feda7fc21d4e1",
+      "output_sha256": "34a55b41d3c1a36e7aed792831d1f3b708560be0a4e899cc8ebc81c54fee26b8",
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "PASS",
+      "input_sha256": "b0f985140f4a73c65a7b89a136b3e0026bc71940660e60ec3d7feda7fc21d4e1",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "PASS",
+      "input_sha256": "34a55b41d3c1a36e7aed792831d1f3b708560be0a4e899cc8ebc81c54fee26b8",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "symbols_checked": 6,
+        "footprints_checked": 6
+      }
+    }
+  ],
+  "questions": [],
+  "assumptions": [
+    {
+      "field": "모듈 핀 TRIG.vih_min_v",
+      "value": 2.0,
+      "reason": "[assumed] 사양서에 입력 인식 전압 없음(10µs 'TTL pulse'만 명시) — TTL 일반값 2.0V 가정 (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG.vmax_v",
+      "value": 5.5,
+      "reason": "[derived] 입력 한계 사양 없음 — 모듈 전원 최대 5.5V 이내로 가정 (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_min_v",
+      "value": 2.9,
+      "reason": "[derived] DS181 Table 8 LVCMOS33 VOH 최소 = VCCO−0.400, VCCO 3.3V (Basys3 JA) (미검증)"
+    },
+    {
+      "field": "모듈 핀 TRIG를 구동하는 호스트 출력.voh_max_v",
+      "value": 3.3,
+      "reason": "[derived] VCCO 3.3V (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.voh_v",
+      "value": 5.0,
+      "reason": "[derived] 사양서에 Echo High 전압 수치는 없고 '5V TTL' 표기와 동작전압 4.5~5.5V(기준 5V)에서 유도 (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.voh_tol",
+      "value": 0.1,
+      "reason": "[derived] 동작전압 4.5~5.5V를 5V 기준 ±10%로 환산 (미검증)"
+    },
+    {
+      "field": "보내는 쪽.ECHO.iout_max_a",
+      "value": 0.001,
+      "reason": "[assumed] Echo 출력 구동 전류 사양 없음 — 1mA 보수적 가정 (미검증)"
+    },
+    {
+      "field": "signal_max_hz",
+      "value": 10000,
+      "reason": "사용자/설계자가 지정한 최대 신호 속도"
+    },
+    {
+      "field": "모듈.pin_order_verified",
+      "value": false,
+      "reason": "핀 순서를 실제 기판에서 확인하지 못함 (미검증)"
+    }
+  ],
+  "files": {
+    "intent": "intent.json",
+    "design_ir": "design_ir.json",
+    "schematic": "hcsr04_module_basys3_ja1.kicad_sch",
+    "project": "hcsr04_module_basys3_ja1.kicad_pro",
+    "symbols": "eda.kicad_sym",
+    "sym_lib_table": "sym-lib-table",
+    "bom": "bom.csv",
+    "preview": "preview.svg"
+  }
+}

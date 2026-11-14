@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "filename": "hcsr04_module_basys3_ja1.kicad_pro",
+    "version": 1
+  },
+  "schematic": {
+    "legacy_lib_dir": "",
+    "legacy_lib_list": []
+  },
+  "sheets": [
+    [
+      "af1160f6-dccf-5991-885c-79863ebd75c6",
+      "Root"
+    ]
+  ],
+  "boards": [],
+  "text_variables": {},
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "project": "blinker_9v",
+  "overall": "PASS",
+  "gates": [
+    {
+      "gate": "G0",
+      "name": "INTENT",
+      "status": "PASS",
+      "input_sha256": "b31b2539fa7fe78c043400ea2998f56dfd89a8173fd0f430dd52dca851e0db90",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "blocks": 1,
+        "assumptions": 1
+      }
+    },
+    {
+      "gate": "G1",
+      "name": "SYNTHESIS",
+      "status": "PASS",
+      "input_sha256": "b31b2539fa7fe78c043400ea2998f56dfd89a8173fd0f430dd52dca851e0db90",
+      "output_sha256": "c7472c73f2e11268fc0632c8281188de40fa8e54b3d57b165759968c57440b2e",
+      "findings": [],
+      "metrics": {
+        "components": 12,
+        "nets": 7
+      }
+    },
+    {
+      "gate": "G2",
+      "name": "SEMANTIC_ERC",
+      "status": "PASS",
+      "input_sha256": "c7472c73f2e11268fc0632c8281188de40fa8e54b3d57b165759968c57440b2e",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G3",
+      "name": "ELECTRICAL",
+      "status": "PASS",
+      "input_sha256": "c7472c73f2e11268fc0632c8281188de40fa8e54b3d57b165759968c57440b2e",
+      "output_sha256": null,
+      "findings": [
+        {
+          "code": "PART_DATA_UNVERIFIED",
+          "severity": "WARN",
+          "message": "U1 (NE555P) 파라미터가 시드값 — 구매 부품 데이터시트로 검증 필요",
+          "where": "/components/B1.U"
+        },
+        {
+          "code": "ASSUMPTION",
+          "severity": "INFO",
+          "message": "led.color=red: LED 색상 미지정 — 빨강(Vf≈2.0V)으로 가정",
+          "where": ""
+        }
+      ],
+      "metrics": {
+        "errors": 0,
+        "warnings": 1
+      }
+    },
+    {
+      "gate": "G4",
+      "name": "EMIT",
+      "status": "PASS",
+      "input_sha256": "c7472c73f2e11268fc0632c8281188de40fa8e54b3d57b165759968c57440b2e",
+      "output_sha256": "ec8365a65834545e1671453ea5d2ebe89214d85142e1c21bb050c664b9e2c712",
+      "findings": [],
+      "metrics": {
+        "bytes": 42449
+      }
+    },
+    {
+      "gate": "G5",
+      "name": "ROUNDTRIP",
+      "status": "PASS",
+      "input_sha256": "ec8365a65834545e1671453ea5d2ebe89214d85142e1c21bb050c664b9e2c712",
+      "output_sha256": "c7472c73f2e11268fc0632c8281188de40fa8e54b3d57b165759968c57440b2e",
+      "findings": [],
+      "metrics": {}
+    },
+    {
+      "gate": "G6",
+      "name": "KICAD_ERC",
+      "status": "PASS",
+      "input_sha256": "ec8365a65834545e1671453ea5d2ebe89214d85142e1c21bb050c664b9e2c712",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "gate": "G7",
+      "name": "KICAD_LIBRARY",
+      "status": "PASS",
+      "input_sha256": "c7472c73f2e11268fc0632c8281188de40fa8e54b3d57b165759968c57440b2e",
+      "output_sha256": null,
+      "findings": [],
+      "metrics": {
+        "symbols_checked": 6,
+        "footprints_checked": 6
+      }
+    }
+  ],
+  "questions": [],
+  "assumptions": [
+    {
+      "field": "led.color",
+      "value": "red",
+      "reason": "LED 색상 미지정 — 빨강(Vf≈2.0V)으로 가정"
+    }
+  ],
+  "files": {
+    "intent": "intent.json",
+    "design_ir": "design_ir.json",
+    "schematic": "blinker_9v.kicad_sch",
+    "project": "blinker_9v.kicad_pro",
+    "symbols": "eda.kicad_sym",
+    "sym_lib_table": "sym-lib-table",
+    "bom": "bom.csv",
+    "preview": "preview.svg"
+  }
+}

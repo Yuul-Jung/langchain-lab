@@ -1,0 +1,8 @@
+refs,qty,part,value,footprint
+J1,1,USB_C_Power_6P,USB_C,Connector_USB:USB_C_Receptacle_GCT_USB4125-xx-x_6P_TopMnt_Horizontal
+R1 R2,2,R,5.1k,Resistor_SMD:R_0603_1608Metric
+C1 C2,2,C,10u/10V,Capacitor_SMD:C_0805_2012Metric
+U1,1,AMS1117-3.3,AMS1117-3.3,Package_TO_SOT_SMD:SOT-223-3_TabPin2
+C3,1,C,22u/6.3V,Capacitor_SMD:C_0805_2012Metric
+R3,1,R,620,Resistor_SMD:R_0603_1608Metric
+D1,1,LED,LED_green,LED_SMD:LED_0603_1608Metric

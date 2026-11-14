@@ -1,0 +1,26 @@
+{
+  "schema": "eda.intent/1",
+  "source": {
+    "kind": "text",
+    "text": "12V 입력, 12V 모터 2A를 3.3V MCU로 제어"
+  },
+  "power_input": {
+    "connector": "dc",
+    "voltage_v": 12.0
+  },
+  "blocks": [
+    {
+      "id": "B1",
+      "type": "lowside_switch",
+      "params": {
+        "rail": "INPUT",
+        "load_current_a": 2.0,
+        "inductive": true,
+        "control_v": 3.3
+      }
+    }
+  ],
+  "assumptions": [],
+  "questions": [],
+  "unparsed": []
+}

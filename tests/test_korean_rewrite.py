@@ -1,5 +1,6 @@
 """채팅 답변의 가벼운 외국 문자 혼입 처리 (서버·모델 없이 실행).
 
+from pathlib import Path
 원칙: 모델이 다시 쓴 글 전체를 받지 않고, 외국 문자가 있던 자리의 수정만 원래 답에 옮긴다.
 """
 import importlib.util
@@ -187,7 +188,13 @@ class ChatRewriteEndpointTest(unittest.TestCase):
         llm.invoke.side_effect = [mock.Mock(content=text) for text in replies]
         hits = [{"document_id": "d1", "chunk_id": "c1", "filename": "문서.pdf", "title": "t", "page": 3,
                  "text": "가점은 최대 8 점까지 가능", "score": 0.9}]
-        with mock.patch.object(app, "available_models", return_value=[app.CHAT_MODEL]), \
+        import tempfile
+        from pathlib import Path
+        import fallback_log
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        with mock.patch.object(fallback_log, "DEFAULT_PATH", Path(tmp.name) / "fallback.jsonl"), \
+             mock.patch.object(app, "available_models", return_value=[app.CHAT_MODEL]), \
              mock.patch.object(app, "search_uploaded", return_value=hits), \
              mock.patch.object(app.settings, "CHAT_RAG_SOURCE", "documents"), \
              mock.patch.object(app, "make_chat", return_value=llm):
@@ -202,7 +209,7 @@ class ChatRewriteEndpointTest(unittest.TestCase):
         self.assertEqual((data["rewrite"], calls), ("none", 1))
 
     def test_light_leak_is_fixed_with_one_extra_call(self):
-        data, calls = self.ask(["가점은 최대 8점입니다 [자료 1]. 답案: 8점", "가점은 최대 8점입니다 [자료 1]. 답안: 8점"])
+        data, calls = self.ask(["가점은 최대 8점입니다 [자료 1]. 답樂: 8점", "가점은 최대 8점입니다 [자료 1]. 답안: 8점"])
         self.assertEqual((data["rewrite"], calls), ("light", 2))
         self.assertEqual(data["answer"], "가점은 최대 8점입니다 [자료 1]. 답안: 8점")
         import app
@@ -210,21 +217,26 @@ class ChatRewriteEndpointTest(unittest.TestCase):
 
     def test_rewrite_that_changes_the_facts_cannot_change_them_in_the_answer(self):
         # 모델이 숫자와 출처 표시를 바꿔 다시 썼어도, 답에는 외국 문자 자리의 수정만 들어간다
-        data, calls = self.ask(["가점은 최대 8점입니다 [자료 1]. 답案: 8점", "가점은 최대 5점입니다. 답안: 5점"])
+        data, calls = self.ask(["가점은 최대 8점입니다 [자료 1]. 답樂: 8점", "가점은 최대 5점입니다. 답안: 5점"])
         self.assertEqual((data["rewrite"], calls), ("light", 2))
         self.assertEqual(data["answer"], "가점은 최대 8점입니다 [자료 1]. 답안: 8점")
 
     def test_useless_rewrite_leaves_the_original_answer(self):
-        data, calls = self.ask(["가점은 최대 8점입니다 [자료 1]. 답案: 8점", "가점이 있습니다."])
+        data, calls = self.ask(["가점은 최대 8점입니다 [자료 1]. 답樂: 8점", "가점이 있습니다."])
         self.assertEqual((data["rewrite"], calls), ("kept", 2))
-        self.assertEqual(data["answer"], "가점은 최대 8점입니다 [자료 1]. 답案: 8점")
+        self.assertEqual(data["answer"], "가점은 최대 8점입니다 [자료 1]. 답樂: 8점")
+
+    def test_table_fixes_a_known_hanja_without_a_second_model_call(self):
+        data, calls = self.ask(["가점은 최대 8점입니다 [자료 1]. 답案: 8점"])
+        self.assertEqual((data["rewrite"], calls, data["hanja_fixed"]), ("none", 1, 1))
+        self.assertEqual(data["answer"], "가점은 최대 8점입니다 [자료 1]. 답안: 8점")
 
     def test_the_fix_can_be_switched_off_in_settings(self):
         import app
         with mock.patch.object(app.settings, "CHAT_LIGHT_LEAK_FIX", False):
-            data, calls = self.ask(["점수는 최대 8점입니다 [자료 1]. 답案: 8점"])
+            data, calls = self.ask(["점수는 최대 8점입니다 [자료 1]. 답樂: 8점"])
         self.assertEqual((data["rewrite"], calls), ("none", 1))
-        self.assertIn("답案", data["answer"])
+        self.assertIn("답樂", data["answer"])
 
     def test_requested_foreign_text_is_left_alone(self):
         # 사용자가 일본어를 요청했으면 가나는 혼입이 아니다. 뒤따르는 짧은 질문에서도 마찬가지다.

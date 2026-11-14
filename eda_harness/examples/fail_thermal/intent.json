@@ -1,0 +1,45 @@
+{
+  "schema": "eda.intent/1",
+  "source": {
+    "kind": "text",
+    "text": "12V 입력에서 3V3 LDO, 파란 전원 LED"
+  },
+  "power_input": {
+    "connector": "dc",
+    "voltage_v": 12.0
+  },
+  "blocks": [
+    {
+      "id": "B1",
+      "type": "ldo",
+      "params": {
+        "rail_in": "INPUT",
+        "vout_v": 3.3,
+        "iout_max_a": 0.3
+      }
+    },
+    {
+      "id": "B2",
+      "type": "led_indicator",
+      "params": {
+        "rail": "B1",
+        "color": "blue",
+        "current_a": 0.002
+      }
+    }
+  ],
+  "assumptions": [
+    {
+      "field": "blocks.ldo.iout_max_a",
+      "value": 0.3,
+      "reason": "출력 전류 미지정 — 300mA로 가정"
+    },
+    {
+      "field": "blocks.led_indicator.current_a",
+      "value": 0.002,
+      "reason": "표시용 LED 전류 2mA 가정"
+    }
+  ],
+  "questions": [],
+  "unparsed": []
+}

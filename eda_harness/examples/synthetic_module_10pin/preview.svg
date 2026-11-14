@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1188" viewBox="0 0 1680 1188" font-family="monospace">
+<rect width="1680" height="1188" fill="#fffdf6"/>
+<text x="101.6" y="121.9" font-size="22" fill="#555">P0: power_input</text>
+<text x="467.4" y="121.9" font-size="22" fill="#555">PWR: power_flags</text>
+<text x="833.1" y="121.9" font-size="22" fill="#555">B1: ldo</text>
+<text x="101.6" y="365.8" font-size="22" fill="#555">B2: logic_module</text>
+<rect x="177.8" y="218.4" width="10.2" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="162.6" y1="223.5" x2="177.8" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="162.6" y1="233.7" x2="177.8" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="177.8" y="203.2" font-size="13" fill="#00666b">J1</text>
+<text x="177.8" y="213.4" font-size="13" fill="#00666b">PWR_IN</text>
+<rect x="337.3" y="220.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="208.3" x2="345.4" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="238.8" x2="345.4" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="360.7" y="213.4" font-size="13" fill="#00666b">C1</text>
+<text x="360.7" y="233.7" font-size="13" fill="#00666b">10u/10V</text>
+<polyline points="548.6,223.5 548.6,218.4 544.6,215.9 548.6,213.4 552.7,215.9 548.6,218.4" fill="none" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="548.6" y1="223.5" x2="548.6" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="558.8" y="228.6" font-size="13" fill="#00666b">PWR_FLAG</text>
+<polyline points="711.2,223.5 711.2,218.4 707.1,215.9 711.2,213.4 715.3,215.9 711.2,218.4" fill="none" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="711.2" y1="223.5" x2="711.2" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="721.4" y="228.6" font-size="13" fill="#00666b">PWR_FLAG</text>
+<rect x="894.1" y="213.4" width="40.6" height="30.5" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="914.4" y1="254.0" x2="914.4" y2="243.8" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="914.4" y="241.4" font-size="10" fill="#1b4f8a" text-anchor="middle" dominant-baseline="middle">GND</text>
+<line x1="944.9" y1="223.5" x2="934.7" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="932.3" y="223.5" font-size="10" fill="#1b4f8a" text-anchor="end" dominant-baseline="middle">VO</text>
+<line x1="883.9" y1="223.5" x2="894.1" y2="223.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="896.5" y="223.5" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">VI</text>
+<text x="939.8" y="208.3" font-size="13" fill="#00666b">U1</text>
+<text x="939.8" y="248.9" font-size="13" fill="#00666b">AMS1117-3.3</text>
+<rect x="1068.8" y="220.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1077.0" y1="208.3" x2="1077.0" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1077.0" y1="238.8" x2="1077.0" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1092.2" y="213.4" font-size="13" fill="#00666b">C2</text>
+<text x="1092.2" y="233.7" font-size="13" fill="#00666b">10u/10V</text>
+<rect x="1231.4" y="220.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="208.3" x2="1239.5" y2="213.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="1239.5" y1="238.8" x2="1239.5" y2="233.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="1254.8" y="213.4" font-size="13" fill="#00666b">C3</text>
+<text x="1254.8" y="233.7" font-size="13" fill="#00666b">22u/6.3V</text>
+<rect x="177.8" y="462.3" width="10.2" height="101.6" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="162.6" y1="467.4" x2="177.8" y2="467.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="467.4" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_1</text>
+<line x1="162.6" y1="477.5" x2="177.8" y2="477.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="477.5" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_2</text>
+<line x1="162.6" y1="487.7" x2="177.8" y2="487.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="487.7" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_3</text>
+<line x1="162.6" y1="497.8" x2="177.8" y2="497.8" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="497.8" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_4</text>
+<line x1="162.6" y1="508.0" x2="177.8" y2="508.0" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="508.0" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_5</text>
+<line x1="162.6" y1="518.2" x2="177.8" y2="518.2" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="518.2" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_6</text>
+<line x1="162.6" y1="528.3" x2="177.8" y2="528.3" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="528.3" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_7</text>
+<line x1="162.6" y1="538.5" x2="177.8" y2="538.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="538.5" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_8</text>
+<line x1="162.6" y1="548.6" x2="177.8" y2="548.6" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="548.6" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_9</text>
+<line x1="162.6" y1="558.8" x2="177.8" y2="558.8" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="180.2" y="558.8" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_10</text>
+<text x="177.8" y="447.0" font-size="13" fill="#00666b">J2</text>
+<text x="177.8" y="457.2" font-size="13" fill="#00666b">MODULE</text>
+<rect x="340.4" y="462.3" width="10.2" height="61.0" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="325.1" y1="467.4" x2="340.4" y2="467.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="342.8" y="467.4" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_1</text>
+<line x1="325.1" y1="477.5" x2="340.4" y2="477.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="342.8" y="477.5" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_2</text>
+<line x1="325.1" y1="487.7" x2="340.4" y2="487.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="342.8" y="487.7" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_3</text>
+<line x1="325.1" y1="497.8" x2="340.4" y2="497.8" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="342.8" y="497.8" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_4</text>
+<line x1="325.1" y1="508.0" x2="340.4" y2="508.0" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="342.8" y="508.0" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_5</text>
+<line x1="325.1" y1="518.2" x2="340.4" y2="518.2" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="342.8" y="518.2" font-size="10" fill="#1b4f8a" text-anchor="start" dominant-baseline="middle">Pin_6</text>
+<text x="340.4" y="447.0" font-size="13" fill="#00666b">J3</text>
+<text x="340.4" y="457.2" font-size="13" fill="#00666b">HOST</text>
+<rect x="503.9" y="457.2" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="508.0" y1="452.1" x2="508.0" y2="457.2" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="508.0" y1="482.6" x2="508.0" y2="477.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="518.2" y="452.1" font-size="13" fill="#00666b">R1</text>
+<text x="518.2" y="482.6" font-size="13" fill="#00666b">3.6k</text>
+<rect x="666.5" y="457.2" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="670.6" y1="452.1" x2="670.6" y2="457.2" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="670.6" y1="482.6" x2="670.6" y2="477.5" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="680.7" y="452.1" font-size="13" fill="#00666b">R2</text>
+<text x="680.7" y="482.6" font-size="13" fill="#00666b">4.3k</text>
+<rect x="178.8" y="660.4" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="182.9" y1="655.3" x2="182.9" y2="660.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="182.9" y1="685.8" x2="182.9" y2="680.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="193.0" y="655.3" font-size="13" fill="#00666b">R3</text>
+<text x="193.0" y="685.8" font-size="13" fill="#00666b">3.6k</text>
+<rect x="341.4" y="660.4" width="8.1" height="20.3" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="655.3" x2="345.4" y2="660.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="345.4" y1="685.8" x2="345.4" y2="680.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="355.6" y="655.3" font-size="13" fill="#00666b">R4</text>
+<text x="355.6" y="685.8" font-size="13" fill="#00666b">4.3k</text>
+<rect x="499.9" y="667.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="508.0" y1="655.3" x2="508.0" y2="660.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="508.0" y1="685.8" x2="508.0" y2="680.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="523.2" y="660.4" font-size="13" fill="#00666b">C4</text>
+<text x="523.2" y="680.7" font-size="13" fill="#00666b">100n/10V</text>
+<rect x="662.4" y="667.5" width="16.3" height="6.1" fill="#fff3c4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="670.6" y1="655.3" x2="670.6" y2="660.4" stroke="#8a1c1c" stroke-width="1.5"/>
+<line x1="670.6" y1="685.8" x2="670.6" y2="680.7" stroke="#8a1c1c" stroke-width="1.5"/>
+<text x="685.8" y="660.4" font-size="13" fill="#00666b">C5</text>
+<text x="685.8" y="680.7" font-size="13" fill="#00666b">100n/6.3V</text>
+<line x1="162.6" y1="223.5" x2="152.4" y2="223.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="233.7" x2="152.4" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="208.3" x2="345.4" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="238.8" x2="345.4" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="548.6" y1="223.5" x2="548.6" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="711.2" y1="223.5" x2="711.2" y2="233.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="914.4" y1="254.0" x2="914.4" y2="264.2" stroke="#007a00" stroke-width="1.5"/>
+<line x1="944.9" y1="223.5" x2="955.0" y2="223.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="883.9" y1="223.5" x2="873.8" y2="223.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1077.0" y1="208.3" x2="1077.0" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1077.0" y1="238.8" x2="1077.0" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="208.3" x2="1239.5" y2="198.1" stroke="#007a00" stroke-width="1.5"/>
+<line x1="1239.5" y1="238.8" x2="1239.5" y2="248.9" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="467.4" x2="152.4" y2="467.4" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="477.5" x2="152.4" y2="477.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="487.7" x2="152.4" y2="487.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="497.8" x2="152.4" y2="497.8" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="508.0" x2="152.4" y2="508.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="518.2" x2="152.4" y2="518.2" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="528.3" x2="152.4" y2="528.3" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="538.5" x2="152.4" y2="538.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="162.6" y1="558.8" x2="152.4" y2="558.8" stroke="#007a00" stroke-width="1.5"/>
+<line x1="325.1" y1="467.4" x2="315.0" y2="467.4" stroke="#007a00" stroke-width="1.5"/>
+<line x1="325.1" y1="477.5" x2="315.0" y2="477.5" stroke="#007a00" stroke-width="1.5"/>
+<line x1="325.1" y1="487.7" x2="315.0" y2="487.7" stroke="#007a00" stroke-width="1.5"/>
+<line x1="325.1" y1="497.8" x2="315.0" y2="497.8" stroke="#007a00" stroke-width="1.5"/>
+<line x1="325.1" y1="508.0" x2="315.0" y2="508.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="325.1" y1="518.2" x2="315.0" y2="518.2" stroke="#007a00" stroke-width="1.5"/>
+<line x1="508.0" y1="452.1" x2="508.0" y2="442.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="508.0" y1="482.6" x2="508.0" y2="492.8" stroke="#007a00" stroke-width="1.5"/>
+<line x1="670.6" y1="452.1" x2="670.6" y2="442.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="670.6" y1="482.6" x2="670.6" y2="492.8" stroke="#007a00" stroke-width="1.5"/>
+<line x1="182.9" y1="655.3" x2="182.9" y2="645.2" stroke="#007a00" stroke-width="1.5"/>
+<line x1="182.9" y1="685.8" x2="182.9" y2="696.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="655.3" x2="345.4" y2="645.2" stroke="#007a00" stroke-width="1.5"/>
+<line x1="345.4" y1="685.8" x2="345.4" y2="696.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="508.0" y1="655.3" x2="508.0" y2="645.2" stroke="#007a00" stroke-width="1.5"/>
+<line x1="508.0" y1="685.8" x2="508.0" y2="696.0" stroke="#007a00" stroke-width="1.5"/>
+<line x1="670.6" y1="655.3" x2="670.6" y2="645.2" stroke="#007a00" stroke-width="1.5"/>
+<line x1="670.6" y1="685.8" x2="670.6" y2="696.0" stroke="#007a00" stroke-width="1.5"/>
+<text x="152.4" y="223.5" font-size="11" fill="#222" text-anchor="end">+5V</text>
+<text x="152.4" y="233.7" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="345.4" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 345.4 198.1)">+5V</text>
+<text x="345.4" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 345.4 248.9)">GND</text>
+<text x="548.6" y="233.7" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 548.6 233.7)">+5V</text>
+<text x="711.2" y="233.7" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 711.2 233.7)">GND</text>
+<text x="914.4" y="264.2" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 914.4 264.2)">GND</text>
+<text x="955.0" y="223.5" font-size="11" fill="#222" text-anchor="start">+3V3</text>
+<text x="873.8" y="223.5" font-size="11" fill="#222" text-anchor="end">+5V</text>
+<text x="1077.0" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1077.0 198.1)">+5V</text>
+<text x="1077.0" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1077.0 248.9)">GND</text>
+<text x="1239.5" y="198.1" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 1239.5 198.1)">+3V3</text>
+<text x="1239.5" y="248.9" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 1239.5 248.9)">GND</text>
+<text x="152.4" y="467.4" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="152.4" y="477.5" font-size="11" fill="#222" text-anchor="end">N_B2_S1</text>
+<text x="152.4" y="487.7" font-size="11" fill="#222" text-anchor="end">+5V</text>
+<text x="152.4" y="497.8" font-size="11" fill="#222" text-anchor="end">N_B2_S2_MOD</text>
+<text x="152.4" y="508.0" font-size="11" fill="#222" text-anchor="end">N_B2_S3</text>
+<text x="152.4" y="518.2" font-size="11" fill="#222" text-anchor="end">+3V3</text>
+<text x="152.4" y="528.3" font-size="11" fill="#222" text-anchor="end">N_B2_S4_MOD</text>
+<text x="152.4" y="538.5" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="152.4" y="558.8" font-size="11" fill="#222" text-anchor="end">N_B2_S5</text>
+<text x="315.0" y="467.4" font-size="11" fill="#222" text-anchor="end">N_B2_S1</text>
+<text x="315.0" y="477.5" font-size="11" fill="#222" text-anchor="end">N_B2_S2_HOST</text>
+<text x="315.0" y="487.7" font-size="11" fill="#222" text-anchor="end">N_B2_S3</text>
+<text x="315.0" y="497.8" font-size="11" fill="#222" text-anchor="end">N_B2_S4_HOST</text>
+<text x="315.0" y="508.0" font-size="11" fill="#222" text-anchor="end">N_B2_S5</text>
+<text x="315.0" y="518.2" font-size="11" fill="#222" text-anchor="end">GND</text>
+<text x="508.0" y="442.0" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 508.0 442.0)">N_B2_S2_MOD</text>
+<text x="508.0" y="492.8" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 508.0 492.8)">N_B2_S2_HOST</text>
+<text x="670.6" y="442.0" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 670.6 442.0)">N_B2_S2_HOST</text>
+<text x="670.6" y="492.8" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 670.6 492.8)">GND</text>
+<text x="182.9" y="645.2" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 182.9 645.2)">N_B2_S4_MOD</text>
+<text x="182.9" y="696.0" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 182.9 696.0)">N_B2_S4_HOST</text>
+<text x="345.4" y="645.2" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 345.4 645.2)">N_B2_S4_HOST</text>
+<text x="345.4" y="696.0" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 345.4 696.0)">GND</text>
+<text x="508.0" y="645.2" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 508.0 645.2)">+5V</text>
+<text x="508.0" y="696.0" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 508.0 696.0)">GND</text>
+<text x="670.6" y="645.2" font-size="11" fill="#222" text-anchor="start" transform="rotate(-90 670.6 645.2)">+3V3</text>
+<text x="670.6" y="696.0" font-size="11" fill="#222" text-anchor="end" transform="rotate(-90 670.6 696.0)">GND</text>
+<path d="M157.6,543.6L167.6,553.6M157.6,553.6L167.6,543.6" stroke="#00f"/>
+</svg>

@@ -1,0 +1,249 @@
+{
+  "schema": "eda.ir/1",
+  "project": {
+    "name": "motor_switch"
+  },
+  "intent_sha256": "ef7e3a4906dffdd1b25e1088f299bd456526b8ea7a75780cec46bd58c1bb0c43",
+  "assumptions": [],
+  "nets": {
+    "GND": {
+      "kind": "ground",
+      "voltage_v": 0.0,
+      "external_supply": true,
+      "current_a": 0.0
+    },
+    "+12V": {
+      "kind": "power",
+      "voltage_v": 12.0,
+      "external_supply": true,
+      "current_a": 2.0
+    },
+    "N_B1_DRAIN": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_GATE": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    },
+    "N_B1_CTRL": {
+      "kind": "signal",
+      "voltage_v": null,
+      "external_supply": false,
+      "current_a": 0.0
+    }
+  },
+  "components": {
+    "P0.J_IN": {
+      "id": "P0.J_IN",
+      "ref": "J1",
+      "part": "Conn_01x02",
+      "value": "PWR_IN",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "P0",
+      "role": "J_IN",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "+12V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "P0.C_BULK": {
+      "id": "P0.C_BULK",
+      "ref": "C1",
+      "part": "C",
+      "value": "10u/25V",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "block": "P0",
+      "role": "C_BULK",
+      "params": {
+        "c_f": 1e-05,
+        "voltage_rating_v": 25
+      },
+      "pins": {
+        "1": "+12V",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_12V": {
+      "id": "PWR.FLAG_12V",
+      "ref": "#FLG01",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_12V",
+      "params": {},
+      "pins": {
+        "1": "+12V"
+      },
+      "no_connect": {}
+    },
+    "PWR.FLAG_GND": {
+      "id": "PWR.FLAG_GND",
+      "ref": "#FLG02",
+      "part": "PWR_FLAG",
+      "value": "PWR_FLAG",
+      "footprint": "",
+      "block": "PWR",
+      "role": "FLAG_GND",
+      "params": {},
+      "pins": {
+        "1": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.J_LOAD": {
+      "id": "B1.J_LOAD",
+      "ref": "J2",
+      "part": "Conn_01x02",
+      "value": "LOAD",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "B1",
+      "role": "J_LOAD",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "+12V",
+        "2": "N_B1_DRAIN"
+      },
+      "no_connect": {}
+    },
+    "B1.Q": {
+      "id": "B1.Q",
+      "ref": "Q1",
+      "part": "AO3400A",
+      "value": "AO3400A",
+      "footprint": "Package_TO_SOT_SMD:SOT-23",
+      "block": "B1",
+      "role": "Q",
+      "params": {
+        "vds_v": 30.0,
+        "id_a": 5.7,
+        "vgs_th_max_v": 1.45,
+        "rds_on_ohm": 0.048,
+        "rds_spec_vgs_v": 2.5,
+        "pd_max_w": 0.7
+      },
+      "pins": {
+        "1": "N_B1_GATE",
+        "3": "N_B1_DRAIN",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.R_G": {
+      "id": "B1.R_G",
+      "ref": "R1",
+      "part": "R",
+      "value": "100",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_G",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 100.0,
+        "purpose": "게이트 직렬 저항"
+      },
+      "pins": {
+        "1": "N_B1_CTRL",
+        "2": "N_B1_GATE"
+      },
+      "no_connect": {}
+    },
+    "B1.R_PD": {
+      "id": "B1.R_PD",
+      "ref": "R2",
+      "part": "R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "block": "B1",
+      "role": "R_PD",
+      "params": {
+        "power_w": 0.1,
+        "tolerance": 0.01,
+        "r_ohm": 100000.0,
+        "purpose": "게이트 풀다운 (MCU 리셋 중 OFF 보장)"
+      },
+      "pins": {
+        "1": "N_B1_GATE",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.J_CTRL": {
+      "id": "B1.J_CTRL",
+      "ref": "J3",
+      "part": "Conn_01x02",
+      "value": "CTRL",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "block": "B1",
+      "role": "J_CTRL",
+      "params": {
+        "current_max_a": 2.0
+      },
+      "pins": {
+        "1": "N_B1_CTRL",
+        "2": "GND"
+      },
+      "no_connect": {}
+    },
+    "B1.D_FLY": {
+      "id": "B1.D_FLY",
+      "ref": "D1",
+      "part": "SS34",
+      "value": "SS34",
+      "footprint": "Diode_SMD:D_SMA",
+      "block": "B1",
+      "role": "D_FLY",
+      "params": {
+        "vr_v": 40.0,
+        "if_a": 3.0
+      },
+      "pins": {
+        "1": "+12V",
+        "2": "N_B1_DRAIN"
+      },
+      "no_connect": {}
+    }
+  },
+  "blocks": {
+    "B1": {
+      "type": "lowside_switch",
+      "params": {
+        "rail": "INPUT",
+        "load_current_a": 2.0,
+        "inductive": true,
+        "control_v": 3.3
+      },
+      "design": {
+        "mosfet": "AO3400A",
+        "mosfet_reason": "조건(Vds≥1.5V, Id≤50%, Vctrl≥Rds 규격 Vgs, Pd)을 만족하는 첫 후보",
+        "load_connector": "Conn_01x02",
+        "flyback": "SS34",
+        "p_cond_w": 0.192
+      }
+    },
+    "P0": {
+      "type": "power_input",
+      "params": {
+        "connector": "dc",
+        "voltage_v": 12.0
+      },
+      "design": {
+        "connector": "Conn_01x02",
+        "i_total_a": 2.0
+      }
+    }
+  }
+}

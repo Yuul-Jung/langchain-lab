@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "filename": "level_12v_to_1v8.kicad_pro",
+    "version": 1
+  },
+  "schematic": {
+    "legacy_lib_dir": "",
+    "legacy_lib_list": []
+  },
+  "sheets": [
+    [
+      "408c026f-a73d-5b9f-abde-dec3a4ee1be3",
+      "Root"
+    ]
+  ],
+  "boards": [],
+  "text_variables": {},
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  }
+}

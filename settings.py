@@ -82,6 +82,31 @@ except ValueError:
 CHAT_RAG_SOURCE = get("CHAT_RAG_SOURCE", "documents").lower()
 # (추가) 채팅 답변에 한자 1자·가나 등이 섞였을 때 모델에게 한 번 고치게 할지 (기본 켬, false 면 이전처럼 그대로 보냄)
 CHAT_LIGHT_LEAK_FIX = get("CHAT_LIGHT_LEAK_FIX", "true").lower() in ("1", "true", "yes")
+# 자동 모드가 "올려 둔 문서에 근거가 있다"고 판단하는 기준 (routing.py). 1위 검색 결과의 점수가 문턱 이상이고
+# 질문 낱말이 본문에 ROUTE_DOC_MIN_TERMS 개 이상 있어야 한다. 값을 올리면 일반 대화로 더 자주 넘어간다.
+try:
+    ROUTE_DOC_MIN_SCORE = float(get("ROUTE_DOC_MIN_SCORE", "0.78"))
+    ROUTE_DOC_STRONG_SCORE = float(get("ROUTE_DOC_STRONG_SCORE", "0.85"))   # 이 미만이면 "근거가 약함" 표시
+    ROUTE_ELLIPSIS_MAX_DROP = float(get("ROUTE_ELLIPSIS_MAX_DROP", "0.02"))   # 지시어 없는 짧은 후속: 직전 질문에 덧붙인 검색 점수가 이만큼 이하로만 떨어지면 이어받음(0이면 끔)
+    ROUTE_FOLLOWUP_MAX_CHARS = int(get("ROUTE_FOLLOWUP_MAX_CHARS", "20"))   # 이 글자 수 이하의 짧은 질문은 직전 질문의 처리 방식을 이어받는다(0이면 끔)
+    ROUTE_DOC_MIN_TERMS = int(get("ROUTE_DOC_MIN_TERMS", "1"))
+except ValueError:
+    ROUTE_DOC_MIN_SCORE, ROUTE_DOC_MIN_TERMS, ROUTE_DOC_STRONG_SCORE, ROUTE_FOLLOWUP_MAX_CHARS = 0.78, 1, 0.85, 20
+    ROUTE_ELLIPSIS_MAX_DROP = 0.02
+# 답에 섞인 한자를 한자 음 표(static_data/hanja_ko.json)로 먼저 고친다(모델 호출 없음). 끄려면 CHAT_HANJA_TABLE=false
+CHAT_HANJA_TABLE = get("CHAT_HANJA_TABLE", "true").lower() in ("1", "true", "yes")
+# 모델이 못 고쳤어도 한국어가 대부분인 답은 안내 문구로 바꾸지 않고 원래 답을 보여 준다(사용자 결정 2026-11-13).
+# 끄려면 CHAT_KEEP_DRAFT_ON_FAIL=false (이전처럼 안내 문구로 바꿈)
+CHAT_KEEP_DRAFT_ON_FAIL = get("CHAT_KEEP_DRAFT_ON_FAIL", "true").lower() in ("1", "true", "yes")
+# 답이 안내 문구로 바뀔 때 바뀌기 전의 답을 data/diagnostics/fallback.jsonl 에 남긴다(이 PC 전용). 끄려면 CHAT_FALLBACK_LOG=false
+CHAT_FALLBACK_LOG = get("CHAT_FALLBACK_LOG", "true").lower() in ("1", "true", "yes")
+# 문서 근거로 답할 때, 모델이 [자료 N] 을 빼먹으면 답과 글이 겹치는 근거를 코드로 찾아 '근거:' 줄을 붙인다(모델 호출 없음).
+# 평가(22문항, 개발/보류 분리): 정답 쪽을 가리키는 비율 0.47~0.49 → 0.85~0.97. 끄려면 CHAT_AUTO_CITE=false
+CHAT_AUTO_CITE = get("CHAT_AUTO_CITE", "true").lower() in ("1", "true", "yes")
+# 부품 핀 답변에 LibrePCB 공개 라이브러리(CC0, 커뮤니티 데이터·사람 승인 전)에만 있는 부품을 포함한다. 끄려면 CHAT_PARTS_LIBREPCB=false
+CHAT_PARTS_LIBREPCB = get("CHAT_PARTS_LIBREPCB", "true").lower() in ("1", "true", "yes")
+# 일반 채팅에서 부품 핀 질문은 KiCad 라이브러리 값으로 바로 답한다(모델을 거치지 않음). 끄려면 CHAT_PARTS_LOOKUP=false
+CHAT_PARTS_LOOKUP = get("CHAT_PARTS_LOOKUP", "true").lower() in ("1", "true", "yes")
 
 # ---- 공개 시작 페이지가 /api/status 를 읽을 수 있는 출처
 STATUS_ALLOWED_ORIGINS = frozenset(get_list("STATUS_ALLOWED_ORIGINS", "https://yuul-jung.github.io"))
@@ -107,7 +132,10 @@ def describe() -> dict:
         "es_rag_index": ES_RAG_INDEX, "es_document_index": ES_DOCUMENT_INDEX,
         "chat_rag_source": CHAT_RAG_SOURCE, "search_score_margin": SEARCH_SCORE_MARGIN,
         "search_term_weight": SEARCH_TERM_WEIGHT,
-        "chat_light_leak_fix": CHAT_LIGHT_LEAK_FIX,
+        "chat_light_leak_fix": CHAT_LIGHT_LEAK_FIX, "chat_parts_lookup": CHAT_PARTS_LOOKUP, "chat_parts_librepcb": CHAT_PARTS_LIBREPCB,
+        "chat_fallback_log": CHAT_FALLBACK_LOG, "chat_hanja_table": CHAT_HANJA_TABLE,
+        "route_doc_min_score": ROUTE_DOC_MIN_SCORE, "route_doc_strong_score": ROUTE_DOC_STRONG_SCORE, "route_followup_max_chars": ROUTE_FOLLOWUP_MAX_CHARS, "route_ellipsis_max_drop": ROUTE_ELLIPSIS_MAX_DROP, "route_doc_min_terms": ROUTE_DOC_MIN_TERMS,
+        "chat_keep_draft_on_fail": CHAT_KEEP_DRAFT_ON_FAIL,
         "access_mode": "password" if ACCESS_PASSWORD else "local-only",
         "upload_max_mb": UPLOAD_MAX_MB, "upload_max_sections": UPLOAD_MAX_SECTIONS,
         "upload_max_chunks": UPLOAD_MAX_CHUNKS,
