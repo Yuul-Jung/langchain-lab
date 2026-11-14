@@ -11,7 +11,7 @@ TAX = {
     "domains": [{"id": "power", "definition": "d1"}, {"id": "analog", "definition": "d2"}],
     "functions": [{"id": "ldo", "domain": "power"}, {"id": "reference", "domain": "analog"}, {"id": "resistor", "domain": "analog"}],
     "libraries": {"Reg": {"function": "ldo", "status": "confirmed", "approver": "delegated: a + b", "also_ok": []},
-                  "Ref": {"function": "reference", "status": "proposed", "approver": "-", "also_ok": ["power"]}},
+                  "Ref": {"function": "reference", "status": "proposed", "approver": "-", "also_ok": []}},
     "generic": {"Device": {"R": {"function": "resistor", "status": "rule"}}},
     "unmapped": ["Odd"],
 }
@@ -55,6 +55,25 @@ class TaxonomyCheckTest(unittest.TestCase):
         self.assertTrue(any("also_ok" in m for m in run(tax=t)["problems"]["check2"]))
         t = copy.deepcopy(TAX); t["domains"][0]["definition"] = ""
         self.assertTrue(any("정의 없음" in m for m in run(tax=t)["problems"]["check2"]))
+
+    def test_mixed_library_schema_and_part_rules(self):
+        t = copy.deepcopy(TAX)
+        t["functions"].append({"id": "fan", "domain": "power"})
+        t["libraries"]["Ref"].update({"mixed": True, "also_functions": ["ldo"], "also_ok": ["power"],
+                                      "part_rules": {"Fan": {"function": "fan"}}})
+        r = run(tax=t, parts=PARTS + [{"library": "Ref", "name": "Fan_3pin"}, {"library": "Ref", "name": "Fanatic"}])
+        self.assertEqual(r["problems"]["check2"], [])
+        self.assertEqual(r["coverage"]["rule"][0], 3)                     # Device 2 + Fan_3pin ('Fanatic' 은 규칙에 안 걸림)
+        t["libraries"]["Ref"]["also_ok"] = []                              # also_functions 와 도메인이 어긋남
+        self.assertTrue(any("도메인과 다름" in m for m in run(tax=t)["problems"]["check2"]))
+        t["libraries"]["Ref"]["mixed"] = False
+        self.assertTrue(any("mixed 표시가 없음" in m for m in run(tax=t)["problems"]["check2"]))
+        t = copy.deepcopy(TAX); t["libraries"]["Reg"]["mixed"] = True      # 근거 없는 mixed
+        self.assertTrue(any("mixed 인데" in m for m in run(tax=t)["problems"]["check2"]))
+        rules = {"NUCLEO144": 1, "RaspberryPi_Pico": 2}
+        self.assertEqual(cpt.match_rule(rules, "RaspberryPi_Pico_W_Debug", "_-"), 2)
+        self.assertIsNone(cpt.match_rule(rules, "RaspberryPi-CM3", "_-"))      # 컴퓨트 모듈은 보드 규칙에 안 걸린다
+        self.assertEqual(cpt.match_rule({"NUCLEO144": 1}, "NUCLEO144-F207ZG", "_-"), 1)
 
     def test_check3_only_when_reference_and_raw_exist(self):
         ref = {"libraries": {"Reg": 5}, "functions": {"ldo": [5, 99]}}

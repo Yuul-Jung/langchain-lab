@@ -155,6 +155,8 @@ def function_for(path: str):
 
 
 def main():
+    if OUT.exists() and "--force" not in sys.argv:
+        sys.exit(f"{OUT.name} 가 이미 있습니다. 이 파일이 원본입니다(검토 수정·혼합 표시·부분 규칙이 들어 있음). 처음부터 다시 만들려면 --force (수정이 사라집니다).")
     import importlib.util
     spec = importlib.util.spec_from_file_location("mapdk", ROOT / "scripts" / "map-digikey-kicad.py")
     mapdk = importlib.util.module_from_spec(spec); spec.loader.exec_module(mapdk)

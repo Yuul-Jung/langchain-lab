@@ -777,29 +777,57 @@
    "domain": "other",
    "ko": "회로도 전용 기호",
    "en": "Schematic-only symbols"
+  },
+  {
+   "id": "clock_buffer",
+   "domain": "logic",
+   "ko": "클록 버퍼·팬아웃",
+   "en": "Clock buffers & fanout"
+  },
+  {
+   "id": "vacuum_tube",
+   "domain": "discrete",
+   "ko": "진공관",
+   "en": "Vacuum tubes"
   }
  ],
  "libraries": {
   "4xxx": {
    "function": "gates",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [
+    "analog"
+   ],
+   "also_functions": [
+    "timer_ic",
+    "analog_switch",
+    "logic_buffer"
+   ],
+   "mixed": true
   },
   "4xxx_IEEE": {
-   "function": "counters",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "gates",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [
+    "counters",
+    "level_shifter",
+    "logic_buffer"
+   ],
+   "mixed": true
   },
   "74xGxx": {
    "function": "gates",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "74xx": {
    "function": "logic_buffer",
@@ -809,11 +837,17 @@
    "also_ok": []
   },
   "74xx_IEEE": {
-   "function": "counters",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "gates",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [
+    "counters",
+    "logic_buffer",
+    "level_shifter"
+   ],
+   "mixed": true
   },
   "Amplifier_Audio": {
    "function": "audio_amp",
@@ -831,10 +865,12 @@
   },
   "Amplifier_Current": {
    "function": "current_sensor",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Amplifier_Difference": {
    "function": "opamp",
@@ -894,17 +930,47 @@
   },
   "Audio": {
    "function": "audio_codec",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [
+    "logic"
+   ],
+   "mixed": true,
+   "also_functions": [
+    "oscillator"
+   ]
   },
   "Auxiliary_Items": {
-   "function": "schematic_symbol",
-   "status": "schematic_only",
-   "source": "회로도 전용(구매 부품 아님)",
-   "approver": "-",
-   "also_ok": []
+   "function": "mechanical",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [
+    "power",
+    "protection",
+    "rf"
+   ],
+   "also_functions": [
+    "antenna",
+    "battery_cell",
+    "fuse"
+   ],
+   "mixed": true,
+   "part_rules": {
+    "Antenna": {
+     "function": "antenna",
+     "ko": "안테나"
+    },
+    "Battery": {
+     "function": "battery_cell",
+     "ko": "배터리"
+    },
+    "Fuse": {
+     "function": "fuse",
+     "ko": "퓨즈"
+    }
+   }
   },
   "Battery_Management": {
    "function": "battery_mgmt",
@@ -914,11 +980,13 @@
    "also_ok": []
   },
   "Buffer": {
-   "function": "logic_buffer",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "clock_buffer",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
   },
   "CPLD_Altera": {
    "function": "pld",
@@ -964,10 +1032,12 @@
   },
   "CPU_NXP_68000": {
    "function": "mpu_soc",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "CPU_NXP_IMX": {
    "function": "mpu_soc",
@@ -1051,7 +1121,13 @@
    "status": "confirmed",
    "source": "DigiKey 실제 부품 증거(2차)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [
+    "protection"
+   ],
+   "also_functions": [
+    "tvs"
+   ],
+   "mixed": true
   },
   "Diode_Bridge": {
    "function": "bridge",
@@ -1069,10 +1145,12 @@
   },
   "Display_Character": {
    "function": "lcd_char",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Display_Graphic": {
    "function": "lcd_graphic",
@@ -1083,10 +1161,12 @@
   },
   "Driver_Display": {
    "function": "display_driver",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Driver_FET": {
    "function": "gate_driver",
@@ -1111,10 +1191,12 @@
   },
   "FPGA_Altera_MAX10": {
    "function": "fpga",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "FPGA_CologneChip_GateMate": {
    "function": "fpga",
@@ -1139,10 +1221,12 @@
   },
   "FPGA_Microsemi": {
    "function": "fpga",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "FPGA_Xilinx": {
    "function": "fpga",
@@ -1153,10 +1237,12 @@
   },
   "FPGA_Xilinx_Artix7": {
    "function": "fpga",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "FPGA_Xilinx_Kintex7": {
    "function": "fpga",
@@ -1181,31 +1267,43 @@
   },
   "FPGA_Xilinx_Virtex6": {
    "function": "fpga",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "FPGA_Xilinx_Virtex7": {
    "function": "fpga",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Fiber_Optic": {
-   "function": "rf_module",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "fiber",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
   },
   "Filter": {
    "function": "emi_filter",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [
+    "rf"
+   ],
+   "also_functions": [
+    "rf_filter"
+   ],
+   "mixed": true
   },
   "Graphic": {
    "function": "schematic_symbol",
@@ -1215,11 +1313,21 @@
    "also_ok": []
   },
   "Interface": {
-   "function": "signal_buffer",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "if_controller",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [
+    "logic",
+    "rf"
+   ],
+   "also_functions": [
+    "io_expander",
+    "rfid",
+    "clock_buffer",
+    "uart"
+   ],
+   "mixed": true
   },
   "Interface_CAN_LIN": {
    "function": "line_transceiver",
@@ -1251,10 +1359,12 @@
   },
   "Interface_HDMI": {
    "function": "if_special",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Interface_LineDriver": {
    "function": "line_transceiver",
@@ -1272,10 +1382,12 @@
   },
   "Interface_Telecom": {
    "function": "telecom",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Interface_UART": {
    "function": "line_transceiver",
@@ -1300,24 +1412,30 @@
   },
   "Isolator_Analog": {
    "function": "isolator",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Jumper": {
-   "function": "connector",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "header",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
   },
   "LED": {
    "function": "led",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Logic_LevelTranslator": {
    "function": "level_shifter",
@@ -1348,11 +1466,13 @@
    "also_ok": []
   },
   "MCU_Dialog": {
-   "function": "mpu_soc",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "mcu",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
   },
   "MCU_Espressif": {
    "function": "rf_transceiver",
@@ -1447,10 +1567,12 @@
   },
   "MCU_Microchip_SAMA": {
    "function": "mpu_soc",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_Microchip_SAMD": {
    "function": "mcu",
@@ -1461,31 +1583,89 @@
   },
   "MCU_Microchip_SAME": {
    "function": "mcu",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_Microchip_SAML": {
    "function": "mcu",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_Microchip_SAMV": {
    "function": "mcu",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_Module": {
    "function": "module",
    "status": "confirmed",
    "source": "독립 검토 + 이름 유사도(1차)",
    "approver": "delegated: jung-29 + 71 (사용자 위임)",
-   "also_ok": []
+   "also_ok": [
+    "boards"
+   ],
+   "also_functions": [
+    "dev_board"
+   ],
+   "mixed": true,
+   "part_rules": {
+    "Adafruit": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "Arduino": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "NUCLEO144": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "NUCLEO64": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "CHIP": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "Maple": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "Electrosmith": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "Flipper": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "PocketBeagle": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "Olimex": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    },
+    "RaspberryPi_Pico": {
+     "function": "dev_board",
+     "ko": "개발 보드"
+    }
+   }
   },
   "MCU_NXP_ColdFire": {
    "function": "mcu",
@@ -1559,10 +1739,12 @@
   },
   "MCU_Nordic": {
    "function": "mcu",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_Parallax": {
    "function": "mcu",
@@ -1727,17 +1909,21 @@
   },
   "MCU_ST_STM32WB": {
    "function": "mcu",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_ST_STM32WL": {
    "function": "mcu",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_ST_STM8": {
    "function": "mcu",
@@ -1783,10 +1969,12 @@
   },
   "MCU_Trident": {
    "function": "mcu",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "MCU_WCH_RiscV": {
    "function": "mcu",
@@ -1804,17 +1992,21 @@
   },
   "Memory_EPROM": {
    "function": "memory_ic",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Memory_Flash": {
    "function": "memory_ic",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Memory_NVRAM": {
    "function": "memory_ic",
@@ -1832,10 +2024,12 @@
   },
   "Memory_ROM": {
    "function": "memory_ic",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Memory_UniqueID": {
    "function": "specialized_ic",
@@ -1846,10 +2040,20 @@
   },
   "Motor": {
    "function": "motor",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [
+    "thermal"
+   ],
+   "mixed": true,
+   "part_rules": {
+    "Fan": {
+     "function": "thermal",
+     "ko": "냉각 팬"
+    }
+   }
   },
   "Oscillator": {
    "function": "oscillator",
@@ -1866,11 +2070,16 @@
    "also_ok": []
   },
   "Power_Management": {
-   "function": "specialized_ic",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "current_reg",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [
+    "battery_mgmt",
+    "reg_controller"
+   ],
+   "mixed": true
   },
   "Power_Protection": {
    "function": "tvs",
@@ -1922,11 +2131,13 @@
    "also_ok": []
   },
   "RF_GPS": {
-   "function": "rf_misc",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "rf_module",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
   },
   "RF_GSM": {
    "function": "rf_module",
@@ -1978,11 +2189,15 @@
    "also_ok": []
   },
   "RF_ZigBee": {
-   "function": "rf_module",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "rf_transceiver",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [
+    "rf_module"
+   ],
+   "mixed": true
   },
   "Reference_Current": {
    "function": "current_reg",
@@ -2000,17 +2215,21 @@
   },
   "Regulator_Controller": {
    "function": "reg_controller",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Regulator_Current": {
-   "function": "current_diode",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "function": "current_reg",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
   },
   "Regulator_Linear": {
    "function": "ldo",
@@ -2049,10 +2268,18 @@
   },
   "Sensor": {
    "function": "multi_sensor",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [
+    "power"
+   ],
+   "also_functions": [
+    "metering",
+    "temp_sensor",
+    "light_sensor"
+   ],
+   "mixed": true
   },
   "Sensor_Audio": {
    "function": "microphone",
@@ -2133,10 +2360,12 @@
   },
   "Sensor_Temperature": {
    "function": "temp_sensor",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Sensor_Touch": {
    "function": "touch",
@@ -2175,10 +2404,12 @@
   },
   "Transformer": {
    "function": "transformer",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Transistor_Array": {
    "function": "bjt_array",
@@ -2210,10 +2441,12 @@
   },
   "Transistor_IGBT": {
    "function": "igbt",
-   "status": "proposed",
-   "source": "독립 검토 답, 근거 보강 전",
-   "approver": "-",
-   "also_ok": []
+   "status": "confirmed",
+   "source": "독립 검토(71, 뜻 중심) + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "mixed": false,
+   "also_functions": []
   },
   "Transistor_Power_Module": {
    "function": "igbt",
@@ -2242,6 +2475,74 @@
    "source": "회로도 전용(구매 부품 아님)",
    "approver": "-",
    "also_ok": []
+  },
+  "CPU_PowerPC": {
+   "function": "mpu_soc",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
+  },
+  "GPU": {
+   "function": "specialized_ic",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
+  },
+  "Security": {
+   "function": "specialized_ic",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
+  },
+  "Valve": {
+   "function": "vacuum_tube",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
+  },
+  "Interface_HID": {
+   "function": "if_controller",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
+  },
+  "Sensor_Voltage": {
+   "function": "multi_sensor",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [],
+   "also_functions": [],
+   "mixed": false
+  },
+  "Driver": {
+   "function": "motor_driver",
+   "status": "confirmed",
+   "source": "블라인드 표본에서 71이 찾은 오류 + 카탈로그 예시 확인(jung-29)",
+   "approver": "delegated: jung-29 + 71 (사용자 위임)",
+   "also_ok": [
+    "interface"
+   ],
+   "also_functions": [
+    "gate_driver",
+    "sensor_if"
+   ],
+   "mixed": true
   }
  },
  "generic": {
@@ -2525,13 +2826,18 @@
    }
   }
  },
- "unmapped": [
-  "CPU_PowerPC",
-  "Driver",
-  "GPU",
-  "Interface_HID",
-  "Security",
-  "Sensor_Voltage",
-  "Valve"
+ "unmapped": [],
+ "history": [
+  {
+   "date": "2026-11-15",
+   "by": "jung-29",
+   "change": "71의 블라인드 표본(라이브러리 가중, 223개)과 뜻 중심 검토 반영: 오류 8개 수정, 검토 OK 30개 확정, 혼합 라이브러리 표시(mixed·also_functions·part_rules), 미분류 7개 배정, Auxiliary_Items를 혼합 하드웨어로, 기능 2개 추가(clock_buffer·vacuum_tube), MCU_Module 개발 보드 이름 규칙",
+   "measured_before": "도메인 일치 200/223 (89.7%), 기능 일치 182/223 (81.6%)"
+  },
+  {
+   "date": "2026-11-15",
+   "by": "jung-29",
+   "change": "MCU_Module 개발 보드 규칙 수정: 'RaspberryPi' 가 컴퓨트 모듈(RaspberryPi-CM*)까지 삼키던 것을 'RaspberryPi_Pico' 로 좁힘"
+  }
  ]
 }

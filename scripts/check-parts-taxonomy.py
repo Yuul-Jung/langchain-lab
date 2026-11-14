@@ -25,9 +25,10 @@ RAW = ROOT / "data" / "digikey" / "taxonomy_raw.json"
 STATUSES = {"confirmed", "proposed", "rule", "schematic_only"}
 
 
-def match_rule(rules: dict, name: str):
+def match_rule(rules: dict, name: str, seps: str = "_"):
+    """이름이 키와 같거나 '키+구분자'로 시작하면 그 규칙(긴 키 먼저). 'R' 이 'RotaryEncoder' 를 삼키지 않는다."""
     keys = sorted((k for k in rules if k != "*"), key=len, reverse=True)
-    k = next((k for k in keys if name == k or name.startswith(k + "_")), None)
+    k = next((k for k in keys if name == k or any(name.startswith(k + s) for s in seps)), None)
     return rules.get(k) if k else rules.get("*")
 
 
@@ -65,7 +66,9 @@ def validate(tax: dict, parts: list[dict], ref: dict | None = None, digikey_ids:
     cov = Counter()
     for lib, ps in by_lib.items():
         if lib in libs:
-            cov[libs[lib]["status"]] += len(ps)
+            pr = libs[lib].get("part_rules") or {}
+            for p in ps:     # 부분 이름 규칙이 걸리는 부품은 '이름 규칙', 나머지는 라이브러리 상태
+                cov["rule" if pr and match_rule(pr, p["name"], "_-") else libs[lib]["status"]] += 1
         elif lib in generic:
             for p in ps:
                 if match_rule(generic[lib], p["name"]) is None:
@@ -83,9 +86,21 @@ def validate(tax: dict, parts: list[dict], ref: dict | None = None, digikey_ids:
             problems["check2"].append(f"{lib}: 알 수 없는 상태 {e['status']}")
         if e["status"] == "confirmed" and not str(e.get("approver", "")).startswith(("delegated:", "human:")):
             problems["check2"].append(f"{lib}: 확정인데 확인자 표시가 없음")
+        own = funcs.get(e["function"], {}).get("domain")
         for d in e.get("also_ok", []):
-            if d not in domains or d == funcs.get(e["function"], {}).get("domain"):
+            if d not in domains or d == own:
                 problems["check2"].append(f"{lib}: also_ok 가 잘못됨({d})")
+        also = e.get("also_functions", [])
+        for fid in also + [r["function"] for r in (e.get("part_rules") or {}).values()]:
+            if fid not in funcs:
+                problems["check2"].append(f"{lib}: 없는 기능 {fid} (also_functions·part_rules)")
+        derived = {funcs[f]["domain"] for f in also if f in funcs} - {own}
+        if set(e.get("also_ok", [])) != derived:
+            problems["check2"].append(f"{lib}: also_ok 가 also_functions 의 도메인과 다름")
+        if (also or e.get("part_rules")) and not e.get("mixed"):
+            problems["check2"].append(f"{lib}: also_functions·part_rules 가 있는데 mixed 표시가 없음")
+        if e.get("mixed") and not (also or e.get("part_rules")):
+            problems["check2"].append(f"{lib}: mixed 인데 also_functions·part_rules 가 없음")
     for lib, rules in generic.items():
         for key, r in rules.items():
             if r["function"] not in funcs:

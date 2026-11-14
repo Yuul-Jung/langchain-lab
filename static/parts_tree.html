@@ -46,6 +46,7 @@ function libRow(l){
   r.append(el("code",l.kicad),el("span",l.parts+"개","muted"));
   for(const k of l.ko_concepts||[])r.append(el("span",k,"chip"));
   r.append(el("span",l.status,STCLS[l.status]||"muted"));
+  if(l.mixed&&l.mixed.length){const m=el("span","혼합: "+l.mixed.join(", "),"chip");m.title="이 라이브러리에는 다른 기능의 부품도 섞여 있습니다";r.append(m)}
   if(l.examples&&l.examples.length)r.append(el("span","예: "+l.examples.join(", "),"muted"));
   return r}
 function render(){

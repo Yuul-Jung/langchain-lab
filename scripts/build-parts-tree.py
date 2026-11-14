@@ -17,9 +17,9 @@ OUT = ROOT / "data" / "parts_tree"
 STATUS_KO = {"confirmed": "확정", "proposed": "검토 필요", "rule": "이름 규칙", "schematic_only": "회로도 전용"}
 
 
-def match_rule(rules: dict, name: str):
+def match_rule(rules: dict, name: str, seps: str = "_"):
     keys = sorted((k for k in rules if k != "*"), key=len, reverse=True)
-    k = next((k for k in keys if name == k or name.startswith(k + "_")), None)
+    k = next((k for k in keys if name == k or any(name.startswith(k + s) for s in seps)), None)
     return rules.get(k) if k else rules.get("*")
 
 
@@ -41,12 +41,24 @@ def build(tax: dict, parts_by_lib: dict, ko: dict) -> dict:
     branches = defaultdict(lambda: defaultdict(list))        # 도메인 → 기능 → 잎
     unmapped = []
 
-    def leaf(name, ps, status, concepts):
-        return {"kicad": name, "parts": len(ps), "ko_concepts": concepts, "examples": [p["name"] for p in ps[:3]], "status": STATUS_KO[status]}
+    def leaf(name, ps, status, concepts, mixed=None):
+        d = {"kicad": name, "parts": len(ps), "ko_concepts": concepts, "examples": [p["name"] for p in ps[:3]], "status": STATUS_KO[status]}
+        if mixed:
+            d["mixed"] = [funcs[x]["ko"] for x in mixed]
+        return d
     for lib, e in tax["libraries"].items():
         ps = parts_by_lib.get(lib, [])
-        f = funcs[e["function"]]
-        branches[f["domain"]][e["function"]].append(leaf(lib, ps, e["status"], ko.get(lib, [])))
+        rules = e.get("part_rules") or {}
+        rest = []
+        split = defaultdict(list)
+        for p in ps:     # 부분 이름 규칙에 걸리는 부품은 그 기능의 잎으로 따로 보낸다
+            r = match_rule(rules, p["name"], "_-") if rules else None
+            (split[r["function"], r.get("ko", "")] if r else rest).append(p)
+        for (fid, kword), sub in split.items():
+            branches[funcs[fid]["domain"]][fid].append(leaf(f"{lib} [{kword or funcs[fid]['ko']}]", sub, "rule", [kword] if kword else []))
+        if rest or not ps:
+            branches[funcs[e["function"]]["domain"]][e["function"]].append(
+                leaf(lib, rest, e["status"], ko.get(lib, []), e.get("also_functions") if e.get("mixed") else None))
     for lib, rules in tax["generic"].items():
         groups = defaultdict(list)
         for p in parts_by_lib.get(lib, []):
