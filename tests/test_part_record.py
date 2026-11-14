@@ -1,0 +1,47 @@
+import unittest
+
+import part_record as pr
+
+
+class ParseTest(unittest.TestCase):
+    def test_ranges(self):
+        self.assertEqual(pr.parse_range("1.8V ~ 5.5V", "V"), (1.8, 5.5))
+        self.assertEqual(pr.parse_range("-40°C ~ 85°C (TA)", "°C"), (-40.0, 85.0))
+        self.assertEqual(pr.parse_range("3.3V", "V"), (3.3, 3.3))
+        self.assertEqual(pr.parse_range("-", "V"), (None, None))
+
+    def test_package_family_and_pins(self):
+        self.assertEqual(pr.package_family("Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"), "SOIC")
+        self.assertEqual(pr.package_family('8-SOIC (0.154", 3.90mm Width)'), "SOIC")
+        self.assertEqual(pr.package_family("SOT-23-5"), "SOT-23")
+        self.assertEqual(pr.package_family("16-TSSOP"), "TSSOP")      # SOP 로 잘못 잡지 않음
+        self.assertEqual(pr.pins_from_package('8-SOIC (0.154", 3.90mm Width)'), 8)
+        self.assertEqual(pr.pins_from_package("SOT-23-5"), 5)
+
+
+class ResolveTest(unittest.TestCase):
+    def ev(self, src, lo, hi):
+        return pr.evidence(src, f"{lo}~{hi}V", "ref", "2026-11-14", unit="V", lo=lo, hi=hi)
+
+    def test_agreed_picks_highest_basis(self):
+        r = pr.resolve([self.ev("digikey", 1.8, 5.5), self.ev("datasheet", 1.8, 5.5)])
+        self.assertEqual(r["status"], "agreed")
+        self.assertEqual(r["chosen"]["source"], "datasheet")
+
+    def test_conflict_is_never_auto_chosen(self):
+        r = pr.resolve([self.ev("digikey", 2.7, 5.5), self.ev("datasheet", 1.8, 5.5)])
+        self.assertEqual(r["status"], "conflict")
+        self.assertIsNone(r["chosen"])
+
+    def test_single_and_unknown(self):
+        self.assertEqual(pr.resolve([self.ev("kicad", 3.0, 3.6)])["status"], "single")
+        self.assertEqual(pr.resolve([None])["status"], "unknown")
+
+    def test_pins_compare_exact(self):
+        a = pr.evidence("kicad", 8, "k", "d", unit="pins", typ=8)
+        b = pr.evidence("digikey", 14, "m", "d", unit="pins", typ=14)
+        self.assertEqual(pr.resolve([a, b])["status"], "conflict")
+
+
+if __name__ == "__main__":
+    unittest.main()
