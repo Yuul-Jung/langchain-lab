@@ -6,7 +6,7 @@
 부품의 기능은 분류 체계(static_data/parts_taxonomy.json)에서 구한다: 일반 분류는 이름 규칙, 혼합 분류는 부품 이름 규칙이
 있으면 그 기능, 없으면 대표 기능.
 설정은 서비스와 같게(승인된 개념만·키워드 덧붙임·여러 조건 설정·학습 관문) 쓴다.
-  .venv/bin/python scripts/eval-parts-func.py --file data/eval/parts-ko-questions-71k-func.jsonl [--env PARTS_FUNCTION_RANK=1]
+  .venv/bin/python scripts/eval-parts-func.py --file data/eval/parts-ko-questions-71k-func.jsonl [--rank off|on|service]
 """
 from __future__ import annotations
 
@@ -54,7 +54,9 @@ def main() -> int:
     ap.add_argument("--file", type=Path, required=True)
     ap.add_argument("--graph", default=None)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--rank", choices=["off", "on", "service"], default="service", help="PARTS_FUNCTION_RANK: 끔·켬·서비스 설정")
     args = ap.parse_args()
+    RANK = settings.PARTS_FUNCTION_RANK if args.rank == "service" else args.rank == "on"
     items = [json.loads(l) for l in args.file.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
     parts, g, es = kp.default_catalog(), og.load_graph(args.graph or ROOT / "data" / "ontology" / "graph_ko.json"), rag_search.es_client()
     full = {p["lib_id"]: p for p in parts}
@@ -65,6 +67,7 @@ def main() -> int:
     sem = (lambda q: og.semantic_concepts(g, q, rag_search.embed_query, vecs, include_proposed=False)) if vecs else None
     kw = dict(find=find, ontology=g, include_proposed=False, semantic_concepts=sem, catalog=parts, expand=True,
               conditions=settings.PARTS_CONDITIONS, bridge=settings.PARTS_BRIDGE,
+              function_rank=RANK, taxonomy=(pt.Taxonomy.load() if RANK else None),
               veto=(lambda q: parts_gate.veto(q, embed=rag_search.embed_query)) if settings.PARTS_GATE_ML else None)
     graph = pg.build_parts_graph(pg.PartsDeps(**kw))
     pos = [i for i in items if i["kind"] == "parts"]

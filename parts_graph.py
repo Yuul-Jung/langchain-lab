@@ -57,6 +57,8 @@ class PartsState(TypedDict, total=False):
     concept_ids: list[str]
     anchor: dict
     parts: list[dict]
+    plain_base: bool        # 분류 체계 이름으로 찾은 질문이 원래도 보조 관문(짧은 부품 질문)으로 답이 나오던 것인지
+    functions: list[str]    # 분류 체계의 기능 id(개념 사전에 없는 말을 우리 분류 체계의 이름으로 찾았을 때)
     conditions: list[str]   # 여러 조건 질문: 질문에서 뽑은 조건 이름(부품마다 checks 에 ✓·✗·? 판정)
     backend: str
     answered: bool
@@ -73,6 +75,8 @@ class PartsDeps:
     catalog: Optional[list] = None   # 부품 목록(영문 부품 이름으로 '비슷한 부품'을 찾을 때 씀)
     expand: bool = False          # 검색어에 개념의 영어 키워드·분류 이름을 덧붙인다(짧은 한국어 질문의 의미 검색 보강)
     semantic_concepts: Optional[Callable[[str], list[str]]] = None   # 문구가 사전과 다를 때 의미가 가까운 개념(문턱 넘는 것만)
+    taxonomy: Optional[object] = None   # 분류 체계(parts_taxonomy.Taxonomy). function_rank 가 켜졌을 때만 쓴다
+    function_rank: bool = False         # 기능 단위 순위·분류 표시·분류 체계 이름으로 찾기(설정 PARTS_FUNCTION_RANK, 기본 꺼짐)
     bridge: bool = False          # 한·영 다리 사전의 영어 짝을 검색어에 덧붙임(설정 PARTS_BRIDGE, 기본 꺼짐)
     conditions: bool = False      # 여러 조건 질문(인터페이스·전압·패키지 …)을 뽑아 순서·답에 반영(설정 PARTS_CONDITIONS, 기본 꺼짐)
     veto: Optional[Callable[[str], bool]] = None   # 규칙이 부품 질문이라 본 뒤의 보조 거부(학습 모델, parts_gate.veto). True 면 부품 질문 아님
@@ -115,6 +119,30 @@ def rerank_by_library(rows: list[dict], libs: set[str]) -> list[dict]:
         return rows
     lib_of = lambda r: r.get("library") or r.get("lib_id", "").split(":", 1)[0]
     return [r for r in rows if lib_of(r) in libs] + [r for r in rows if lib_of(r) not in libs]
+
+
+def function_gate(question: str) -> bool:
+    """분류 체계 이름으로 찾는 길의 관문: 설명·문서·비부품 말이 없고, 부품을 찾는 말(INTENT)이 있어야 한다.
+    개념 사전을 거치지 않는 길이라 짧은 명사구는 받지 않는다(소비자 제품·잡담에 기능 낱말이 섞여 오처리되는 것을 막는다)."""
+    if DOC_WORDS.search(question) or EXPLAIN.search(question) or NONPART.search(question):
+        return False
+    return bool(INTENT.search(question.strip()))
+
+
+def _lib_of(p: dict) -> str:
+    return p.get("library") or str(p.get("lib_id", "")).split(":", 1)[0]
+
+
+def part_info(tax, p: dict):
+    return tax.classify(_lib_of(p), p.get("name", ""), " ".join(str(p.get(k) or "") for k in ("description", "keywords", "name")).lower())
+
+
+def annotate_parts(tax, parts: list[dict]) -> list[dict]:
+    out = []
+    for p in parts:
+        info = part_info(tax, p)
+        out.append({**p, "taxonomy": {**info, "label": tax.label(info)}} if info else p)
+    return out
 
 
 def find_anchor(question: str, catalog) -> dict | None:
@@ -172,6 +200,8 @@ def format_answer(parts: list[dict], backend: str, concepts: list[str], conditio
         desc = (p.get("description") or "").strip() or "설명 없음"
         pins = f", 핀 {p['pin_count']}개" if p.get("pin_count") else ""
         lines.append(f"{i}. **{p.get('name', p.get('lib_id', ''))}** (`{p.get('lib_id', '')}`{pins}) — {desc}")
+        if p.get("taxonomy"):
+            lines.append(f"   분류: {p['taxonomy']['label']}")
         if conditions and p.get("checks"):
             lines.append("   조건: " + " · ".join(f"{k} {v}" for k, v in p["checks"].items()))
     if conditions and any(v == pc.UNKNOWN for p in parts for v in (p.get("checks") or {}).values()):
@@ -206,6 +236,13 @@ def build_parts_graph(deps: PartsDeps):
                     "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}"]}
         ids = parts_concepts(state["question"], deps.ontology, deps.include_proposed, deps.semantic_concepts)
         concepts = [deps.ontology.nodes[c]["label"] for c in ids]
+        if not concepts and deps.function_rank and deps.taxonomy is not None and function_gate(state["question"]):
+            fids = deps.taxonomy.question_functions(state["question"])
+            if fids:
+                names = [deps.taxonomy.funcs[f]["ko"] for f in fids]
+                return {"concepts": names, "concept_ids": [], "functions": fids,
+                        "plain_base": plain_parts_request(state["question"], deps.ontology),
+                        "trace": [f"classify: 개념 사전에는 없지만 분류 체계의 기능 이름으로 부품 질문을 찾음, 기능 {names}"]}
         if not concepts and plain_parts_request(state["question"], deps.ontology):
             return {"concepts": [NO_CONCEPT], "concept_ids": [],
                     "trace": ["classify: 사전에 개념은 없지만 부품을 찾는 짧은 질문 → 질문 그대로 검색"]}
@@ -221,7 +258,35 @@ def build_parts_graph(deps: PartsDeps):
             base = anchor["name"].lower()
             rows, backend = deps.find(similar_query(anchor), deps.limit + 8)
             parts = [r for r in rows if r.get("lib_id") != anchor["lib_id"] and not r.get("name", "").lower().startswith(base)][:deps.limit]
+            if deps.function_rank and deps.taxonomy is not None:
+                parts = annotate_parts(deps.taxonomy, parts)
             return {"parts": parts, "backend": backend, "trace": [f"search[{backend}]: 비슷한 부품 {len(parts)}건"]}
+        tax = deps.taxonomy if deps.function_rank else None
+        fids = state.get("functions") or []
+        if fids and tax is not None:     # 분류 체계의 기능 이름으로 찾은 질문
+            names = " ".join(tax.funcs[f]["en"] for f in fids)
+            rows, backend = deps.find(f"{state['question']} {names}", deps.limit * 8)
+            want = set(fids)
+            hit = [r for r in rows if (i := part_info(tax, r)) and i["function"] in want]
+            added = 0
+            if len(hit) < deps.limit and deps.catalog:     # 검색 결과에 그 기능 부품이 모자라면 카탈로그에서 결정적으로 채운다
+                have = {r.get("lib_id") for r in hit}
+                idx = tax.index(deps.catalog)
+                extra = sorted((p for f in fids for p in idx.get(f, []) if p.get("lib_id") not in have),
+                               key=lambda p: (not p.get("datasheet"), -(p.get("pin_count") or 0), p["name"]))
+                added = len(extra[:deps.limit - len(hit)])
+                hit += extra[:deps.limit - len(hit)]
+            if state.get("plain_base"):
+                # 원래도 보조 관문으로 답이 나오던 질문: 원래 검색 결과(앞쪽 3개)를 지키고 기능 부품을 뒤쪽에 끼워 넣는다(원래 답을 깎지 않는다)
+                base, _ = deps.find(state["question"], deps.limit)
+                keep = base[:max(deps.limit - 2, 1)]
+                seen = {r.get("lib_id") for r in keep}
+                parts = keep + [r for r in hit if r.get("lib_id") not in seen][:deps.limit - len(keep)]
+            else:
+                parts = hit[:deps.limit]
+            parts = annotate_parts(tax, parts[:deps.limit])
+            return {"parts": parts, "backend": backend if parts else None, "functions": fids,
+                    "trace": [f"search[{backend}]: 기능 {fids} 부품 {len(parts)}건(카탈로그 보충 {added}건)"]}
         query = state["question"]
         ids = state.get("concept_ids", [])
         if deps.conditions and deps.ontology is not None and len(ids) > 1:
@@ -244,6 +309,8 @@ def build_parts_graph(deps: PartsDeps):
             in_lib = [r for r in rows if lib_of(r) in libs] if libs else rows
             rows = pc.rank(conds, in_lib) + [r for r in rows if r not in in_lib] if in_lib else pc.rank(conds, rows)
         parts = rows[:deps.limit]
+        if tax is not None:
+            parts = annotate_parts(tax, parts)
         if not parts:   # ES·임베딩이 안 되고 한국어 낱말 검색도 비면: 온톨로지의 영어 키워드·분류로 대체
             parts = ontology_search(deps.ontology, ids, deps.limit)
             parts = pc.rank(conds, parts) if conds else parts
