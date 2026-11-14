@@ -1,0 +1,410 @@
+{
+ "_note": "부품 테크트리의 기능 도메인 표(초안, jung-29, 2026-11-14, 검토 전). 키 = DigiKey 최상위 분류 이름, 또는 'Integrated Circuits (ICs)' 아래 2단계 이름. 값 = 도메인 id. 표에 없는 분류는 'other'.",
+ "domains": [
+  {
+   "id": "processor",
+   "ko": "처리기 (MCU·CPU·FPGA)",
+   "en": "Processors"
+  },
+  {
+   "id": "power",
+   "ko": "전원",
+   "en": "Power"
+  },
+  {
+   "id": "analog",
+   "ko": "아날로그·신호 처리",
+   "en": "Analog & signal"
+  },
+  {
+   "id": "logic",
+   "ko": "디지털 로직·타이밍",
+   "en": "Logic & timing"
+  },
+  {
+   "id": "memory",
+   "ko": "메모리",
+   "en": "Memory"
+  },
+  {
+   "id": "interface",
+   "ko": "통신·인터페이스",
+   "en": "Interface"
+  },
+  {
+   "id": "rf",
+   "ko": "RF·무선",
+   "en": "RF & wireless"
+  },
+  {
+   "id": "sensor",
+   "ko": "센서",
+   "en": "Sensors"
+  },
+  {
+   "id": "discrete",
+   "ko": "개별 반도체",
+   "en": "Discrete semiconductors"
+  },
+  {
+   "id": "opto",
+   "ko": "광·표시",
+   "en": "Optoelectronics & display"
+  },
+  {
+   "id": "electromech",
+   "ko": "전기기계 (릴레이·스위치·모터)",
+   "en": "Electromechanical"
+  },
+  {
+   "id": "protection",
+   "ko": "보호·필터",
+   "en": "Protection & filters"
+  },
+  {
+   "id": "passive",
+   "ko": "수동 소자",
+   "en": "Passives"
+  },
+  {
+   "id": "connect",
+   "ko": "연결·기구",
+   "en": "Connectors & mechanical"
+  },
+  {
+   "id": "boards",
+   "ko": "개발 보드·키트",
+   "en": "Boards & kits"
+  },
+  {
+   "id": "other",
+   "ko": "기타",
+   "en": "Other"
+  }
+ ],
+ "map": {
+  "Embedded": "processor",
+  "Embedded Computers": "processor",
+  "Development Boards, Kits, Programmers": "boards",
+  "Power Management (PMIC)": "power",
+  "Power Supplies - Board Mount": "power",
+  "Power Supplies - External/Internal (Off-Board)": "power",
+  "Battery Products": "power",
+  "Linear": "analog",
+  "Data Acquisition": "analog",
+  "Audio Special Purpose": "analog",
+  "Audio Products": "analog",
+  "Logic": "logic",
+  "Clock/Timing": "logic",
+  "Crystals, Oscillators, Resonators": "logic",
+  "Memory": "memory",
+  "Memory - Modules, Cards": "memory",
+  "Interface": "interface",
+  "Isolators": "interface",
+  "Networking Solutions": "interface",
+  "RF and Wireless": "rf",
+  "Sensors, Transducers": "sensor",
+  "Discrete Semiconductor Products": "discrete",
+  "Optoelectronics": "opto",
+  "Relays": "electromech",
+  "Switches": "electromech",
+  "Motors, Actuators, Solenoids and Drivers": "electromech",
+  "Fans, Blowers, Thermal Management": "electromech",
+  "Circuit Protection": "protection",
+  "Filters": "protection",
+  "Line Protection, Distribution, Backups": "protection",
+  "Resistors": "passive",
+  "Capacitors": "passive",
+  "Inductors, Coils, Chokes": "passive",
+  "Potentiometers, Variable Resistors": "passive",
+  "Transformers": "passive",
+  "Magnetics - Transformer, Inductor Components": "passive",
+  "Connectors, Interconnects": "connect",
+  "Cable Assemblies": "connect",
+  "Cables, Wires": "connect",
+  "Hardware, Fasteners, Accessories": "connect",
+  "Boxes, Enclosures, Racks": "connect",
+  "Specialized ICs": "other"
+ },
+ "generic_prefix": {
+  "_note": "일반 분류는 부품 이름으로 나눈다: 이름 == 키 또는 이름이 '키_'로 시작(긴 키 먼저). 값 = [도메인, DigiKey 분류, 한국어 개념]. 맞는 키가 없으면 '규칙 없음'.",
+  "Device": {
+   "R": [
+    "passive",
+    "Resistors",
+    "저항"
+   ],
+   "C": [
+    "passive",
+    "Capacitors",
+    "커패시터"
+   ],
+   "L": [
+    "passive",
+    "Inductors, Coils, Chokes",
+    "인덕터"
+   ],
+   "Transformer": [
+    "passive",
+    "Transformers",
+    "변압기"
+   ],
+   "D": [
+    "discrete",
+    "Discrete Semiconductor Products > Diodes",
+    "다이오드"
+   ],
+   "Q": [
+    "discrete",
+    "Discrete Semiconductor Products > Transistors",
+    "트랜지스터"
+   ],
+   "LED": [
+    "opto",
+    "Optoelectronics > LED Indication",
+    "발광 다이오드"
+   ],
+   "Lamp": [
+    "opto",
+    "Optoelectronics",
+    "램프"
+   ],
+   "Crystal": [
+    "logic",
+    "Crystals, Oscillators, Resonators",
+    "크리스탈"
+   ],
+   "Resonator": [
+    "logic",
+    "Crystals, Oscillators, Resonators",
+    "공진자"
+   ],
+   "Fuse": [
+    "protection",
+    "Circuit Protection > Fuses",
+    "퓨즈"
+   ],
+   "CircuitBreaker": [
+    "protection",
+    "Circuit Protection > Circuit Breakers",
+    "차단기"
+   ],
+   "Filter": [
+    "protection",
+    "Filters",
+    "필터"
+   ],
+   "Thermistor": [
+    "sensor",
+    "Sensors, Transducers > Temperature Sensors",
+    "서미스터"
+   ],
+   "Antenna": [
+    "rf",
+    "RF and Wireless > RF Antennas",
+    "안테나"
+   ],
+   "Microphone": [
+    "analog",
+    "Audio Products > Microphones",
+    "마이크"
+   ],
+   "Speaker": [
+    "analog",
+    "Audio Products > Speakers",
+    "스피커"
+   ],
+   "Buzzer": [
+    "analog",
+    "Audio Products > Buzzers",
+    "부저"
+   ],
+   "RotaryEncoder": [
+    "electromech",
+    "Sensors, Transducers > Encoders",
+    "로터리 엔코더"
+   ],
+   "Battery": [
+    "power",
+    "Battery Products",
+    "배터리"
+   ],
+   "CP": [
+    "passive",
+    "Capacitors",
+    "커패시터"
+   ],
+   "FerriteBead": [
+    "protection",
+    "Filters > Ferrite Beads and Chips",
+    "페라이트 비드"
+   ],
+   "Polyfuse": [
+    "protection",
+    "Circuit Protection > PTC Resettable Fuses",
+    "폴리퓨즈"
+   ],
+   "Varistor": [
+    "protection",
+    "Circuit Protection > TVS - Varistors, MOVs",
+    "배리스터"
+   ],
+   "GDT": [
+    "protection",
+    "Circuit Protection > Gas Discharge Tube Arresters (GDT)",
+    ""
+   ],
+   "SparkGap": [
+    "protection",
+    "Circuit Protection",
+    ""
+   ],
+   "Thermocouple": [
+    "sensor",
+    "Sensors, Transducers > Temperature Sensors",
+    "열전대"
+   ],
+   "HallGenerator": [
+    "sensor",
+    "Sensors, Transducers > Magnetic Sensors",
+    ""
+   ],
+   "DIAC": [
+    "discrete",
+    "Discrete Semiconductor Products > Thyristors",
+    "다이악"
+   ],
+   "Solar": [
+    "power",
+    "Power Supplies - Board Mount",
+    ""
+   ],
+   "Earphone": [
+    "analog",
+    "Audio Products",
+    ""
+   ],
+   "PeltierElement": [
+    "electromech",
+    "Fans, Blowers, Thermal Management",
+    ""
+   ],
+   "Heater": [
+    "electromech",
+    "Fans, Blowers, Thermal Management",
+    ""
+   ],
+   "ElectromagneticActor": [
+    "electromech",
+    "Motors, Actuators, Solenoids and Drivers",
+    ""
+   ],
+   "Circulator": [
+    "rf",
+    "RF and Wireless",
+    ""
+   ],
+   "RFShield": [
+    "rf",
+    "RF and Wireless",
+    ""
+   ],
+   "DelayLine": [
+    "logic",
+    "Integrated Circuits (ICs) > Logic",
+    ""
+   ],
+   "VoltageDivider": [
+    "passive",
+    "Resistors",
+    ""
+   ],
+   "Memristor": [
+    "passive",
+    "Resistors",
+    ""
+   ],
+   "Ammeter": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ],
+   "Voltmeter": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ],
+   "Ohmmeter": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ],
+   "Galvanometer": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ],
+   "Oscilloscope": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ],
+   "FrequencyCounter": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ],
+   "NetTie": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ],
+   "Thermal_Jumper": [
+    "other",
+    "(회로도 전용 기호 — 구매 부품 아님)",
+    ""
+   ]
+  },
+  "Connector": {
+   "*": [
+    "connect",
+    "Connectors, Interconnects"
+   ]
+  },
+  "Connector_Generic": {
+   "*": [
+    "connect",
+    "Connectors, Interconnects"
+   ]
+  },
+  "Connector_Generic_MountingPin": {
+   "*": [
+    "connect",
+    "Connectors, Interconnects"
+   ]
+  },
+  "Connector_Generic_Shielded": {
+   "*": [
+    "connect",
+    "Connectors, Interconnects"
+   ]
+  },
+  "Switch": {
+   "*": [
+    "electromech",
+    "Switches"
+   ]
+  },
+  "Mechanical": {
+   "*": [
+    "connect",
+    "Hardware, Fasteners, Accessories"
+   ]
+  }
+ },
+ "also_ok": {
+  "Isolators": [
+   "power"
+  ]
+ }
+}

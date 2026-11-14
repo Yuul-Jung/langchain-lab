@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>부품 테크트리</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--sub:#5b6676;--line:#dde2ea;--ok:#1f7a4d;--warn:#a15c00;--acc:#34445d;--chip:#eef1f6}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--ink:#e6e9ee;--sub:#9aa4b2;--line:#2e343e;--ok:#5cc28f;--warn:#e0a24a;--acc:#8fa6c8;--chip:#272c35}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Noto Sans KR",sans-serif}
+header{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+header h1{margin:0 0 4px;font-size:18px}
+header p{margin:0;color:var(--sub);font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+input[type=search]{flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit}
+label{font-size:13px;color:var(--sub)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
+.stat b{font-size:16px;display:block}
+details{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}
+details>summary{cursor:pointer;padding:10px 12px;font-weight:600;list-style-position:inside}
+details details{border:none;border-top:1px solid var(--line);border-radius:0;margin:0}
+details details>summary{font-weight:500;font-size:14px;padding:8px 12px 8px 24px;color:var(--sub)}
+.lib{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;padding:6px 12px 6px 40px;border-top:1px dashed var(--line);font-size:14px}
+.lib code{font-weight:600}
+.chip{background:var(--chip);border-radius:10px;padding:0 8px;font-size:12px}
+.st-확정{color:var(--ok)} .st-검토{color:var(--warn)} .st-규칙{color:var(--acc)}
+.muted{color:var(--sub);font-size:12px}
+.hidden{display:none}
+</style></head>
+<body>
+<header><h1>부품 테크트리</h1>
+<p>기능 도메인 → DigiKey 분류 → KiCad 라이브러리. 대응은 jung-29·71 위임 합의(사람 검토 전 초안). '검토 필요'는 근거 보강 전, '이름 규칙'은 일반 분류(Device 등)를 부품 이름으로 나눈 것.</p></header>
+<main>
+<div class="bar"><input id="q" type="search" placeholder="찾기: 라이브러리·분류·한국어 개념 (예: LDO, 저항, Interface)" aria-label="찾기">
+<label><input id="onlyok" type="checkbox"> 확정만</label></div>
+<div class="stats" id="stats"></div>
+<div id="tree" aria-live="polite">불러오는 중…</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n};
+const STCLS={"확정":"st-확정","검토 필요":"st-검토","이름 규칙":"st-규칙"};
+let DATA=null;
+function libRow(l){
+  const r=el("div",null,"lib");r.dataset.text=[l.kicad,(l.ko_concepts||[]).join(" "),(l.examples||[]).join(" ")].join(" ").toLowerCase();r.dataset.status=l.status;
+  r.append(el("code",l.kicad),el("span",l.parts+"개","muted"));
+  for(const k of l.ko_concepts||[])r.append(el("span",k,"chip"));
+  r.append(el("span",l.status,STCLS[l.status]||"muted"));
+  if(l.examples&&l.examples.length)r.append(el("span","예: "+l.examples.join(", "),"muted"));
+  return r}
+function render(){
+  const root=$("tree");root.replaceChildren();
+  const tot=DATA.domains.reduce((a,d)=>a+d.parts,0)+(DATA.unmapped||[]).reduce((a,l)=>a+l.parts,0);
+  const by={};for(const d of DATA.domains)for(const b of d.branches)for(const l of b.libraries)by[l.status]=(by[l.status]||0)+l.parts;
+  const s=$("stats");s.replaceChildren();
+  const stat=(k,v)=>{const x=el("div",null,"stat");x.append(el("b",v),document.createTextNode(k));s.append(x)};
+  stat("도메인",DATA.domains.length);stat("전체 부품",tot.toLocaleString());
+  for(const k of ["확정","검토 필요","이름 규칙"])if(by[k])stat(k,(by[k]/tot*100).toFixed(1)+"%");
+  for(const d of DATA.domains){
+    const D=el("details");const sm=el("summary",d.ko+" — 라이브러리 "+d.libraries+"개 · 부품 "+d.parts.toLocaleString()+"개");D.append(sm);
+    for(const b of d.branches){const B=el("details");B.append(el("summary",b.digikey_path+" ("+b.libraries.length+")"));for(const l of b.libraries)B.append(libRow(l));D.append(B)}
+    root.append(D)}
+  if(DATA.unmapped&&DATA.unmapped.length){const U=el("details");U.append(el("summary","미분류 — "+DATA.unmapped.length+"개 (기호 전용·일반 분류)"));for(const l of DATA.unmapped)U.append(libRow(l));root.append(U)}
+  filter()}
+function filter(){
+  const q=$("q").value.trim().toLowerCase(),ok=$("onlyok").checked;
+  for(const D of $("tree").children){let any=false;
+    for(const B of D.querySelectorAll(":scope>details")){let hit=false;const path=B.firstChild.textContent.toLowerCase();
+      for(const r of B.querySelectorAll(".lib")){const show=(!q||r.dataset.text.includes(q)||path.includes(q))&&(!ok||r.dataset.status==="확정");r.classList.toggle("hidden",!show);hit=hit||show}
+      B.classList.toggle("hidden",!hit);if(q)B.open=hit;any=any||hit}
+    for(const r of D.querySelectorAll(":scope>.lib")){const show=(!q||r.dataset.text.includes(q))&&!ok;r.classList.toggle("hidden",!show);any=any||show}
+    D.classList.toggle("hidden",!any);if(q)D.open=any}}
+$("q").addEventListener("input",filter);$("onlyok").addEventListener("change",filter);
+fetch("/api/parts-tree").then(r=>{if(r.status===401){location.href="/login?next=/parts-tree";throw Error("로그인 필요")}return r.json()})
+  .then(d=>{DATA=d;render()}).catch(e=>{$("tree").textContent="불러오지 못했습니다: "+e.message});
+</script></body></html>

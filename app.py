@@ -1,5 +1,6 @@
 """Local LangChain + Elasticsearch RAG web service. Loopback only."""
 import difflib
+import json
 import os
 import re
 import secrets
@@ -161,6 +162,20 @@ def graph_page():
 @app.get("/ontology")
 def ontology_page():
     return FileResponse(ROOT / "static" / "ontology.html")
+
+
+@app.get("/parts-tree")
+def parts_tree_page():
+    return FileResponse(ROOT / "static" / "parts_tree.html")
+
+
+@app.get("/api/parts-tree")
+def parts_tree_api():
+    """(추가) 부품 테크트리(scripts/build-parts-tree.py 결과). 없으면 빈 나무. 접근 제어는 access_guard 공통."""
+    path = ROOT / "data" / "parts_tree" / "tree.json"
+    if not path.is_file():
+        return {"domains": [], "unmapped": [], "_source": "아직 만들지 않았습니다(scripts/build-parts-tree.py)."}
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 @app.get("/api/graph")
