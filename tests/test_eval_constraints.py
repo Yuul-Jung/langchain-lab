@@ -31,8 +31,7 @@ class EvalConstraints(unittest.TestCase):
         self.assertGreater(r["dangerous_pass"], 0)
 
     def test_too_strict_limit_gives_false_alarm(self):
-        r = ec.evaluate(GOLD, pred(supply_max_v=[{"value": 2.0, "source": "distributor"}],
-                                   supply_min_v=[{"value": 1.0, "source": "distributor"}]))
+        r = ec.evaluate(GOLD, pred(supply_max_v=[{"value": 4.0, "source": "distributor"}]))   # 더 엄격한 상한만
         self.assertGreater(r["fp"], 0)
         self.assertEqual(r["dangerous_pass"], 0)
 
