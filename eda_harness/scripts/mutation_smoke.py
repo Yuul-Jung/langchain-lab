@@ -38,6 +38,7 @@ MUTANTS = [
     ("edaharness/checks.py", "if tr > 0.1 / p[\"signal_max_hz\"]:", "if False:", "레벨 변환 상승 시간 검사 생략"),
     ("edaharness/units.py", "hi = v_hi * r_bot * (1 + r_tol)", "hi = v_hi * r_bot * (1 - r_tol)", "분압 최악 상한 계산 오류"),
     ("edaharness/synth.py", "if hi > vmx or lo < vih:", "if False:", "분압 합성이 창 조건을 무시"),
+    ("edaharness/constraints.py", 'if r.get("tier") == "delegated":', "if False:", "위임 확인 경고 생략"),
     ("edaharness/constraints.py", "if amax is not None and rail_v > amax:", "if False:", "절대 최대 전원 검사 생략"),
     ("edaharness/constraints.py", "if lo is not None and rail_v < lo:", "if False:", "권장 최소 전원 검사 생략"),
     ("edaharness/constraints.py", "if hi is not None and rail_v > hi:", "if False:", "권장 최대 전원 검사 생략"),

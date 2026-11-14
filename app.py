@@ -23,6 +23,7 @@ import parts_chat
 import parts_log
 import fallback_log
 import graph_views
+import datasheet_review
 import ontology_review
 import hanja_ko
 import routing
@@ -53,6 +54,7 @@ APP_VERSION = _app_version()
 app = FastAPI(title="LangChain Lab")
 app.include_router(document_router)
 app.include_router(ontology_review.router)   # (추가) 개념 승인 화면 API. 접근 제어는 access_guard 공통
+app.include_router(datasheet_review.router)   # (추가) 데이터시트 값 확인 화면 API. 접근 제어는 access_guard 공통
 
 
 # (추가) 공개 시작 페이지(GitHub Pages)가 /api/status 하나만 GET으로 읽을 수 있게 한다.
@@ -157,6 +159,11 @@ def documents_page():
 @app.get("/graph")
 def graph_page():
     return FileResponse(ROOT / "static" / "graph.html")
+
+
+@app.get("/datasheet-review")
+def datasheet_review_page():
+    return FileResponse(ROOT / "static" / "datasheet_review.html")
 
 
 @app.get("/ontology")

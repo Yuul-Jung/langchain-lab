@@ -9,6 +9,7 @@
 판정은 부품 이름을 보지 않는다. 필드 이름과 숫자만 본다(어떤 부품에도 같은 코드).
   - 근거 값이 없으면 ERROR(MISSING) — 통과로 치지 않는다.
   - datasheet 가 아닌 값으로 내린 판정은 WARN(UNVERIFIED_BASIS)을 함께 남긴다.
+  - 증거에 tier="delegated"(위임 확인, 사람이 직접 확인하지 않음)가 있으면 WARN(DELEGATED_CONFIRMATION)을 남긴다.
 """
 from __future__ import annotations
 
@@ -49,7 +50,8 @@ def resolve(record: dict, field: str) -> dict:
     v0 = float(best[0]["value"])
     if any(abs(float(c["value"]) - v0) > REL_TOL * max(1.0, abs(v0)) for c in best[1:]):
         return {"status": "conflict", "value": None, "source": best[0]["source"], "candidates": best}
-    return {"status": "ok", "value": v0, "source": best[0]["source"], "candidates": cands}
+    tier = "delegated" if any(c.get("tier") == "delegated" for c in best) else None
+    return {"status": "ok", "value": v0, "source": best[0]["source"], "tier": tier, "candidates": cands}
 
 
 def disagreements(record: dict) -> list[dict]:
@@ -81,6 +83,9 @@ def check_operating_point(record: dict, rail_v: float, temp_c: tuple[float, floa
             out.append({"severity": "ERROR", "code": "CONFLICT", "field": field,
                         "msg": f"{FIELDS[field]}: 같은 신뢰 단계의 값이 서로 다름 → 사람 확인 필요"})
             return None
+        if r.get("tier") == "delegated":
+            out.append({"severity": "WARN", "code": "DELEGATED_CONFIRMATION", "field": field,
+                        "msg": f"{FIELDS[field]} = {r['value']:g} 은 위임 확인 값(사람이 직접 확인하지 않음)"})
         if r["source"] != "datasheet":
             out.append({"severity": "WARN", "code": "UNVERIFIED_BASIS", "field": field,
                         "msg": f"{FIELDS[field]} = {r['value']:g} 은 {r['source']} 값(데이터시트 미확인)"})

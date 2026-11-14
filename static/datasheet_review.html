@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>데이터시트 값 확인</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--sub:#5b6676;--line:#dde2ea;--ok:#1f7a4d;--warn:#a15c00;--bad:#b3261e;--acc:#34445d;--chip:#eef1f6}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--ink:#e6e9ee;--sub:#9aa4b2;--line:#2e343e;--ok:#5cc28f;--warn:#e0a24a;--bad:#ef7a72;--acc:#8fa6c8;--chip:#272c35}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Noto Sans KR",sans-serif}
+header{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+header a{color:var(--acc)}
+h1{font-size:19px;margin:4px 0 6px}
+.note{color:var(--sub);font-size:13px;margin:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.bar select,.bar input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.bar input{flex:1;min-width:140px}
+.stat{font-size:13px;color:var(--sub)}
+main{max-width:980px;margin:0 auto;padding:12px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:600}
+.row{margin:6px 0 0;font-size:14px;overflow-wrap:anywhere}
+.k{color:var(--sub);display:inline-block;min-width:84px}
+.quote{background:var(--chip);border-radius:8px;padding:8px 10px;font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap}
+.act{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.act input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:150px}
+button{font:inherit;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+button.a{border-color:var(--ok);color:var(--ok)}
+.good{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.msg{font-size:13px;margin-left:4px}
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← 채팅</a> · <a href="/parts-tree">부품 테크트리</a>
+  <h1>데이터시트 값 확인</h1>
+  <p class="note">자동으로 뽑은 값은 사람이 인용문과 쪽수를 보고 확인해야 회로 판정에 쓰입니다. 인용문을 읽고 <b>값을 직접 입력</b>한 뒤 확인을 누르면, 자동 추출 값과 맞는지 알려 줍니다.
+  인용문에서 확인할 수 없으면 '확인 불가'를 누르세요. 여기서 누르는 확인은 사람의 확인으로 기록됩니다. 절대 최대 전원은 사람의 확인만 인정됩니다.</p>
+  <div class="bar">
+    <select id="fStatus" aria-label="상태"><option value="">모든 상태</option><option value="대기">대기</option><option value="결정됨">결정됨</option></select>
+    <select id="fField" aria-label="항목"><option value="">모든 항목</option></select>
+    <input id="fText" type="search" placeholder="문서 이름 찾기" aria-label="문서 이름 찾기">
+  </div>
+  <div class="stat" id="stat">불러오는 중…</div>
+</header>
+<main id="list"></main>
+<script>
+let DATA=null;
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+function line(k,v){const p=el("div","row");p.append(el("span","k",k));if(typeof v==="string")p.append(document.createTextNode(v));else p.append(v);return p}
+async function load(){
+  const r=await fetch("/api/datasheet-review/items");
+  if(r.status===401){location.href="/login?next=/datasheet-review";return}
+  if(!r.ok){document.getElementById("stat").textContent="목록을 읽지 못했습니다.";return}
+  DATA=await r.json();
+  const sel=document.getElementById("fField");
+  if(sel.options.length===1){[...new Set(DATA.items.map(i=>i.label))].forEach(l=>sel.append(new Option(l,l)))}
+  render();
+}
+function match(i){
+  const st=document.getElementById("fStatus").value,fl=document.getElementById("fField").value,tx=document.getElementById("fText").value.trim().toLowerCase();
+  if(st&&i.status!==st)return false;if(fl&&i.label!==fl)return false;
+  if(tx&&!i.doc.toLowerCase().includes(tx))return false;return true;
+}
+function render(){
+  const list=document.getElementById("list");list.textContent="";
+  const shown=DATA.items.filter(match);
+  document.getElementById("stat").textContent=`전체 ${DATA.items.length} · 대기 ${DATA.pending} · 표시 ${shown.length}`;
+  shown.slice(0,200).forEach(x=>list.append(card(x)));
+  if(shown.length>200)list.append(el("p","note","200개까지만 표시합니다. 위의 거르기로 줄여 보세요."));
+}
+function card(x){
+  const box=el("article","card");
+  const top=el("div","top");top.append(el("span",null,x.doc+" · "+x.page+"쪽"),el("span",x.status==="대기"?"warn":"good",x.status));box.append(top);
+  box.append(line("항목",x.label+(x.human_only?" (사람 확인만 인정)":"")));
+  box.append(line("인용문",el("div","quote",x.quote)));
+  if(x.decision){
+    const d=x.decision;const t={confirmed:"맞음",disputed:"다름",unclear:"확인 불가"}[d.outcome]||d.outcome;
+    box.append(line("결정",`${t} · 입력 ${d.reviewer_value==null?"없음":d.reviewer_value} · 자동 추출 ${d.extracted_value} · ${d.approver} · ${d.at||""}`));
+    return box;
+  }
+  const act=el("div","act");const inp=el("input");inp.type="number";inp.step="any";inp.placeholder="내가 읽은 값";inp.setAttribute("aria-label","내가 읽은 값");
+  const msg=el("span","msg");
+  const ok=el("button","a","확인");ok.type="button";ok.onclick=()=>send(x,inp.value===""?null:Number(inp.value),msg,ok,inp.value==="");
+  const un=el("button",null,"확인 불가");un.type="button";un.onclick=()=>send(x,null,msg,un,false);
+  act.append(inp,ok,un,msg);box.append(act);return box;
+}
+async function send(x,value,msg,btn,empty){
+  if(empty){msg.textContent="먼저 읽은 값을 입력하세요.";msg.className="msg warn";return}
+  btn.disabled=true;msg.textContent="저장 중…";
+  try{
+    const r=await fetch("/api/datasheet-review/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:x.key,value:value,note:""})});
+    if(r.status===401){location.href="/login?next=/datasheet-review";return}
+    const j=await r.json();
+    if(!r.ok){msg.textContent=j.detail||"저장하지 못했습니다.";msg.className="msg bad";return}
+    const t={confirmed:`맞음(자동 추출 ${j.extracted_value})`,disputed:`다름 — 자동 추출은 ${j.extracted_value}, 입력은 ${j.reviewer_value}`,unclear:"확인 불가로 기록"}[j.outcome];
+    msg.textContent=t;msg.className="msg "+(j.outcome==="confirmed"?"good":"warn");
+    setTimeout(load,1500);
+  }catch(e){msg.textContent="저장하지 못했습니다.";msg.className="msg bad"}
+  finally{btn.disabled=false}
+}
+["fStatus","fField"].forEach(id=>document.getElementById(id).onchange=render);
+document.getElementById("fText").oninput=render;
+load();
+</script>
+</body>
+</html>

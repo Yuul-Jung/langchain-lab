@@ -87,6 +87,13 @@ class OperatingPoint(unittest.TestCase):
         self.assertTrue(cs.passes(f))
         self.assertEqual(codes(f), ["UNVERIFIED_BASIS"])
 
+    def test_delegated_confirmation_warns_but_judges(self):
+        g = dict(GOOD, supply_max_v=[{"value": 5.5, "source": "datasheet", "tier": "delegated"}])
+        f = cs.check_operating_point(rec(**g), 3.3)
+        self.assertTrue(cs.passes(f))
+        self.assertEqual(codes(f), ["DELEGATED_CONFIRMATION"])
+        self.assertEqual(codes(cs.check_operating_point(rec(**GOOD), 3.3)), [])     # 사람 확인은 경고 없음
+
     def test_inverted_range_is_error(self):
         self.assertIn("BAD_RANGE", codes(cs.check_operating_point(rec(**dict(GOOD, supply_min_v=6.0)), 6.2)))
 
