@@ -62,5 +62,48 @@ class OntologyGraphTest(unittest.TestCase):
         self.assertEqual(og.summarize(g2), og.summarize(g))
 
 
+
+
+class ProvenanceTest(unittest.TestCase):
+    PARTS = [
+        {"lib_id": "Zeta:ZX100", "library": "Zeta_Linear", "name": "ZX100", "description": "alpha", "keywords": "gadget alpha",
+         "datasheet": "x", "pin_count": 3},
+        {"lib_id": "Zeta:ZX200", "library": "Zeta_Linear", "name": "ZX200", "description": "beta", "keywords": "gadget beta",
+         "datasheet": "", "pin_count": 8},
+    ]
+
+    def test_nodes_get_evidence_and_examples(self):
+        g = og.build_graph(self.PARTS, min_cooccurrence=1)
+        og.annotate_provenance(g, {"catalog": "fake", "fetched": "2000-01-01"})
+        self.assertEqual(g.graph["source"]["catalog"], "fake")
+        lib = g.nodes["lib:Zeta_Linear"]
+        self.assertEqual(lib["evidence_parts"], 2)
+        self.assertEqual(lib["example_parts"][0], "Zeta:ZX100")        # 데이터시트 있는 부품이 먼저
+        self.assertEqual(lib["display_name_en"], "Zeta Linear")
+        self.assertIn("gadget", lib["top_keywords"])
+        self.assertEqual(g.nodes["kw:gadget"]["evidence_parts"], 2)
+
+    def test_concept_and_library_ko_names(self):
+        g = og.build_graph(self.PARTS, min_cooccurrence=1)
+        og.add_korean_bridge(g, [{"ko": ["가젯"], "kw": ["gadget"], "lib": ["Zeta_Linear"]}])
+        og.annotate_provenance(g)
+        self.assertEqual(g.nodes["lib:Zeta_Linear"]["ko_names"], ["가젯"])
+        c = g.nodes["concept:0"]
+        self.assertEqual(c["evidence_parts"], 2)
+        self.assertIn("승인 전", c["origin"])
+
+    def test_save_and_load_keep_source(self):
+        import tempfile, pathlib
+        g = og.build_graph(self.PARTS, min_cooccurrence=1)
+        og.annotate_provenance(g, {"catalog": "fake"})
+        with tempfile.TemporaryDirectory() as d:
+            p = pathlib.Path(d) / "g.json"
+            og.save_graph(g, p)
+            self.assertEqual(og.load_graph(p).graph["source"]["catalog"], "fake")
+
+    def test_missing_source_file_gives_empty(self):
+        self.assertEqual(og.kicad_source("/no/such/SOURCE.json"), {})
+
+
 if __name__ == "__main__":
     unittest.main()

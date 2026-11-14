@@ -28,6 +28,7 @@ def main() -> int:
     entries = json.loads(SEED.read_text(encoding="utf-8"))["entries"]
     g = og.build_graph(kicad_parts.default_catalog())
     og.add_korean_bridge(g, entries)
+    og.annotate_provenance(g, og.kicad_source(ROOT / "data" / "kicad_catalog" / "SOURCE.json"))
     og.save_graph(g, OUT)
     empty, linked = [], 0
     for n, d in g.nodes(data=True):

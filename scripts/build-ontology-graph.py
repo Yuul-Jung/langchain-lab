@@ -26,6 +26,7 @@ def main() -> int:
         print("카탈로그가 비어 있습니다 (data/kicad_catalog/catalog.jsonl).", file=sys.stderr)
         return 1
     g = og.build_graph(parts)
+    og.annotate_provenance(g, og.kicad_source(ROOT / "data" / "kicad_catalog" / "SOURCE.json"))
     og.save_graph(g, OUT)
     print(json.dumps(og.summarize(g), ensure_ascii=False, indent=2))
     print(f"저장: {OUT} ({OUT.stat().st_size // 1024} KB)")

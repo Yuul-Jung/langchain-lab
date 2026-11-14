@@ -133,6 +133,53 @@ def library_profile(g: nx.Graph, library: str, limit: int = 10) -> list[dict]:
     return [{"keyword": k, "parts": c} for k, c in cnt.most_common(limit)]
 
 
+# ---- 출처(provenance): 그래프 전체와 노드마다 "어디서 왔고 근거가 몇 개인가" -------------------------------
+def readable_name(library: str) -> str:
+    """라이브러리 이름을 사람이 읽을 영어 이름 후보로 (Regulator_Linear → 'Regulator Linear'). 번역이 아니라 표기 정리."""
+    return re.sub(r"\s+", " ", library.replace("_", " ")).strip()
+
+
+def kicad_source(path: str | Path) -> dict:
+    """data/kicad_catalog/SOURCE.json 에서 받은 날짜·커밋·라이선스를 뽑는다. 파일이 없으면 빈 사전(그래프는 출처 없이 만들어진다)."""
+    p = Path(path)
+    if not p.is_file():
+        return {}
+    raw = json.loads(p.read_text(encoding="utf-8"))
+    ext = raw.get("extensions", {})
+    return {"catalog": "KiCad official libraries", "fetched": raw.get("fetched"), "license": raw.get("license"),
+            "symbols_commit": (ext.get("symbols") or {}).get("Commit"),
+            "footprints_commit": (ext.get("footprints") or {}).get("Commit")}
+
+
+def _example_parts(g: nx.Graph, part_nodes: list[str], k: int) -> list[str]:
+    rows = sorted(((not g.nodes[n].get("has_datasheet"), -g.nodes[n].get("pin_count", 0), n) for n in part_nodes))
+    return [n[len("part:"):] for _, _, n in rows[:k]]
+
+
+def annotate_provenance(g: nx.Graph, source: dict | None = None, examples: int = 3) -> None:
+    """그래프 전체에 출처(g.graph['source'])를, 라이브러리·키워드·개념 노드마다 근거 부품 수(evidence_parts)와
+    예시 부품 lib_id(example_parts)를 붙인다. 라이브러리에는 읽을 이름 후보(display_name_en)·대표 키워드·
+    (한·영 다리가 있으면) 한국어 이름 후보(ko_names)도 붙인다. 모두 후보이며 사람이 승인해야 쓴다."""
+    if source:
+        g.graph["source"] = source
+    for n, d in list(g.nodes(data=True)):
+        kind = d.get("kind")
+        if kind in ("library", "keyword"):
+            parts = [m for m in g.neighbors(n) if g.nodes[m].get("kind") == "part"]
+            d["evidence_parts"] = len(parts)
+            d["example_parts"] = _example_parts(g, parts, examples)
+            d["origin"] = "catalog"
+            if kind == "library":
+                d["display_name_en"] = readable_name(d["label"])
+                d["top_keywords"] = [x["keyword"] for x in library_profile(g, d["label"], 5)]
+                d["ko_names"] = sorted(g.nodes[c]["label"] for c in g.neighbors(n) if g.nodes[c].get("kind") == "concept")
+        elif kind == "concept":
+            rows = concept_parts(g, n, limit=10 ** 6)
+            d["evidence_parts"] = len(rows)
+            d["example_parts"] = [r["lib_id"] for r in rows[:examples]]
+            d["origin"] = "claude-authored seed (static_data/ontology_ko_en_seed.json), 사람 승인 전"
+
+
 def save_graph(g: nx.Graph, path: str | Path) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(nx.node_link_data(g, edges="edges"), ensure_ascii=False), encoding="utf-8")
@@ -156,7 +203,13 @@ def _term_regex(term: str):
     ascii_only = all(ord(c) < 128 for c in term)
     body = _SEP.join(chars)
     # 영문·숫자만인 용어는 다른 낱말 속에서 찾아지지 않게(예: 'led' 가 'called' 에서) 경계를 둔다
-    return re.compile((r"(?<![a-z0-9])" + body + r"(?![a-z0-9])") if ascii_only else body)
+    if ascii_only:
+        return re.compile(r"(?<![a-z0-9])" + body + r"(?![a-z0-9])")
+    # 한 글자 한국어 용어(램·롬)는 다른 낱말 속에서 걸리지 않게(예: '프로그램' 의 '램'): 앞이 한글이면 안 되고,
+    # 뒤는 한글이 아니거나 조사(을·를·은·는·이·가·도·과·와·의·에·로·으로) 뒤가 끝나야 한다
+    if len(chars) == 1:
+        return re.compile(r"(?<![가-힣])" + body + r"(?:(?![가-힣])|(?=(?:으로|[을를은는이가도과와의에로])(?![가-힣])))")
+    return re.compile(body)
 
 
 def add_korean_bridge(g: nx.Graph, entries: list[dict]) -> int:
@@ -233,3 +286,39 @@ def ask_ko(g: nx.Graph, text: str, include_proposed: bool = False, limit: int = 
         out.append({"concept": g.nodes[c]["label"], "status": g.nodes[c].get("review_status"),
                     "parts": concept_parts(g, c, limit)})
     return out
+
+
+def semantic_concepts(g: nx.Graph, text: str, embed, term_vecs: dict, threshold: float = 0.75,
+                      include_proposed: bool = False, limit: int = 2) -> list[str]:
+    """질문이 사전의 용어와 문구만 다르고 뜻이 아주 가까울 때(예: '절연된' ↔ '절연형') 그 개념을 찾는다.
+    term_vecs = {'nodes': [term 노드 id...], 'mat': (n, d) 단위 벡터 행렬}. 문턱 미만이면 찾지 않는다(비어 있음).
+    임베딩이 안 되면(서버 없음) 빈 목록. 문턱 0.75 는 dev 에서 정함: 부품 아닌 질문이 관문을 통과했을 때의 최고 0.64 와
+    표현 변형 0.78~0.79 사이의 보수적인 값이다."""
+    import numpy as np
+    try:   # 서버가 없거나 벡터 크기가 맞지 않으면 보조 단계만 건너뛴다(질문 처리를 깨지 않는다)
+        v = np.asarray(embed(text), dtype=np.float32)
+        v = v / (np.linalg.norm(v) or 1)
+        sims = term_vecs["mat"] @ v
+    except Exception:
+        return []
+    out: list[str] = []
+    for j in np.argsort(-sims)[:6]:
+        if sims[j] < threshold:
+            break
+        for c in g.neighbors(term_vecs["nodes"][j]):
+            if g.nodes[c].get("kind") != "concept" or c in out:
+                continue
+            if g.nodes[c].get("review_status") != "approved" and not include_proposed:
+                continue
+            out.append(c)
+    return out[:limit]
+
+
+def load_term_vecs(path: str | Path) -> dict | None:
+    """scripts/build-term-vecs.py 가 만든 용어 임베딩. 파일이 없으면 None(보조 단계를 쓰지 않는다)."""
+    p = Path(path)
+    if not p.is_file():
+        return None
+    import numpy as np
+    z = np.load(p, allow_pickle=False)
+    return {"nodes": [str(n) for n in z["nodes"]], "mat": z["mat"]}

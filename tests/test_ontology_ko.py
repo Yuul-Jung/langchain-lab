@@ -56,5 +56,53 @@ class KoreanBridgeTest(unittest.TestCase):
         self.assertEqual(r[0]["parts"], [])
 
 
+class ShortKoreanTermTest(unittest.TestCase):
+    def names(self, text):
+        g = og.build_graph(PARTS, min_cooccurrence=1)
+        og.add_korean_bridge(g, [{"ko": ["램"], "kw": ["regulator"]}])
+        return [g.nodes[c]["label"] for c in og.translate_query(g, text, True)]
+
+    def test_one_syllable_term_not_inside_longer_word(self):
+        self.assertEqual(self.names("프로그램 추천해줘"), [])
+        self.assertEqual(self.names("램프 추천해줘"), [])
+
+    def test_one_syllable_term_alone_or_with_particle(self):
+        self.assertEqual(self.names("램 추천해줘"), ["램"])
+        self.assertEqual(self.names("램을 추천해줘"), ["램"])
+        self.assertEqual(self.names("메모리 램으로 추천해줘"), ["램"])
+
+
+class SemanticConceptTest(unittest.TestCase):
+    def setUp(self):
+        import numpy as np
+        self.np = np
+        self.g = og.build_graph(PARTS, min_cooccurrence=1)
+        og.add_korean_bridge(self.g, [{"ko": ["가젯 알파"], "kw": ["regulator"]}])
+        self.vecs = {"nodes": ["term:가젯 알파"], "mat": np.array([[1.0, 0.0]], dtype=np.float32)}
+
+    def find(self, vec, **kw):
+        return og.semantic_concepts(self.g, "아무 문구", lambda t: vec, self.vecs, include_proposed=True, **kw)
+
+    def test_close_paraphrase_is_found(self):
+        self.assertEqual([self.g.nodes[c]["label"] for c in self.find([0.8, 0.6])], ["가젯 알파"])
+
+    def test_below_threshold_finds_nothing(self):
+        self.assertEqual(self.find([0.6, 0.8]), [])
+
+    def test_embedding_failure_finds_nothing(self):
+        def boom(t):
+            raise RuntimeError("down")
+        self.assertEqual(og.semantic_concepts(self.g, "x", boom, self.vecs, include_proposed=True), [])
+
+    def test_proposed_concepts_need_flag(self):
+        self.assertEqual(og.semantic_concepts(self.g, "x", lambda t: [1.0, 0.0], self.vecs), [])
+
+    def test_mismatched_vector_size_finds_nothing(self):
+        self.assertEqual(og.semantic_concepts(self.g, "x", lambda t: [1.0], self.vecs, include_proposed=True), [])
+
+    def test_missing_vecs_file_is_none(self):
+        self.assertIsNone(og.load_term_vecs("/no/such/term_vecs.npz"))
+
+
 if __name__ == "__main__":
     unittest.main()
