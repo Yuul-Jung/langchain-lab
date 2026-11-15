@@ -42,13 +42,23 @@ SHORT = 30
 
 # '이 부품 말고 비슷한 것'을 찾는 말 (질문에 카탈로그에 있는 부품 이름이 있을 때)
 SIMILAR = re.compile(r"같은\s*거|같은\s*것|[A-Za-z0-9]\s*같은|비슷|유사|대체|대신|말고|다른\s*(?:거|것|부품)|호환|또\s*(?:뭐|있)|비교\s*대상|동급|급의", re.I)
+# 기준 부품 고정(anchor_lock)이 켜졌을 때만 추가로 받는 '대체' 표현(영어 표현, '다른 걸로', '바꾸다', '교체')
+REPLACE_EXT = re.compile(r"replacement|alternative|substitute|equivalent|drop-?in|compatible|instead\s+of|similar\s+to|"
+                         r"다른\s*(?:걸|칩|모델|제품)|바꾸|바꿀|바꿔|교체", re.I)
+# 부품 번호처럼 보이지만 조건·규격인 낱말(전압·전류·주파수·패키지·인터페이스 이름). '카탈로그에 없는 부품 번호' 판단에서 뺀다
+_NOT_PART_TOKEN = re.compile(
+    r"^(?:\d+(?:\.\d+)?(?:[munpkmg]?(?:v|a|w|hz|f|h|ohm|r|s|b|bit|bps|sps|ch|g|c|k|m|u|mm|db|dbm|ppm))|"
+    r"(?:sot|soic|sop|ssop|tssop|msop|qfn|dfn|bga|lga|lqfp|tqfp|qfp|dip|sip|to|sc|sod|plcc|wlcsp|smd|tht)-?\d+[a-z]?(?:-\d+[a-z]?)?|"
+    r"i2c|i2s|i3c|iic|rs-?\d{3}[a-z]?|usb-?\d(?:\.\d)?|usb-?c|1-wire|ipv[46]|[2345]g|wi-?fi\d?|802\.\d+[a-z]*|"
+    r"cortex-?[amr]\d+\+?|\d+(?:x|by)\d+|[a-z]\d|\d[a-z]|"
+    r"0201|0402|0603|0805|1206|1210|1812|2010|2512)$", re.I)      # 칩 부품 크기 코드(부품 이름 앞머리와 우연히 같을 수 있음)
 # 사전에 개념이 없어도 부품을 찾는 말이 분명한 짧은 질문(예: '로드셀 증폭용 칩')은 질문 그대로 검색한다
 PART_NOUN = re.compile(r"(?<![가-힣])(?:칩|소자|부품)(?![가-힣])|(?<![a-z])ic(?![a-z])", re.I)
 NO_CONCEPT = "(사전 밖 부품 질문)"
 
 DOC_WORDS = re.compile(r"문서|자료|pdf|올려|업로드|과제|본문|\d+\s*쪽|페이지", re.I)
 
-BACKEND_LABEL = {"es-semantic": "의미 검색", "file": "낱말 검색", "ontology": "온톨로지 키워드 검색"}
+BACKEND_LABEL = {"es-semantic": "의미 검색", "file": "낱말 검색", "ontology": "온톨로지 키워드 검색", "catalog-miss": "카탈로그에 없음"}
 
 
 class PartsState(TypedDict, total=False):
@@ -56,6 +66,9 @@ class PartsState(TypedDict, total=False):
     concepts: list[str]
     concept_ids: list[str]
     anchor: dict
+    anchor_scope: dict      # 기준 부품 고정: {'function': 기능 id 또는 None, 'library': 라이브러리, 'label': 표시 이름, 'by': 근거}
+    abstain: str            # 추측하지 않고 답하지 않은 이유(기준 부품 고정이나 '카탈로그에 없음' 안내가 켜졌을 때만)
+    notice: str             # 부품 목록 대신 그대로 보일 안내문('카탈로그에 없음' 안내가 켜졌고, 대체품을 묻는데 번호가 카탈로그에 없을 때)
     parts: list[dict]
     plain_base: bool        # 분류 체계 이름으로 찾은 질문이 원래도 보조 관문(짧은 부품 질문)으로 답이 나오던 것인지
     functions: list[str]    # 분류 체계의 기능 id(개념 사전에 없는 말을 우리 분류 체계의 이름으로 찾았을 때)
@@ -79,6 +92,8 @@ class PartsDeps:
     function_rank: bool = False         # 기능 단위 순위·분류 표시·분류 체계 이름으로 찾기(설정 PARTS_FUNCTION_RANK, 기본 꺼짐)
     bridge: bool = False          # 한·영 다리 사전의 영어 짝을 검색어에 덧붙임(설정 PARTS_BRIDGE, 기본 꺼짐)
     conditions: bool = False      # 여러 조건 질문(인터페이스·전압·패키지 …)을 뽑아 순서·답에 반영(설정 PARTS_CONDITIONS, 기본 꺼짐)
+    anchor_lock: bool = False     # 기준 부품 고정(설정 PARTS_ANCHOR_LOCK, 기본 꺼짐): 대체품은 기준 부품의 기능군 안에서만, 모르면 답하지 않음
+    unknown_notice: bool = False  # '카탈로그에 없음' 안내(설정 PARTS_UNKNOWN_NOTICE, 기본 꺼짐): 대체품을 묻는 부품 번호가 카탈로그에 없으면 안내문으로 답함
     veto: Optional[Callable[[str], bool]] = None   # 규칙이 부품 질문이라 본 뒤의 보조 거부(학습 모델, parts_gate.veto). True 면 부품 질문 아님
 
 
@@ -148,14 +163,71 @@ def annotate_parts(tax, parts: list[dict]) -> list[dict]:
     return out
 
 
-def find_anchor(question: str, catalog) -> dict | None:
+def replace_intent(question: str, extended: bool = False) -> bool:
+    """'비슷한·대체' 부품을 찾는 말이 있고 설명·문서·비부품 말이 없는가. extended 면 영어 표현·'바꾸다'·'교체'도 받는다."""
+    if DOC_WORDS.search(question) or EXPLAIN.search(question) or NONPART.search(question):
+        return False
+    return bool(SIMILAR.search(question) or (extended and REPLACE_EXT.search(question)))
+
+
+def anchor_group(question: str, catalog, extended: bool = False) -> list[dict]:
+    """'비슷한 부품' 질문에서 질문 속 부품 번호와 맞는 카탈로그 부품들(이름이 짧은 순). 없으면 빈 목록."""
+    if not catalog or not replace_intent(question, extended):
+        return []
+    for token, group in kp._candidate_groups(question, catalog):
+        if extended and _NOT_PART_TOKEN.match(token.lower().strip("-_.+")):
+            continue      # 전압·패키지·인터페이스 이름이 우연히 부품 이름의 앞머리와 같아도 기준 부품으로 삼지 않는다
+        return sorted(group, key=lambda p: (len(p["name"]), p["lib_id"]))
+    return []
+
+
+def find_anchor(question: str, catalog, extended: bool = False) -> dict | None:
     """'비슷한 부품' 질문이면 기준이 되는 카탈로그 부품(질문 속 부품 번호와 맞는 것 중 이름이 가장 짧은 것), 아니면 None."""
-    if not catalog or DOC_WORDS.search(question) or EXPLAIN.search(question) or NONPART.search(question) \
-            or not SIMILAR.search(question):
-        return None
-    for _token, group in kp._candidate_groups(question, catalog):
-        return sorted(group, key=lambda p: (len(p["name"]), p["lib_id"]))[0]
-    return None
+    group = anchor_group(question, catalog, extended)
+    return group[0] if group else None
+
+
+def unknown_part_tokens(question: str, catalog) -> list[str]:
+    """질문에 적힌 부품 번호처럼 보이는 낱말 중 카탈로그에 없는 것(글자와 숫자가 섞인 4자 이상, 전압·패키지·인터페이스 이름 제외)."""
+    out = []
+    for token in kp._PART_TOKEN.findall(question):
+        t = token.lower().strip("-_.+")
+        if len(t) < 4 or not re.search(r"\d", t) or not re.search(r"[a-z]", t) or _NOT_PART_TOKEN.match(t):
+            continue
+        if not kp._candidates(t, catalog) and not any(p["name"].lower().startswith(t) for p in catalog):
+            out.append(token)      # 핀 정보가 없어 핀 조회 후보에는 안 잡히는 부품(카탈로그에는 있음)은 '없는 번호'가 아니다
+    return out
+
+
+def unknown_notice_text(tokens: list[str]) -> str:
+    """대체품을 묻는 부품 번호가 카탈로그에 없을 때의 안내문(모델을 거치지 않는 고정 문구). 번호가 아닐 수도 있으므로 '번호로 보이는'이라고 쓴다."""
+    names = ", ".join(f"`{t}`" for t in tokens)
+    return "\n".join([
+        f"질문에서 부품 번호로 보이는 {names}을(를) KiCad 부품 라이브러리에서 찾지 못해 대체품을 추천하지 않습니다.", "",
+        "- 라이브러리에 없는 부품은 어떤 기능인지 확인할 수 없어, 비슷한 부품을 추측해서 답하지 않습니다.",
+        "- 번호 표기를 확인해 주세요. 제조사 접두어나 주문용 접미사를 뺀 기본 번호로 다시 물어보면 찾아질 수 있습니다.",
+        "- 부품 번호가 아니라면, 또는 기능으로 찾고 싶다면 기능과 조건으로 물어보세요(예: 3.3V 출력 LDO 추천)."])
+
+
+def anchor_scope(tax, group: list[dict]) -> tuple[dict | None, str]:
+    """기준 부품들의 기능군. (범위, 이유): 범위가 None 이면 정할 수 없음(이유에 까닭).
+    기능이 근거(이름 규칙·설명 증거·혼합 아닌 라이브러리의 대표 기능)로 정해지면 그 기능, 혼합 라이브러리에서 근거 없이 대표 기능으로만
+    떨어지면 같은 라이브러리로 좁힌다(기능은 추측하지 않음). 후보들의 기능이 서로 다르면 정하지 않는다."""
+    if tax is None:
+        return None, "분류 체계 없음"
+    infos = [part_info(tax, p) for p in group]
+    if any(i is None for i in infos):
+        return None, "일반 라이브러리 부품이라 기능을 정할 수 없음"
+    libs = sorted({_lib_of(p) for p in group})
+    guessed = [i for i in infos if i["mixed"] and i["by"] == "대표 기능"]
+    if guessed:
+        if len(libs) > 1:
+            return None, "혼합 라이브러리 여러 곳에 걸쳐 기능을 정할 수 없음"
+        return {"function": None, "library": libs[0], "label": f"{libs[0]} 라이브러리(혼합, 기능 미확정)", "by": "같은 라이브러리"}, ""
+    fids = sorted({i["function"] for i in infos})
+    if len(fids) > 1:
+        return None, f"같은 번호의 부품이 여러 기능에 걸침 {fids}"
+    return {"function": fids[0], "library": libs[0], "label": tax.label(infos[0]), "by": infos[0]["by"]}, ""
 
 
 def similar_query(anchor: dict) -> str:
@@ -227,16 +299,36 @@ def order_by_position(ontology, question: str, concept_ids: list[str]) -> list[s
 def build_parts_graph(deps: PartsDeps):
     def classify(state: PartsState) -> PartsState:
         out = rule_classify(state)
-        if (out.get("concepts") or out.get("anchor")) and deps.veto is not None and deps.veto(state["question"]):
-            return {"concepts": [], "concept_ids": [], "anchor": None,
+        if (out.get("concepts") or out.get("anchor") or out.get("notice")) and deps.veto is not None and deps.veto(state["question"]):
+            return {"concepts": [], "concept_ids": [], "anchor": None, "notice": "",
                     "trace": out["trace"] + ["classify: 학습 관문이 부품 질문이 아니라고 판단 → 기존 흐름"]}
         return out
 
     def rule_classify(state: PartsState) -> PartsState:
-        anchor = find_anchor(state["question"], deps.catalog)
+        lock = deps.anchor_lock
+        group = anchor_group(state["question"], deps.catalog, extended=lock)
+        anchor = group[0] if group else None
+        if anchor and lock:
+            scope, why = anchor_scope(deps.taxonomy, group)
+            if scope is None:
+                return {"concepts": [], "concept_ids": [], "abstain": why,
+                        "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']} — {why} → 답하지 않음"]}
+            return {"anchor": anchor, "anchor_scope": scope, "concepts": [anchor["lib_id"]], "concept_ids": [],
+                    "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}, 기능군 고정 {scope['label']}({scope['by']})"]}
         if anchor:
             return {"anchor": anchor, "concepts": [anchor["lib_id"]], "concept_ids": [],
                     "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}"]}
+        # 안내문은 원래의 대체 표현(SIMILAR)이 있을 때만 낸다. 넓힌 표현(REPLACE_EXT)은 수리·사양 문장도 잡으므로 안내 없이 답하지 않기만 한다
+        notify = deps.unknown_notice and replace_intent(state["question"], extended=False)
+        if deps.catalog and (notify or (lock and replace_intent(state["question"], extended=True))):
+            unknown = unknown_part_tokens(state["question"], deps.catalog)
+            if unknown:      # 대체품을 묻는데 기준 부품 번호가 카탈로그에 없다: 조건 낱말로 다른 기능군을 추측하지 않는다
+                why = f"부품 번호 {unknown} 가 카탈로그에 없음"
+                out = {"concepts": [], "concept_ids": [], "abstain": why, "trace": [f"classify: 비슷한 부품 질문, {why} → 답하지 않음"]}
+                if notify:
+                    out["notice"] = unknown_notice_text(unknown)
+                    out["trace"] = [f"classify: 비슷한 부품 질문, {why} → 추천하지 않고 안내문으로 답함"]
+                return out
         ids = parts_concepts(state["question"], deps.ontology, deps.include_proposed, deps.semantic_concepts)
         concepts = [deps.ontology.nodes[c]["label"] for c in ids]
         overridden = False
@@ -257,14 +349,39 @@ def build_parts_graph(deps: PartsDeps):
                 "trace": ["classify: " + (f"부품 추천 질문, 개념 {concepts}" if concepts else "해당 없음 → 기존 흐름")]}
 
     def after_classify(state: PartsState) -> str:
+        if state.get("notice"):
+            return "notice"
         return "search" if (state.get("concepts") or state.get("anchor")) else "end"
+
+    def notice(state: PartsState) -> PartsState:
+        return {"answer": state["notice"], "answered": True, "backend": "catalog-miss", "parts": [],
+                "trace": ["answer: 카탈로그에 없는 부품 번호 안내(부품을 추천하지 않음, 모델 호출 없음)"]}
 
     def search(state: PartsState) -> PartsState:
         anchor = state.get("anchor")
         if anchor:   # 기준 부품과 비슷한 부품: 기준 부품 자신(같은 이름 계열)은 뺀다
             base = anchor["name"].lower()
-            rows, backend = deps.find(similar_query(anchor), deps.limit + 8)
-            parts = [r for r in rows if r.get("lib_id") != anchor["lib_id"] and not r.get("name", "").lower().startswith(base)][:deps.limit]
+            scope = state.get("anchor_scope") if deps.anchor_lock else None
+            rows, backend = deps.find(similar_query(anchor), deps.limit * 4 if scope else deps.limit + 8)
+            other = lambda r: r.get("lib_id") != anchor["lib_id"] and not r.get("name", "").lower().startswith(base)   # noqa: E731
+            if scope:    # 기준 부품의 기능군 안에서만. 조건(인터페이스·전압·패키지 …)은 그 안의 순서만 바꾼다
+                tax, fid, lib = deps.taxonomy, scope["function"], scope["library"]
+                # 같은 기능으로 '근거 있게' 분류된 부품만(혼합 라이브러리에서 근거 없이 대표 기능으로 떨어진 부품은 후보로 쓰지 않는다)
+                sure = lambda r: (i := part_info(tax, r)) is not None and i["function"] == fid and not (i["mixed"] and i["by"] == "대표 기능")   # noqa: E731
+                inside = sure if fid else (lambda r: _lib_of(r) == lib)
+                found = [r for r in rows if other(r) and inside(r)]
+                fill = []
+                if fid and len(found) < deps.limit and deps.catalog:   # 검색 결과가 모자라면 같은 기능 부품으로 결정적으로 채운다(같은 라이브러리·핀 수가 가까운 것 먼저)
+                    have, pins = {r.get("lib_id") for r in found}, anchor.get("pin_count") or 0
+                    fill = sorted((p for p in tax.index(deps.catalog).get(fid, []) if p.get("lib_id") not in have and other(p) and sure(p)),
+                                  key=lambda p: (_lib_of(p) != lib, abs((p.get("pin_count") or 0) - pins), not p.get("datasheet"), p["name"]))
+                    fill = [{**p, "filled": True} for p in fill[:deps.limit - len(found)]]
+                conds = pc.parse(state["question"]) if deps.conditions else []
+                parts = (pc.rank(conds, found) if conds else found)[:deps.limit]
+                parts = annotate_parts(tax, parts + fill[:deps.limit - len(parts)])
+                return {"parts": parts, "backend": backend if parts else None, "conditions": [c.label for c in conds],
+                        "trace": [f"search[{backend}]: 기능군 고정 {scope['label']} 안에서 {len(parts)}건(카탈로그 보충 {sum(1 for p in parts if p.get('filled'))}건)"]}
+            parts = [r for r in rows if other(r)][:deps.limit]
             if deps.function_rank and deps.taxonomy is not None:
                 parts = annotate_parts(deps.taxonomy, parts)
             return {"parts": parts, "backend": backend, "trace": [f"search[{backend}]: 비슷한 부품 {len(parts)}건"]}
@@ -333,14 +450,17 @@ def build_parts_graph(deps: PartsDeps):
         anchor = state.get("anchor")
         text = format_answer(state["parts"], state["backend"], state["concepts"], state.get("conditions"))
         if anchor:
-            text = text.replace("찾은 후보입니다", f"찾은 후보입니다 — `{anchor['lib_id']}`와 설명이 비슷한 부품(성능·핀 호환은 보장하지 않음)", 1)
+            scope = state.get("anchor_scope")
+            note = f"`{anchor['lib_id']}`와 같은 기능군({scope['label']}) 안에서 설명이 비슷한 부품" if scope else f"`{anchor['lib_id']}`와 설명이 비슷한 부품"
+            text = text.replace("찾은 후보입니다", f"찾은 후보입니다 — {note}(성능·핀 호환은 보장하지 않음)", 1)
         return {"answer": text, "answered": True, "trace": ["answer: 검색된 부품 값으로 답함 (모델 호출 없음)"]}
 
     g = StateGraph(PartsState)
-    for name, fn in [("classify", classify), ("search", search), ("answer", answer)]:
+    for name, fn in [("classify", classify), ("search", search), ("answer", answer), ("notice", notice)]:
         g.add_node(name, fn)
     g.add_edge(START, "classify")
-    g.add_conditional_edges("classify", after_classify, {"search": "search", "end": END})
+    g.add_conditional_edges("classify", after_classify, {"search": "search", "notice": "notice", "end": END})
+    g.add_edge("notice", END)
     g.add_conditional_edges("search", after_search, {"answer": "answer", "end": END})
     g.add_edge("answer", END)
     return g.compile()

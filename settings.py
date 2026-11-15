@@ -128,6 +128,12 @@ PARTS_ONTOLOGY_INCLUDE_PROPOSED = get("PARTS_ONTOLOGY_INCLUDE_PROPOSED", "false"
 PARTS_CONDITIONS = get("PARTS_CONDITIONS", "false").lower() in ("1", "true", "yes")
 # (추가) 분류 체계(static_data/parts_taxonomy.json)를 부품 검색에 쓴다: 답에 분류 표시, 목표 기능 부품 우선, 분류 체계의 기능 이름으로 질문 찾기. 기본 꺼짐
 PARTS_FUNCTION_RANK = get("PARTS_FUNCTION_RANK", "false").lower() in ("1", "true", "yes")
+# (추가) 기준 부품 고정: 'X 대체품' 질문에서 X 가 카탈로그에 있으면 X 의 기능군 안에서만 후보를 내고(조건은 그 안의 순서만 바꿈),
+# X 가 카탈로그에 없거나 기능을 정할 수 없으면 추측하지 않고 답하지 않는다(parts_graph.py). 판정 전이라 기본 꺼짐
+PARTS_ANCHOR_LOCK = get("PARTS_ANCHOR_LOCK", "false").lower() in ("1", "true", "yes")
+# (추가) '카탈로그에 없음' 안내: 대체품을 묻는 부품 번호가 카탈로그에 없으면 일반 흐름(모델이 제 지식으로 답함)으로 넘기지 않고
+# "라이브러리에서 찾지 못해 추천하지 않는다"는 고정 안내문으로 답한다(parts_graph.py, 사용자 결정 2026-11-15). 봉인 판정 전이라 기본 꺼짐
+PARTS_UNKNOWN_NOTICE = get("PARTS_UNKNOWN_NOTICE", "false").lower() in ("1", "true", "yes")
 # (추가) 부품 관문의 보조 거부: 학습 모델이 부품 질문일 확률을 아주 낮게 볼 때만 되돌림(data/parts_gate/model.npz, 없으면 원래 동작). 끄려면 PARTS_GATE_ML=false
 PARTS_GATE_ML = get("PARTS_GATE_ML", "true").lower() in ("1", "true", "yes")
 # 부품 경로의 판단(질문·처리 여부·개념·검색 방식)을 data/diagnostics/parts_route.jsonl 에 남긴다(이 PC 전용, 질문 원문 포함 — 공유 금지). 끄려면 PARTS_ROUTE_LOG=false
