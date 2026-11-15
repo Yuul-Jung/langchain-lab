@@ -5,7 +5,7 @@
 요청인지(1) 수리·사양·설명·구매 같은 다른 질문인지(0)를 질문 임베딩으로 가린다. 낱말 규칙을 덧붙이는 방식이 새 대조 문장에서 계속 깨졌기 때문이다
 (2차 판정 기준 2 미충족, 동료 검토의 대조 탐침 32개 중 25개 오처리).
 
-학습 자료(모두 이미 공개된 것, 3차 낱말 목록은 쓰지 않는다): 1차·2차 질문 세트, 동료 검토의 탐침. 이 PC 전용(data/ 는 git 밖).
+학습 자료(모두 이미 공개·은퇴한 것만 쓴다. 판정에 쓸 봉인 낱말 목록은 쓰지 않는다): 1차·2차·3차 질문 세트, 동료 검토의 탐침. 이 PC 전용(data/ 는 git 밖).
 부품 번호는 자리표시로 가린 뒤 임베딩한다(번호가 아니라 말투를 배우게). 평가는 표현 틀 단위로 묶어 나눈 교차검증(같은 틀이 학습과 평가에 함께 들어가지 않게).
 문턱: 틀 단위 교차검증에서 '어려운 0'(부품 번호나 대체류 낱말이 든 대조 문장)이 통과하는 비율이 --far 이하가 되는 가장 낮은 값.
 
@@ -41,6 +41,11 @@ def examples() -> list[dict]:
     for q in jl(EV / "spec1-r2" / "questions-extra.jsonl"):               # 2차: 두 부품 질문(호환 여부·차이) 0
         if q["kind"] == "borderline":
             rows.append({"q": q["question"], "y": 0, "group": "r2:" + q["template"], "hard": True})
+    r3 = EV / "spec1-r3"                                                  # 3차(은퇴한 봉인): 대체 질문 1, 대조·두 부품 질문 0
+    if (r3 / "questions-sealed.jsonl").exists():
+        for q in jl(r3 / "questions-sealed.jsonl") + jl(r3 / "questions-extra.jsonl"):
+            if q["kind"] in ("substitute", "control", "two_part"):
+                rows.append({"q": q["question"], "y": int(q["kind"] == "substitute"), "group": "r3:" + q["template"], "hard": q["kind"] != "substitute"})
     for name in ("practice", "sealed"):                                   # 1차: 영문 부품 대체 질문 1, 부품 아닌 질문 0
         for q in jl(EV / "spec1" / f"questions-{name}.jsonl"):
             if q["kind"] == "parts" and q["intent"] == "A2":
