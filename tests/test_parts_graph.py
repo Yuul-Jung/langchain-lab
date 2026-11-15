@@ -451,7 +451,7 @@ class AnchorLockRound3Test(unittest.TestCase):
             find=lambda q_, n: (cat[1:4] if rows is None else rows, "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True,
             conditions=True, substitute_gate=lambda q_: True)), q)
         r = ask("ZX100보다 전류를 더 많이 흘릴 수 있는 대체품")
-        self.assertEqual([p["name"] for p in r["parts"]], ["QA5", "QA0"])            # 1.5A 는 빠지고, 수치가 안 적힌 것은 뒤에
+        self.assertEqual([p["name"] for p in r["parts"]], ["QA5"])                   # 1.5A 와 수치가 안 적힌 것은 빠진다(확인된 것만)
         r = ask("ZX100보다 전류를 더 많이 흘릴 수 있는 대체품", rows=[cat[1]])
         self.assertFalse(r["answered"])
         self.assertIn("비교 조건", r["abstain"])
