@@ -61,14 +61,14 @@ def check_env():
 
 
 def build(lock: bool, cat):
-    import kicad_parts as kp, ontology_graph as og, parts_gate, parts_graph as pg, parts_taxonomy as pt, rag_search, settings
+    import kicad_parts as kp, ontology_graph as og, parts_gate, parts_graph as pg, parts_taxonomy as pt, rag_search, settings, substitute_gate
     g, es = og.load_graph(ROOT / "data" / "ontology" / "graph_ko.json"), rag_search.es_client()
     vecs = og.load_term_vecs(ROOT / "data" / "ontology" / "term_vecs.npz")
     deps = pg.PartsDeps(
         find=lambda q, n: kp.find_parts(q, cat, n, semantic=True, embed=rag_search.embed_query, es=es), ontology=g, include_proposed=False,
         semantic_concepts=(lambda q: og.semantic_concepts(g, q, rag_search.embed_query, vecs, include_proposed=False)) if vecs else None,
         catalog=cat, expand=True, conditions=settings.PARTS_CONDITIONS, bridge=settings.PARTS_BRIDGE, function_rank=False,
-        taxonomy=pt.Taxonomy.load() if lock else None, anchor_lock=lock,
+        taxonomy=pt.Taxonomy.load() if lock else None, anchor_lock=lock, substitute_gate=lambda q: substitute_gate.decide(q, embed=rag_search.embed_query),
         veto=(lambda q: parts_gate.veto(q, embed=rag_search.embed_query)) if settings.PARTS_GATE_ML else None)
     return pg, pg.build_parts_graph(deps)
 
@@ -87,7 +87,7 @@ def cmd_run(a) -> int:
                         "scope_by": (r.get("anchor_scope") or {}).get("by", ""), "scope_function": (r.get("anchor_scope") or {}).get("function") or "",
                         "parts": [{"lib_id": p.get("lib_id", ""), "name": p.get("name", ""), "description": p.get("description", ""),
                                    "keywords": p.get("keywords", ""), "filled": bool(p.get("filled"))} for p in parts]})
-        digest = dump(DIR / f"result-{a.tag}-{name}.jsonl", out)
+        digest = dump(DIR / f"result-{a.tag}-{name}{a.suffix}.jsonl", out)
         by = defaultdict(Counter)
         for it, r in zip(items, out):
             kind = it["kind"] + ("" if it["kind"] != "substitute" else (" 찾아짐" if it["pn_found"] else " 안 찾아짐"))
@@ -285,6 +285,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run"); r.add_argument("--tag", choices=["practice", "sealed", "extra"], required=True)
+    r.add_argument("--suffix", default="", help="결과 파일 이름 끝에 붙일 글(기록된 결과를 덮어쓰지 않고 다시 돌릴 때)")
     w = sub.add_parser("rows"); w.add_argument("--tags", nargs="+", default=["sealed", "practice"]); w.add_argument("--checks", type=int, default=30)
     s = sub.add_parser("score"); s.add_argument("--labels", type=Path, required=True)
     m = sub.add_parser("sample"); m.add_argument("--n", type=int, default=80)
