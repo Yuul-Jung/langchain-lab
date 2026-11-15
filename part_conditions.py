@@ -222,3 +222,32 @@ def unverifiable(question: str) -> list[str]:
     """질문에 든, 카탈로그로는 확인할 수 없는 조건의 이름 목록."""
     return [label for pat, label in UNVERIFIABLE if re.search(pat, question, re.I)]
 
+
+# ---- 비교 조건("X보다 전류를 더 많이", "higher voltage than X"): 기준 부품의 수치와 후보의 수치를 견준다 (기준 부품 고정에서만)
+COMPARE_ATTRS = [("전류", r"전류|current|\bamps?\b", r"(\d+(?:\.\d+)?)\s*(m|u|µ|μ)?A(?![A-Za-z])", {"m": 1e-3, "u": 1e-6, "µ": 1e-6, "μ": 1e-6}),
+                 ("전압", r"전압|내압|voltage", r"(\d+(?:\.\d+)?)\s*(m|k)?V(?![A-Za-z])", {"m": 1e-3, "k": 1e3})]
+_MORE = r"더\s*(?:많|크|큰|높|세|센)|higher|more|larger|bigger|greater|(?:많이|크게|높게)|(?:큰|높은|센)\s"
+_LESS = r"더\s*(?:적|작|낮)|lower|less|smaller|(?:적게|작게|낮게)|(?:작은|낮은)\s"
+
+
+def parse_compare(question: str) -> dict | None:
+    """질문의 비교 조건 {'attr': '전류'·'전압'·None(다루지 못하는 속성), 'more': True·False}. 비교 표현이 없으면 None."""
+    m = re.search(r"보다|than", question, re.I)
+    if not m:
+        return None
+    seg = question[max(0, m.start() - 30):m.end() + 40]
+    more, less = re.search(_MORE, seg, re.I), re.search(_LESS, seg, re.I)
+    if bool(more) == bool(less):
+        return None
+    attr = next((name for name, words, _rx, _mult in COMPARE_ATTRS if re.search(words, seg, re.I)), None)
+    return {"attr": attr, "more": bool(more)}
+
+
+def attr_value(part: dict, attr: str) -> float | None:
+    """부품 설명에 적힌 그 속성의 가장 큰 수치(기본 단위). 없으면 None."""
+    for name, _words, rx, mult in COMPARE_ATTRS:
+        if name == attr:
+            vals = [float(v) * mult.get(u, 1.0) for v, u in re.findall(rx, str(part.get("description") or ""))]
+            return max(vals) if vals else None
+    return None
+

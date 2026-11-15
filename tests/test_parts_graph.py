@@ -442,6 +442,26 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertFalse(pv.conflicts(v("humidity and temperature sensor", domain="sensor"), v("humidity, temperature and pressure sensor", domain="sensor")))   # 더 재는 것은 괜찮다
         self.assertTrue(pv.conflicts(v("humidity, temperature and pressure sensor", domain="sensor"), v("humidity and temperature sensor", domain="sensor")))
 
+    def test_comparison_condition_uses_the_anchor_value(self):
+        import part_conditions as pc
+        P = AnchorLockTest.part
+        cat = [P("Zeta_Linear", "ZX100", "gadget driver, 2.8A"), P("Zeta_Linear", "QA1", "gadget driver, 1.5A"), P("Zeta_Linear", "QA5", "gadget driver, 5A"),
+               P("Zeta_Linear", "QA0", "gadget driver"), P("Zeta_Linear", "ZY100", "gadget driver")]
+        ask = lambda q, rows=None: pg.ask_parts(pg.build_parts_graph(pg.PartsDeps(   # noqa: E731
+            find=lambda q_, n: (cat[1:4] if rows is None else rows, "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True,
+            conditions=True, substitute_gate=lambda q_: True)), q)
+        r = ask("ZX100보다 전류를 더 많이 흘릴 수 있는 대체품")
+        self.assertEqual([p["name"] for p in r["parts"]], ["QA5", "QA0"])            # 1.5A 는 빠지고, 수치가 안 적힌 것은 뒤에
+        r = ask("ZX100보다 전류를 더 많이 흘릴 수 있는 대체품", rows=[cat[1]])
+        self.assertFalse(r["answered"])
+        self.assertIn("비교 조건", r["abstain"])
+        r = ask("ZY100보다 전류를 더 많이 흘릴 수 있는 대체품")                       # 기준 부품의 수치가 없으면 거르지 않고 확인하지 못했다고 밝힌다
+        self.assertEqual(len(r["parts"]), 3)
+        self.assertIn("비교 조건(전류)", r["unverified"])
+        self.assertEqual(pc.parse_compare("higher voltage than ZX100"), {"attr": "전압", "more": True})
+        self.assertEqual(pc.parse_compare("ZX100보다 용량이 더 큰 걸로"), {"attr": None, "more": True})
+        self.assertIsNone(pc.parse_compare("ZX100 대체품"))
+
     def test_sop_and_soic_are_the_same_package(self):
         import part_conditions as pc
         cond = [c for c in pc.parse("SOP 패키지로") if c.family == "package"][0]

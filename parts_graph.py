@@ -548,15 +548,30 @@ def build_parts_graph(deps: PartsDeps):
                 found = sorted((r for r in found if r not in clash), key=lambda r: -pv.shared(mine, theirs[r.get("lib_id")]))   # 값이 맞는 것이 확인된 후보를 앞에
                 # 후보가 모자라도 카탈로그에서 채우지 않는다. 2차 판정 뒤 확인: 채운 부품은 기능 이름만 같고 값(극성·코어 계열)이 다른 것이 섞여
                 # 틀린 부품이 된다(예: PNP 트랜지스터의 자리에 NPN). 적게 내는 편이 낫다.
+                # 비교 조건("X보다 전류를 더 많이"): 기준 부품의 수치가 설명에 있으면 견줘서 맞지 않는 후보를 빼고, 수치가 안 적힌 후보는 뒤로 보낸다.
+                # 기준 부품의 수치가 없거나 다루지 못하는 속성이면 거르지 않고 '확인할 수 없는 조건'으로 밝힌다(3차 판정에서 양쪽 모두 틀린 질문)
+                unverified = pc.unverifiable(plain) if deps.conditions else []
+                compare, failed = (pc.parse_compare(plain) if deps.conditions else None), []
+                if compare:
+                    base = pc.attr_value(anchor, compare["attr"]) if compare["attr"] else None
+                    if base is None:
+                        unverified.append(f"비교 조건({compare['attr'] or '수치'})")
+                    else:
+                        val = {r.get("lib_id"): pc.attr_value(r, compare["attr"]) for r in found}
+                        meets = lambda r: (v := val[r.get("lib_id")]) is not None and (v > base if compare["more"] else v < base)   # noqa: E731
+                        failed = [r for r in found if val[r.get("lib_id")] is not None and not meets(r)]
+                        found = [r for r in found if meets(r)] + [r for r in found if val[r.get("lib_id")] is None]
                 parts = (pc.rank(conds, found) if conds else found)[:deps.limit]
                 parts = annotate_parts(tax, parts)
-                note = (f"(조건에 어긋나 뺀 후보 {len(dropped)}건)" if dropped else "") + (f"(기준 부품의 값과 어긋나 뺀 후보 {len(clash)}건)" if clash else "")
+                note = ((f"(조건에 어긋나 뺀 후보 {len(dropped)}건)" if dropped else "") + (f"(기준 부품의 값과 어긋나 뺀 후보 {len(clash)}건)" if clash else "")
+                        + (f"(비교 조건에 맞지 않아 뺀 후보 {len(failed)}건)" if failed else ""))
                 out = {"parts": parts, "backend": backend if parts else None, "conditions": [c.label for c in conds],
-                       "unverified": pc.unverifiable(plain) if deps.conditions else [],
+                       "unverified": unverified,
                        "trace": [f"search[{backend}]: 기능군 고정 {scope['label']} 안에서 {len(parts)}건{note}"]}
                 if not parts:        # 답하지 않는 이유를 남긴다(집계에서 '일부러 답하지 않음'으로 세어지게)
                     out["abstain"] = (f"질문의 조건({', '.join(c.label for c in hard)})에 맞는 후보가 기능군 안에 없음" if dropped
-                                      else (f"기준 부품의 값({', '.join(sorted(mine))})이 같은 후보가 기능군 안에 없음" if clash
+                                      else ("비교 조건에 맞는 후보가 기능군 안에 없음" if failed and not clash
+                                            else f"기준 부품의 값({', '.join(sorted(mine))})이 같은 후보가 기능군 안에 없음" if clash
                                             else "기능군 안에 다른 후보가 없음"))
                 return out
             parts = [r for r in rows if other(r)][:deps.limit]
