@@ -12,15 +12,22 @@ N = int(sys.argv[1]) if len(sys.argv) > 1 else 50000
 rng = random.Random(sys.argv[2] if len(sys.argv) > 2 else "fuzz-v1")
 TIERS = ["datasheet", "distributor", "library", "delegated"]
 FIELDS = ["supply_min_v", "supply_max_v", "abs_max_supply_v", "temp_min_c", "temp_max_c"]
+TOL = len(sys.argv) > 3 and sys.argv[3] == "tol"  # 허용 폭 t 의 0.9·1.0·1.1 배 섭동, 값 3개 이상, 순서 임의
+TINY = len(sys.argv) > 3 and sys.argv[3] == "tiny"  # ±1e-7 섭동 포함(R2 허용 오차 경계 탐색)
 BASE = {"supply_min_v": D("3.0"), "supply_max_v": D("5.5"), "abs_max_supply_v": D("6.5"), "temp_min_c": D("-40"), "temp_max_c": D("85")}
 
 
 def vals(field):
-    n = rng.choice([0, 0, 1, 1, 1, 2, 2, 3])
+    n = rng.choice([2, 3, 3, 4]) if TOL else rng.choice([0, 0, 1, 1, 1, 2, 2, 3])
     out = []
     for _ in range(n):
         t = rng.choice(TIERS)
-        v = BASE[field] + rng.choice([D(0), D(0), D(0), D("0.01"), D("-0.01"), D("0.5"), D("-1"), D("1")])
+        if TOL:
+            tt = D("0.000001") * max(D(1), abs(BASE[field]))
+            v = BASE[field] + tt * rng.choice([D(0), D("0.9"), D("-0.9"), D("0.5"), D("1.1"), D("-1.1"), D("1")])
+            out.append((rng.choice(TIERS[:2] if rng.random() < 0.7 else TIERS), str(v)))
+            continue
+        v = BASE[field] + rng.choice([D(0), D(0), D(0), D("0.01"), D("-0.01"), D("0.5"), D("-1"), D("1")] + ([D("0.0000001"), D("-0.0000001"), D("0.0000002")] if TINY else []))
         out.append((t, str(v)))
     return out
 

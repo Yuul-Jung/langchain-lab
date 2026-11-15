@@ -110,6 +110,36 @@ class OracleIndependence(unittest.TestCase):
         bad = {x for x in names if "edaharness" in x or "constraints" in x.replace("oracle_constraints", "")}
         self.assertFalse(bad, f"엔진 import 금지: {bad}")
 
+class RelTolR2(unittest.TestCase):
+    def test_same_tier_values_within_rel_tol_are_same_number(self):
+        from oracle_constraints import resolve_field
+        self.assertEqual(resolve_field("supply_max_v", [("datasheet", "5.5"), ("datasheet", "5.5000001")])[0], "value")
+        self.assertEqual(resolve_field("supply_max_v", [("datasheet", "5.5"), ("datasheet", "5.51")])[0], "conflict")
+
+    def test_order_independent_and_conservative(self):
+        import itertools
+        from oracle_constraints import resolve_field
+        t = "0.0000055"  # 5.5 의 1e-6 배 = 허용 폭
+        vals = [("datasheet", "5.5"), ("datasheet", "5.5000049"), ("datasheet", "5.4999951")]  # a, a+0.9t, a-0.9t
+        outs = {resolve_field("supply_max_v", list(p))[:2] for p in itertools.permutations(vals)}
+        self.assertEqual(len(outs), 1)  # 순서 바꿔도 같음 (최대-최소 1.8t > t 이므로 충돌)
+        self.assertEqual(next(iter(outs))[0], "conflict")
+        two = [("datasheet", "5.5"), ("datasheet", "5.5000049")]
+        self.assertEqual(resolve_field("supply_max_v", two)[1], __import__("decimal").Decimal("5.5"))   # 상한 → 최소
+        self.assertEqual(resolve_field("supply_min_v", two)[1], __import__("decimal").Decimal("5.5000049"))  # 하한 → 최대
+
+    def test_tolerance_edge_exact(self):
+        from oracle_constraints import resolve_field
+        for d, want in (("0.0000055", "value"), ("0.00000550055", "conflict"), ("0.00000549945", "value")):
+            self.assertEqual(resolve_field("supply_max_v", [("datasheet", "5.5"), ("datasheet", str(__import__("decimal").Decimal("5.5") + __import__("decimal").Decimal(d)))])[0], want)
+
+    def test_boundary_comparison_stays_exact(self):
+        from oracle_constraints import judge
+        row = {"fields": {"supply_min_v": [("datasheet", "3.0")], "supply_max_v": [("datasheet", "5.5")],
+                          "abs_max_supply_v": [("datasheet", "6.5")], "temp_min_c": [("datasheet", "-40")],
+                          "temp_max_c": [("datasheet", "85")]}, "v": "5.5000001", "ta": ["0", "50"]}
+        self.assertEqual(judge(row)[0], "violation")
+
 
 if __name__ == "__main__":
     unittest.main()

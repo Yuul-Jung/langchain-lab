@@ -12,6 +12,7 @@ from decimal import Decimal
 
 # R1: 높을수록 우선. 사람·위임 확인은 데이터시트 단계의 값이다.
 _RANK = {"human": 3, "delegated": 3, "datasheet": 3, "distributor": 2, "library": 1}
+_REL_TOL = Decimal("1e-6")  # R2 3판
 FIELDS = ("supply_min_v", "supply_max_v", "abs_max_supply_v", "temp_min_c", "temp_max_c")
 VIOLATION, UNKNOWN, PASS = "violation", "unknown", "pass"
 
@@ -41,12 +42,15 @@ def resolve_field(name: str, values: list[tuple[str, float]]) -> tuple[str, Deci
     if not vals:
         return "none", None, warns
     top = max(_RANK[t] for t, _ in vals)
-    top_nums = {n for t, n in vals if _RANK[t] == top}
+    top_nums = [n for t, n in vals if _RANK[t] == top]
     if any(t == "delegated" and _RANK[t] == top for t, _ in vals):
         warns.add("DELEGATED_CONFIRMATION")  # R5
-    if len(top_nums) > 1:
-        return "conflict", None, warns  # R2
-    return "value", next(iter(top_nums)), warns  # R3: 낮은 단계 값은 무시
+    lo, hi = min(top_nums), max(top_nums)  # R2(3판): 대칭 규칙, 순서 무관
+    scale = max(Decimal(1), max(abs(n) for n in top_nums))
+    if hi - lo > _REL_TOL * scale:
+        return "conflict", None, warns
+    # 확정 값: 위험 방향으로 보수적(하한 필드는 최대, 상한 필드는 최소)
+    return "value", (hi if name in ("supply_min_v", "temp_min_c") else lo), warns  # R3: 낮은 단계 값은 무시
 
 
 def judge(case: dict) -> tuple[str, set[str], dict[str, set[str]]]:
