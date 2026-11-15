@@ -477,10 +477,15 @@ class AnchorLockRound3Test(unittest.TestCase):
         r = ask("ZY100보다 전류를 더 많이 흘릴 수 있는 대체품")                       # 기준 부품의 수치가 없으면 거르지 않고 확인하지 못했다고 밝힌다
         self.assertEqual(len(r["parts"]), 3)
         self.assertIn("비교 조건(전류)", r["unverified"])
-        self.assertEqual(pc.parse_compare("higher voltage than ZX100"), {"attr": "전압", "more": True})
-        self.assertEqual(pc.parse_compare("ZX100보다 용량이 더 큰 걸로"), {"attr": None, "more": True})
+        self.assertEqual(pc.parse_compare("higher output voltage than ZX100"), {"attr": "전압", "more": True})
+        self.assertEqual(pc.parse_compare("more current than ZX100"), {"attr": "전류", "more": True})
+        self.assertEqual(pc.parse_compare("ZX100보다 출력 전압이 낮은 것"), {"attr": "전압", "more": False})
         self.assertIsNone(pc.parse_compare("ZX100 대체품"))
-        self.assertEqual(pc.parse_compare("ZX100보다 입력 전압이 더 높고 전류는 같은 것")["attr"], "전압")      # 비교하는 말에 가까운 속성
+        # 견주지 못하는 비교(속성 없음 → 거르지 않고 확인할 수 없는 조건으로 밝힌다): 다루지 않는 속성, 출력이 아닌 전압, 부품 종류 이름 속의 '전압'
+        for q in ("ZX100보다 용량이 더 큰 걸로", "ZX100보다 입력 전압이 더 높은 대체품", "ZX100보다 내압이 높은 대체품", "ZX100보다 효율이 더 높은 전압 레귤레이터로 대체",
+                  "ZX100보다 노이즈가 더 낮은 전압 기준 IC", "a lower noise voltage reference than ZX100", "higher voltage than ZX100",
+                  "ZX100보다 입력 전압이 더 높고 전류는 같은 것"):
+            self.assertEqual(pc.parse_compare(q), {"attr": None, "more": None}, q)
         for q in ("ZX100 대체품 찾아보다가 포기했어요", "ZX100 써 보다 말았는데 대체품", "Thanks, any ZX100 alternative?", "anything other than ZX100"):
             self.assertIsNone(pc.parse_compare(q), q)                                                            # 비교의 '보다'·than 이 아니다
         self.assertIsNone(pc.attr_value({"description": "regulator, 35V input, 5V output, 1A"}, "전압"))        # 수치가 여럿이면 어느 것인지 가릴 수 없다
@@ -504,6 +509,8 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertEqual([p["name"] for p in r["parts"]], ["ZR09"])
         r = pg.ask_parts(pg.build_parts_graph(d), "ZR05 대체품")
         self.assertFalse(r["answered"])                                              # 비교가 없으면 고정 출력이 같은 것만(없으면 답하지 않음)
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05보다 입력 전압이 더 높은 대체품")    # 출력이 아닌 전압의 비교: 고정 출력으로 가르지 않는다
+        self.assertFalse(r["answered"])                                              # (출력 5V 는 그대로여야 하므로 출력이 다른 후보는 여전히 빠진다)
 
     def test_package_reading_details(self):
         import part_conditions as pc
@@ -518,7 +525,7 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertEqual(pc.unverifiable("저항 값이 같은 걸로, is not available now"), [])
         dfn = [c for c in pc.parse("DFN 패키지로") if c.family == "package"][0]
         self.assertFalse(pc.contradicts(dfn, {"description": "gadget, WSON-8"}))                                # DFN 과 SON 계열은 같은 것으로 본다
-        self.assertEqual(pc.parse_compare("PARTA보다 정밀도가 높은 대체품, 전류는 상관없음"), {"attr": None, "more": True})   # 쉼표 너머의 속성을 집지 않는다
+        self.assertEqual(pc.parse_compare("PARTA보다 정밀도가 높은 대체품, 전류는 상관없음"), {"attr": None, "more": None})   # 쉼표 너머의 속성을 집지 않는다
         import part_values as pv
         self.assertNotIn("고정 전압", pv.values({"name": "X", "description": "DC-DC module, 11.85-22V output voltage"}, function="dcdc_module"))   # 범위의 윗값은 고정 출력이 아니다
 

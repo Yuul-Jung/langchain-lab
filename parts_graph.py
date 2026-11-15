@@ -561,8 +561,10 @@ def build_parts_graph(deps: PartsDeps):
                     one = lambda vals: next(iter(vals)) if vals and len(vals) == 1 else None     # noqa: E731
                     fixed_base = one(mine.get("고정 전압")) if compare["attr"] == "전압" else None
                     base = None
-                    if compare["attr"] and compare["more"] is not None:
-                        base = fixed_base if fixed_base is not None else pc.attr_value(anchor, compare["attr"])
+                    if compare["attr"] == "전압":          # 출력 전압의 비교: 고정 출력끼리만 견준다(기준 부품의 고정 출력이 없으면 견주지 않고 밝힌다)
+                        base = fixed_base
+                    elif compare["attr"]:
+                        base = pc.attr_value(anchor, compare["attr"])
                     if base is None:
                         unverified.append(f"비교 조건({compare['attr'] or '수치'})")
                     else:

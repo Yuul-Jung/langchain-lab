@@ -245,26 +245,29 @@ _THAN = (r"(?<=PART[ABC])\s?보다(?:는|도)?(?![가-힣])|(?<![\s아어해봐]
          r"(?<!other\s)(?<!rather\s)(?<![a-z])than(?![a-z])")
 
 
+# 견줄 수 있는 비교는 두 가지뿐이다: '출력 전압'(고정 출력끼리)과 '전류'. 속성 낱말이 비교하는 말의 주어·대상일 때만 읽는다.
+# '입력 전압이 더 높은'·'내압이 높은'·'효율이 더 높은 전압 레귤레이터'·'노이즈가 더 낮은 전압 기준' 은 견주지 않고 확인할 수 없는 조건으로 밝힌다
+# (동료 검토: 출력이 아닌 전압의 비교에 고정 출력을 쓰거나, 부품 종류 이름 속의 '전압'을 속성으로 집어 값이 다른 부품을 골라 냈다).
+_CMP_PATTERNS = [
+    (r"(출력\s*전압|전류)(?:이|가|을|를|도|는)?\s*(?:좀\s*|훨씬\s*|조금\s*)?(?:더\s*)?(높|큰|크|많|세|센|낮|작|적)", 1, 2),
+    (r"(?:더\s*)?(높은|큰|많은|센|낮은|작은|적은)\s*(출력\s*전압|전류)(?!\s*(?:센서|감지|제한|레귤|기준|조정|모니터))", 2, 1),
+    (r"(higher|greater|larger|more|bigger|lower|less|smaller)\s+(output\s+voltage|current)(?![a-z])(?!\s+(?:sens|regul|refer|monitor|limit|source))", 2, 1),
+]
+_IS_MORE = re.compile(r"높|큰|크|많|세|센|higher|greater|larger|more|bigger", re.I)
+
+
 def parse_compare(question: str) -> dict | None:
-    """질문의 비교 조건 {'attr': '전류'·'전압'·None(다루지 못하는 속성), 'more': True·False·None(방향을 못 읽음)}. 비교 표현이 없으면 None.
-    속성은 비교하는 말(더 많이·higher)에 가장 가까운 것을 고른다('입력 전압이 더 높고 전류는 같은' → 전압)."""
+    """질문의 비교 조건 {'attr': '전류'·'전압'(출력 전압)·None(견주지 못하는 비교), 'more': True·False·None}. 비교 표현이 없으면 None."""
     m = re.search(_THAN, question, re.I)
     if not m:
         return None
-    seg = question[max(0, m.start() - 30):m.end() + 40]
-    more, less = re.search(_MORE, seg, re.I), re.search(_LESS, seg, re.I)
-    word = None if (more and less) else (more or less)
-    if not word:
-        return {"attr": None, "more": None}
-    # 속성 낱말은 비교하는 말과 같은 구절(쉼표·마침표를 넘지 않음) 안에서 가까이(14자 안) 있어야 한다
-    # ('정밀도가 높은 대체품, 전류는 상관없음' 의 전류를 집지 않게)
-    near = []
-    for name, words, _rx, _mult in COMPARE_ATTRS:
-        for a in re.finditer(words, seg, re.I):
-            lo, hi = sorted((a.start(), word.start()))
-            if hi - lo <= 14 and not re.search(r"[,.，、]", seg[lo:hi]):
-                near.append((hi - lo, name))
-    return {"attr": min(near)[1] if near else None, "more": bool(more)}
+    seg = question[max(0, m.start() - 40):m.end() + 40]
+    for rx, attr_group, dir_group in _CMP_PATTERNS:
+        hit = re.search(rx, seg, re.I)
+        if hit:
+            attr = "전류" if re.search(r"전류|current", hit.group(attr_group), re.I) else "전압"
+            return {"attr": attr, "more": bool(_IS_MORE.search(hit.group(dir_group)))}
+    return {"attr": None, "more": None}
 
 
 def attr_value(part: dict, attr: str) -> float | None:
