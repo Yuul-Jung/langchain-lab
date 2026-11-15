@@ -66,6 +66,17 @@ FREQ_POINT = r"(\d+(?:\.\d+)?)\s*(k|M|G)Hz"
 MULT = {"k": 0.001, "M": 1.0, "G": 1000.0}
 
 
+def _single_values(rx: str, desc: str) -> set[float]:
+    """정규식에 걸린 전압 중 범위의 한쪽 끝이 아닌 것만('11.85-22V output voltage' 의 22 는 고정 출력이 아니다)."""
+    out = set()
+    for m in re.finditer(rx, desc, re.I):
+        before = desc[max(0, m.start(1) - 5):m.start(1)]
+        if re.search(r"(?:[-–~]|to|\.\.)\s*$", before, re.I) or re.search(r"[\d.]$", before):
+            continue
+        out.add(abs(float(m.group(1))))
+    return out
+
+
 def _frequencies(desc: str, name: str, function: str) -> set[tuple[float, float]]:
     """글의 주파수를 (아래, 위) MHz 범위로. 한 값은 (값, 값)."""
     out, rest = set(), desc
@@ -100,12 +111,12 @@ def values(part: dict, domain: str = "", function: str = "") -> dict[str, set]:
     put("통신 방식", [n for n, rx in INTERFACES if re.search(rx, text, re.I if n not in ("CAN", "LIN") else 0)])
     if function in REGULATOR_FUNCTIONS or function == "reference":
         put("전압 부호", (["음"] if re.search(r"\bnegative\b", low) else []) + (["양"] if re.search(r"\bpositive\b", low) else []))
-        fixed = {abs(float(m)) for rx in FIXED_OUT for m in re.findall(rx, desc, re.I)}
+        fixed = {v for rx in FIXED_OUT for v in _single_values(rx, desc)}
         if function in REGULATOR_FUNCTIONS:
             if not fixed:                      # 출력이라고 밝힌 값이 없을 때만 설명 맨 앞 전압을 출력으로 읽는다
-                fixed = {abs(float(m)) for m in re.findall(LEADING_V, desc, re.I) if abs(float(m)) <= MAX_LEADING_OUTPUT}
+                fixed = {v for v in _single_values(LEADING_V, desc) if v <= MAX_LEADING_OUTPUT}
         else:
-            fixed |= {abs(float(m)) for rx in REFERENCE_V for m in re.findall(rx, desc, re.I)}
+            fixed |= {v for rx in REFERENCE_V for v in _single_values(rx, desc)}
         if re.search(r"adjustable|variable|programmable\s+output", low):
             fixed = set()                      # 가변형은 값을 맞출 수 있으므로 고정값으로 비교하지 않는다
         put("고정 전압", fixed)
@@ -130,12 +141,12 @@ def conflicts(anchor: dict[str, set], cand: dict[str, set], ignore: tuple[str, .
     return [key for key, a in anchor.items() if key not in ignore and cand.get(key) and not _overlap(key, a, cand[key])]
 
 
-def shared(anchor: dict[str, set], cand: dict[str, set]) -> int:
+def shared(anchor: dict[str, set], cand: dict[str, set], ignore: tuple[str, ...] = ()) -> int:
     """기준 부품의 값을 후보가 모두 갖춘 것이 확인된 속성의 수(후보 순서를 정할 때 쓴다). 재는 것은 기준 부품이 재는 것을 다 재야 센다."""
     n = 0
     for key, a in anchor.items():
         c = cand.get(key)
-        if not c:
+        if not c or key in ignore:
             continue
         if key == "주파수(MHz)":
             n += _overlap(key, a, c)

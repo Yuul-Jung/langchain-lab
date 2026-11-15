@@ -496,7 +496,12 @@ class AnchorLockRound3Test(unittest.TestCase):
                P("Zeta_Linear", "ZR03", "1A Linear Regulator, Fixed Output 3.3V")]
         d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=Tax(), anchor_lock=True, conditions=True, substitute_gate=lambda q: True)
         r = pg.ask_parts(pg.build_parts_graph(d), "ZR05보다 출력 전압이 높은 대체품")
-        self.assertEqual([p["name"] for p in r["parts"]], ["ZR09"])                  # 출력이 다르다고 먼저 다 빼지 않는다
+        self.assertEqual([p["name"] for p in r["parts"]], ["ZR09"])                  # 출력이 다르다고 먼저 다 빼지 않고, 고정 출력끼리 견준다
+        cat.append(P("Zeta_Linear", "ZN12", "Negative 1A Linear Regulator, Fixed Output 12V"))
+        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=Tax(), anchor_lock=True, conditions=True, substitute_gate=lambda q: True)
+        cat[0] = P("Zeta_Linear", "ZR05", "Positive 1A Linear Regulator, Fixed Output 5V")
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05 보다 출력 전압이 높은 대체품")   # 띄어 쓴 '보다'도 읽고, 음전압 부품은 부호가 달라 빠진다
+        self.assertEqual([p["name"] for p in r["parts"]], ["ZR09"])
         r = pg.ask_parts(pg.build_parts_graph(d), "ZR05 대체품")
         self.assertFalse(r["answered"])                                              # 비교가 없으면 고정 출력이 같은 것만(없으면 답하지 않음)
 
@@ -511,6 +516,11 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertFalse(pc.contradicts(qfn, {"description": "gadget, VQFN-32"}))                               # 앞글자가 붙은 같은 계열
         self.assertEqual(pc.package_pins("gadget, VQFN-32", "QFN"), {32})
         self.assertEqual(pc.unverifiable("저항 값이 같은 걸로, is not available now"), [])
+        dfn = [c for c in pc.parse("DFN 패키지로") if c.family == "package"][0]
+        self.assertFalse(pc.contradicts(dfn, {"description": "gadget, WSON-8"}))                                # DFN 과 SON 계열은 같은 것으로 본다
+        self.assertEqual(pc.parse_compare("PARTA보다 정밀도가 높은 대체품, 전류는 상관없음"), {"attr": None, "more": True})   # 쉼표 너머의 속성을 집지 않는다
+        import part_values as pv
+        self.assertNotIn("고정 전압", pv.values({"name": "X", "description": "DC-DC module, 11.85-22V output voltage"}, function="dcdc_module"))   # 범위의 윗값은 고정 출력이 아니다
 
     def test_sop_and_soic_are_the_same_package(self):
         import part_conditions as pc

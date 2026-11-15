@@ -546,9 +546,9 @@ def build_parts_graph(deps: PartsDeps):
                 theirs = {r.get("lib_id"): pv.values(r, info.get("domain", ""), info.get("function", "")) for r in found}
                 # 질문이 그 값을 바꿔 달라고 했으면('출력 전압이 더 높은') 그 속성은 기준 부품과 같아야 한다는 조건에서 뺀다
                 compare = pc.parse_compare(plain) if deps.conditions else None
-                skip = ("고정 전압", "전압 부호") if compare and compare["attr"] == "전압" else ()
+                skip = ("고정 전압",) if compare and compare["attr"] == "전압" else ()      # 부호(양·음 전압)는 그대로 견준다
                 clash = [r for r in found if pv.conflicts(mine, theirs[r.get("lib_id")], ignore=skip)]
-                found = sorted((r for r in found if r not in clash), key=lambda r: -pv.shared(mine, theirs[r.get("lib_id")]))   # 값이 맞는 것이 확인된 후보를 앞에
+                found = sorted((r for r in found if r not in clash), key=lambda r: -pv.shared(mine, theirs[r.get("lib_id")], ignore=skip))   # 값이 맞는 것이 확인된 후보를 앞에
                 # 후보가 모자라도 카탈로그에서 채우지 않는다. 2차 판정 뒤 확인: 채운 부품은 기능 이름만 같고 값(극성·코어 계열)이 다른 것이 섞여
                 # 틀린 부품이 된다(예: PNP 트랜지스터의 자리에 NPN). 적게 내는 편이 낫다.
                 # 비교 조건("X보다 전류를 더 많이"): 기준 부품의 수치가 설명에 있으면 견줘서, 맞는 것이 확인된 후보만 남긴다(수치가 안 적힌 후보도 뺀다:
@@ -557,11 +557,17 @@ def build_parts_graph(deps: PartsDeps):
                 unverified = pc.unverifiable(plain) if deps.conditions else []
                 failed = []
                 if compare:
-                    base = pc.attr_value(anchor, compare["attr"]) if (compare["attr"] and compare["more"] is not None) else None
+                    # 전압 비교에서 양쪽의 고정 출력이 읽히면 그 값으로 견준다(설명의 다른 전압 수치보다 뜻이 분명하다)
+                    one = lambda vals: next(iter(vals)) if vals and len(vals) == 1 else None     # noqa: E731
+                    fixed_base = one(mine.get("고정 전압")) if compare["attr"] == "전압" else None
+                    base = None
+                    if compare["attr"] and compare["more"] is not None:
+                        base = fixed_base if fixed_base is not None else pc.attr_value(anchor, compare["attr"])
                     if base is None:
                         unverified.append(f"비교 조건({compare['attr'] or '수치'})")
                     else:
-                        val = {r.get("lib_id"): pc.attr_value(r, compare["attr"]) for r in found}
+                        val = {r.get("lib_id"): (one(theirs[r.get("lib_id")].get("고정 전압")) if fixed_base is not None else pc.attr_value(r, compare["attr"]))
+                               for r in found}
                         meets = lambda r: (v := val[r.get("lib_id")]) is not None and (v > base if compare["more"] else v < base)   # noqa: E731
                         failed = [r for r in found if not meets(r)]
                         found = [r for r in found if meets(r)]

@@ -149,7 +149,8 @@ def _lock_text(part: dict) -> str:
     return " ".join(str(part.get(k) or "") for k in ("name", "description", "keywords", "footprint", "footprint_filters"))
 
 
-SAME_PACKAGE = [{"SOP", "SOIC"}, {"DIP"}]         # 같은 것으로 보는 패키지 이름(SOP 와 SOIC 는 같은 계열로 부른다)
+# 같은 것으로 보는 패키지 이름: SOP 와 SOIC, 그리고 DFN 과 SON 계열(WSON·VSON — 같은 무연 소형 패키지를 회사마다 다르게 부른다)
+SAME_PACKAGE = [{"SOP", "SOIC"}, {"DIP"}, {"DFN", "SON"}]
 # 후보의 글에서 '다른 패키지'로 알아볼 이름(질문에서 조건으로 뽑는 PACKAGES 보다 넓다. 서비스의 조건 표시는 PACKAGES 만 쓴다)
 KNOWN_PACKAGES = PACKAGES + ["TSOP", "SSOP", "VSSOP", "QSOP", "QFP", "LGA", "PLCC", "SON", "WLCSP", "SIP", "TO-247", "TO-252", "TO-263", "TO-3",
                              "SOD-123", "SOD-323", "DO-41", "DO-35", "SC-70"]
@@ -240,7 +241,8 @@ COMPARE_ATTRS = [("전류", r"전류|current|\bamps?\b", r"(\d+(?:\.\d+)?)\s*(m|
 _MORE = r"더\s*(?:많|크|큰|높|세|센)|higher|more|larger|bigger|greater|(?:많이|크게|높게)|(?:큰|높은|센)\s"
 _LESS = r"더\s*(?:적|작|낮)|lower|less|smaller|(?:적게|작게|낮게)|(?:작은|낮은|적은)\s"
 # 비교의 '보다'는 낱말에 바로 붙는다(X보다). '찾아보다가'·'써 보다'·'해보다'의 보다는 아니다. than 은 other than·rather than·thanks 가 아니다
-_THAN = r"(?<![\s아어해봐])보다(?![가-힣])|(?<!other\s)(?<!rather\s)(?<![a-z])than(?![a-z])"
+_THAN = (r"(?<=PART[ABC])\s?보다(?:는|도)?(?![가-힣])|(?<![\s아어해봐])보다(?:는|도)?(?![가-힣])|"
+         r"(?<!other\s)(?<!rather\s)(?<![a-z])than(?![a-z])")
 
 
 def parse_compare(question: str) -> dict | None:
@@ -254,7 +256,14 @@ def parse_compare(question: str) -> dict | None:
     word = None if (more and less) else (more or less)
     if not word:
         return {"attr": None, "more": None}
-    near = [(abs(a.start() - word.start()), name) for name, words, _rx, _mult in COMPARE_ATTRS for a in re.finditer(words, seg, re.I)]
+    # 속성 낱말은 비교하는 말과 같은 구절(쉼표·마침표를 넘지 않음) 안에서 가까이(14자 안) 있어야 한다
+    # ('정밀도가 높은 대체품, 전류는 상관없음' 의 전류를 집지 않게)
+    near = []
+    for name, words, _rx, _mult in COMPARE_ATTRS:
+        for a in re.finditer(words, seg, re.I):
+            lo, hi = sorted((a.start(), word.start()))
+            if hi - lo <= 14 and not re.search(r"[,.，、]", seg[lo:hi]):
+                near.append((hi - lo, name))
     return {"attr": min(near)[1] if near else None, "more": bool(more)}
 
 
