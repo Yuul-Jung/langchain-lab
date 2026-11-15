@@ -461,56 +461,20 @@ class AnchorLockRound3Test(unittest.TestCase):
         logic = dict(domain="logic")
         self.assertTrue(pv.conflicts(v("quad 2-input XOR gate", **logic), v("quad 2-input XNOR gate", **logic)))
 
-    def test_comparison_condition_uses_the_anchor_value(self):
+    def test_comparison_conditions_are_stated_not_filtered(self):
         import part_conditions as pc
         P = AnchorLockTest.part
-        cat = [P("Zeta_Linear", "ZX100", "gadget driver, 2.8A"), P("Zeta_Linear", "QA1", "gadget driver, 1.5A"), P("Zeta_Linear", "QA5", "gadget driver, 5A"),
-               P("Zeta_Linear", "QA0", "gadget driver"), P("Zeta_Linear", "ZY100", "gadget driver")]
-        ask = lambda q, rows=None: pg.ask_parts(pg.build_parts_graph(pg.PartsDeps(   # noqa: E731
-            find=lambda q_, n: (cat[1:4] if rows is None else rows, "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True,
-            conditions=True, substitute_gate=lambda q_: True)), q)
-        r = ask("ZX100보다 전류를 더 많이 흘릴 수 있는 대체품")
-        self.assertEqual([p["name"] for p in r["parts"]], ["QA5"])                   # 1.5A 와 수치가 안 적힌 것은 빠진다(확인된 것만)
-        r = ask("ZX100보다 전류를 더 많이 흘릴 수 있는 대체품", rows=[cat[1]])
-        self.assertFalse(r["answered"])
-        self.assertIn("비교 조건", r["abstain"])
-        r = ask("ZY100보다 전류를 더 많이 흘릴 수 있는 대체품")                       # 기준 부품의 수치가 없으면 거르지 않고 확인하지 못했다고 밝힌다
-        self.assertEqual(len(r["parts"]), 3)
-        self.assertIn("비교 조건(전류)", r["unverified"])
-        self.assertEqual(pc.parse_compare("higher output voltage than ZX100"), {"attr": "전압", "more": True})
-        self.assertEqual(pc.parse_compare("more current than ZX100"), {"attr": "전류", "more": True})
-        self.assertEqual(pc.parse_compare("ZX100보다 출력 전압이 낮은 것"), {"attr": "전압", "more": False})
-        self.assertIsNone(pc.parse_compare("ZX100 대체품"))
-        # 견주지 못하는 비교(속성 없음 → 거르지 않고 확인할 수 없는 조건으로 밝힌다): 다루지 않는 속성, 출력이 아닌 전압, 부품 종류 이름 속의 '전압'
-        for q in ("ZX100보다 용량이 더 큰 걸로", "ZX100보다 입력 전압이 더 높은 대체품", "ZX100보다 내압이 높은 대체품", "ZX100보다 효율이 더 높은 전압 레귤레이터로 대체",
-                  "ZX100보다 노이즈가 더 낮은 전압 기준 IC", "a lower noise voltage reference than ZX100", "higher voltage than ZX100",
-                  "ZX100보다 입력 전압이 더 높고 전류는 같은 것"):
-            self.assertEqual(pc.parse_compare(q), {"attr": None, "more": None}, q)
-        for q in ("ZX100 대체품 찾아보다가 포기했어요", "ZX100 써 보다 말았는데 대체품", "Thanks, any ZX100 alternative?", "anything other than ZX100"):
-            self.assertIsNone(pc.parse_compare(q), q)                                                            # 비교의 '보다'·than 이 아니다
-        self.assertIsNone(pc.attr_value({"description": "regulator, 35V input, 5V output, 1A"}, "전압"))        # 수치가 여럿이면 어느 것인지 가릴 수 없다
-        self.assertEqual(pc.attr_value({"description": "driver, 2.8A"}, "전류"), 2.8)
-
-    def test_comparison_on_voltage_does_not_fight_the_fixed_output_rule(self):
-        P = AnchorLockTest.part
-
-        class Tax(AnchorLockTest.Tax):
-            def classify(self, lib, name, text=""):
-                return {"function": "ldo", "domain": "power", "kind": "ic", "mixed": False, "by": "대표 기능"}
-        cat = [P("Zeta_Linear", "ZR05", "1A Linear Regulator, Fixed Output 5V"), P("Zeta_Linear", "ZR09", "1A Linear Regulator, Fixed Output 9V"),
-               P("Zeta_Linear", "ZR03", "1A Linear Regulator, Fixed Output 3.3V")]
-        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=Tax(), anchor_lock=True, conditions=True, substitute_gate=lambda q: True)
-        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05보다 출력 전압이 높은 대체품")
-        self.assertEqual([p["name"] for p in r["parts"]], ["ZR09"])                  # 출력이 다르다고 먼저 다 빼지 않고, 고정 출력끼리 견준다
-        cat.append(P("Zeta_Linear", "ZN12", "Negative 1A Linear Regulator, Fixed Output 12V"))
-        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=Tax(), anchor_lock=True, conditions=True, substitute_gate=lambda q: True)
-        cat[0] = P("Zeta_Linear", "ZR05", "Positive 1A Linear Regulator, Fixed Output 5V")
-        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05 보다 출력 전압이 높은 대체품")   # 띄어 쓴 '보다'도 읽고, 음전압 부품은 부호가 달라 빠진다
-        self.assertEqual([p["name"] for p in r["parts"]], ["ZR09"])
-        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05 대체품")
-        self.assertFalse(r["answered"])                                              # 비교가 없으면 고정 출력이 같은 것만(없으면 답하지 않음)
-        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05보다 입력 전압이 더 높은 대체품")    # 출력이 아닌 전압의 비교: 고정 출력으로 가르지 않는다
-        self.assertFalse(r["answered"])                                              # (출력 5V 는 그대로여야 하므로 출력이 다른 후보는 여전히 빠진다)
+        cat = [P("Zeta_Linear", "ZX100", "gadget driver, 2.8A"), P("Zeta_Linear", "QA1", "gadget driver, 1.5A"), P("Zeta_Linear", "QA5", "gadget driver, 5A")]
+        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True, conditions=True,
+                         substitute_gate=lambda q: True)
+        for q in ("ZX100보다 전류를 더 많이 흘릴 수 있는 대체품", "ZX100 보다 전류가 작지 않은 대체품", "ZX100 alternative with higher current than the original"):
+            r = pg.ask_parts(pg.build_parts_graph(d), q)
+            self.assertEqual(sorted(p["name"] for p in r["parts"]), ["QA1", "QA5"], q)       # 비교로 거르지 않는다(카탈로그 수치가 무엇의 값인지 가릴 수 없다)
+            self.assertTrue(any("견주는 조건" in u for u in r["unverified"]), q)              # 대신 확인할 수 없다고 밝힌다
+            self.assertIn("확인할 수 없습니다", r["answer"], q)
+        for q in ("ZX100 대체품 찾아보다가 포기했어요", "ZX100 써 보다 말았는데 대체품", "Thanks, any ZX100 alternative?", "anything other than ZX100", "ZX100 대체품"):
+            self.assertFalse(pc.has_comparison(q), q)                                          # 비교의 '보다'·than 이 아니다
+        self.assertTrue(pc.has_comparison("PARTA 보다는 정밀도가 높은 걸로"))
 
     def test_package_reading_details(self):
         import part_conditions as pc
@@ -525,7 +489,6 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertEqual(pc.unverifiable("저항 값이 같은 걸로, is not available now"), [])
         dfn = [c for c in pc.parse("DFN 패키지로") if c.family == "package"][0]
         self.assertFalse(pc.contradicts(dfn, {"description": "gadget, WSON-8"}))                                # DFN 과 SON 계열은 같은 것으로 본다
-        self.assertEqual(pc.parse_compare("PARTA보다 정밀도가 높은 대체품, 전류는 상관없음"), {"attr": None, "more": None})   # 쉼표 너머의 속성을 집지 않는다
         import part_values as pv
         self.assertNotIn("고정 전압", pv.values({"name": "X", "description": "DC-DC module, 11.85-22V output voltage"}, function="dcdc_module"))   # 범위의 윗값은 고정 출력이 아니다
 

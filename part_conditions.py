@@ -235,46 +235,15 @@ def unverifiable(question: str) -> list[str]:
     return [label for pat, label in UNVERIFIABLE if re.search(pat, question, re.I)]
 
 
-# ---- 비교 조건("X보다 전류를 더 많이", "higher voltage than X"): 기준 부품의 수치와 후보의 수치를 견준다 (기준 부품 고정에서만)
-COMPARE_ATTRS = [("전류", r"전류|current|\bamps?\b", r"(\d+(?:\.\d+)?)\s*(m|u|µ|μ)?A(?![A-Za-z])", {"m": 1e-3, "u": 1e-6, "µ": 1e-6, "μ": 1e-6}),
-                 ("전압", r"전압|내압|voltage", r"(\d+(?:\.\d+)?)\s*(m|k)?V(?![A-Za-z])", {"m": 1e-3, "k": 1e3})]
-_MORE = r"더\s*(?:많|크|큰|높|세|센)|higher|more|larger|bigger|greater|(?:많이|크게|높게)|(?:큰|높은|센)\s"
-_LESS = r"더\s*(?:적|작|낮)|lower|less|smaller|(?:적게|작게|낮게)|(?:작은|낮은|적은)\s"
-# 비교의 '보다'는 낱말에 바로 붙는다(X보다). '찾아보다가'·'써 보다'·'해보다'의 보다는 아니다. than 은 other than·rather than·thanks 가 아니다
+# ---- 비교 조건("X보다 전류를 더 많이", "higher voltage than X")
+# 카탈로그 설명의 수치는 무엇의 값인지(출력·입력 정격·대기 전류) 가려 적혀 있지 않아, 비교로 후보를 거르면 틀린 부품을 '확인된 것'처럼 내게 된다.
+# 2026-11-15~16 에 거르는 규칙을 넣고 동료 검토를 네 번 받았는데 볼 때마다 새 오독이 나왔다(입력 전압을 출력으로, '전류 센서'를 전류가 큰 것으로,
+# '작지 않은'을 더 작은 것으로). 그래서 비교 조건은 **거르지 않고, 확인할 수 없는 조건으로 답에 밝히기만** 한다.
+# 비교의 '보다'는 낱말에 붙는다(X보다, X 보다). '찾아보다가'·'써 보다'·'해보다'의 보다는 아니다. than 은 other than·rather than·thanks 가 아니다
 _THAN = (r"(?<=PART[ABC])\s?보다(?:는|도)?(?![가-힣])|(?<![\s아어해봐])보다(?:는|도)?(?![가-힣])|"
          r"(?<!other\s)(?<!rather\s)(?<![a-z])than(?![a-z])")
 
 
-# 견줄 수 있는 비교는 두 가지뿐이다: '출력 전압'(고정 출력끼리)과 '전류'. 속성 낱말이 비교하는 말의 주어·대상일 때만 읽는다.
-# '입력 전압이 더 높은'·'내압이 높은'·'효율이 더 높은 전압 레귤레이터'·'노이즈가 더 낮은 전압 기준' 은 견주지 않고 확인할 수 없는 조건으로 밝힌다
-# (동료 검토: 출력이 아닌 전압의 비교에 고정 출력을 쓰거나, 부품 종류 이름 속의 '전압'을 속성으로 집어 값이 다른 부품을 골라 냈다).
-_CMP_PATTERNS = [
-    (r"(출력\s*전압|전류)(?:이|가|을|를|도|는)?\s*(?:좀\s*|훨씬\s*|조금\s*)?(?:더\s*)?(높|큰|크|많|세|센|낮|작|적)", 1, 2),
-    (r"(?:더\s*)?(높은|큰|많은|센|낮은|작은|적은)\s*(출력\s*전압|전류)(?!\s*(?:센서|감지|제한|레귤|기준|조정|모니터))", 2, 1),
-    (r"(higher|greater|larger|more|bigger|lower|less|smaller)\s+(output\s+voltage|current)(?![a-z])(?!\s+(?:sens|regul|refer|monitor|limit|source))", 2, 1),
-]
-_IS_MORE = re.compile(r"높|큰|크|많|세|센|higher|greater|larger|more|bigger", re.I)
-
-
-def parse_compare(question: str) -> dict | None:
-    """질문의 비교 조건 {'attr': '전류'·'전압'(출력 전압)·None(견주지 못하는 비교), 'more': True·False·None}. 비교 표현이 없으면 None."""
-    m = re.search(_THAN, question, re.I)
-    if not m:
-        return None
-    seg = question[max(0, m.start() - 40):m.end() + 40]
-    for rx, attr_group, dir_group in _CMP_PATTERNS:
-        hit = re.search(rx, seg, re.I)
-        if hit:
-            attr = "전류" if re.search(r"전류|current", hit.group(attr_group), re.I) else "전압"
-            return {"attr": attr, "more": bool(_IS_MORE.search(hit.group(dir_group)))}
-    return {"attr": None, "more": None}
-
-
-def attr_value(part: dict, attr: str) -> float | None:
-    """부품 설명에 적힌 그 속성의 수치(기본 단위). 설명에 그 단위의 수가 하나뿐일 때만 돌려준다
-    (여럿이면 어느 것이 그 속성인지 가릴 수 없다: 입력 정격·대기 전류·출력 전류가 함께 적힌 글)."""
-    for name, _words, rx, mult in COMPARE_ATTRS:
-        if name == attr:
-            vals = {float(v) * mult.get(u, 1.0) for v, u in re.findall(rx, str(part.get("description") or ""))}
-            return vals.pop() if len(vals) == 1 else None
-    return None
+def has_comparison(question: str) -> bool:
+    """질문에 기준 부품과 견주는 조건이 있는가(번호를 가린 글로 부른다)."""
+    return bool(re.search(_THAN, question, re.I))

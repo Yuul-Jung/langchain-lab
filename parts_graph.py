@@ -544,46 +544,24 @@ def build_parts_graph(deps: PartsDeps):
                 info = part_info(tax, anchor) or {}
                 mine = pv.values(anchor, info.get("domain", ""), info.get("function", ""))
                 theirs = {r.get("lib_id"): pv.values(r, info.get("domain", ""), info.get("function", "")) for r in found}
-                # 질문이 그 값을 바꿔 달라고 했으면('출력 전압이 더 높은') 그 속성은 기준 부품과 같아야 한다는 조건에서 뺀다
-                compare = pc.parse_compare(plain) if deps.conditions else None
-                skip = ("고정 전압",) if compare and compare["attr"] == "전압" else ()      # 부호(양·음 전압)는 그대로 견준다
-                clash = [r for r in found if pv.conflicts(mine, theirs[r.get("lib_id")], ignore=skip)]
-                found = sorted((r for r in found if r not in clash), key=lambda r: -pv.shared(mine, theirs[r.get("lib_id")], ignore=skip))   # 값이 맞는 것이 확인된 후보를 앞에
+                clash = [r for r in found if pv.conflicts(mine, theirs[r.get("lib_id")])]
+                found = sorted((r for r in found if r not in clash), key=lambda r: -pv.shared(mine, theirs[r.get("lib_id")]))   # 값이 맞는 것이 확인된 후보를 앞에
                 # 후보가 모자라도 카탈로그에서 채우지 않는다. 2차 판정 뒤 확인: 채운 부품은 기능 이름만 같고 값(극성·코어 계열)이 다른 것이 섞여
                 # 틀린 부품이 된다(예: PNP 트랜지스터의 자리에 NPN). 적게 내는 편이 낫다.
-                # 비교 조건("X보다 전류를 더 많이"): 기준 부품의 수치가 설명에 있으면 견줘서, 맞는 것이 확인된 후보만 남긴다(수치가 안 적힌 후보도 뺀다:
-                # 비교를 분명히 요구한 질문에 확인되지 않은 후보는 답이 아니다).
-                # 기준 부품의 수치가 없거나 다루지 못하는 속성이면 거르지 않고 '확인할 수 없는 조건'으로 밝힌다(3차 판정에서 양쪽 모두 틀린 질문)
+                # 비교 조건("X보다 전류를 더 많이")은 카탈로그 값으로 믿을 만하게 견줄 수 없어 거르지 않고, 확인할 수 없는 조건으로 밝힌다
                 unverified = pc.unverifiable(plain) if deps.conditions else []
-                failed = []
-                if compare:
-                    # 전압 비교에서 양쪽의 고정 출력이 읽히면 그 값으로 견준다(설명의 다른 전압 수치보다 뜻이 분명하다)
-                    one = lambda vals: next(iter(vals)) if vals and len(vals) == 1 else None     # noqa: E731
-                    fixed_base = one(mine.get("고정 전압")) if compare["attr"] == "전압" else None
-                    base = None
-                    if compare["attr"] == "전압":          # 출력 전압의 비교: 고정 출력끼리만 견준다(기준 부품의 고정 출력이 없으면 견주지 않고 밝힌다)
-                        base = fixed_base
-                    elif compare["attr"]:
-                        base = pc.attr_value(anchor, compare["attr"])
-                    if base is None:
-                        unverified.append(f"비교 조건({compare['attr'] or '수치'})")
-                    else:
-                        val = {r.get("lib_id"): (one(theirs[r.get("lib_id")].get("고정 전압")) if fixed_base is not None else pc.attr_value(r, compare["attr"]))
-                               for r in found}
-                        meets = lambda r: (v := val[r.get("lib_id")]) is not None and (v > base if compare["more"] else v < base)   # noqa: E731
-                        failed = [r for r in found if not meets(r)]
-                        found = [r for r in found if meets(r)]
+                if deps.conditions and pc.has_comparison(plain):
+                    unverified.append("기준 부품과 견주는 조건(더 큰·더 낮은 …)")
                 parts = (pc.rank(conds, found) if conds else found)[:deps.limit]
                 parts = annotate_parts(tax, parts)
                 note = ((f"(조건에 어긋나 뺀 후보 {len(dropped)}건)" if dropped else "") + (f"(기준 부품의 값과 어긋나 뺀 후보 {len(clash)}건)" if clash else "")
-                        + (f"(비교 조건에 맞지 않아 뺀 후보 {len(failed)}건)" if failed else ""))
+)
                 out = {"parts": parts, "backend": backend if parts else None, "conditions": [c.label for c in conds],
                        "unverified": unverified,
                        "trace": [f"search[{backend}]: 기능군 고정 {scope['label']} 안에서 {len(parts)}건{note}"]}
                 if not parts:        # 답하지 않는 이유를 남긴다(집계에서 '일부러 답하지 않음'으로 세어지게)
                     out["abstain"] = (f"질문의 조건({', '.join(c.label for c in hard)})에 맞는 후보가 기능군 안에 없음" if dropped
-                                      else ("비교 조건에 맞는 것이 확인된 후보가 기능군 안에 없음" if failed and not clash
-                                            else f"기준 부품의 값({', '.join(sorted(mine))})이 같은 후보가 기능군 안에 없음" if clash
+                                      else (f"기준 부품의 값({', '.join(sorted(mine))})이 같은 후보가 기능군 안에 없음" if clash
                                             else "기능군 안에 다른 후보가 없음"))
                 return out
             parts = [r for r in rows if other(r)][:deps.limit]
