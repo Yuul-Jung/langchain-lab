@@ -22,6 +22,7 @@ from langgraph.graph import END, START, StateGraph
 import kicad_parts as kp
 import ontology_graph as og
 import part_conditions as pc
+import part_values as pv
 
 # 부품을 찾거나 추천해 달라는 말 (너무 넓지 않게: '문서에서' 같은 말이 있으면 통과시키지 않는다)
 # 부품을 찾는 말. 맨 '알려줘'는 설명을 묻는 질문에도 흔해서 뺐다(dev 시험에서 'ADC 해상도가 뭔지 알려줘'를 잘못 처리)
@@ -538,17 +539,25 @@ def build_parts_graph(deps: PartsDeps):
                 hard += pc.parse_mount(plain) if deps.conditions else []
                 dropped = [r for r in found if any(pc.contradicts(c, r) or pc.pin_mismatch(c, plain, r) for c in hard)]
                 found = [r for r in found if r not in dropped]
+                # 기준 부품 자신의 값(극성·고정 전압·통신 방식·대역·재는 것·논리 기능)과 어긋나는 후보는 뺀다. 양쪽 글에 모두 적혀 있고 다를 때만.
+                # 3차 판정에서 켬이 낸 틀린 부품의 가장 큰 덩어리였다(고정 출력 −12V 의 자리에 −5V, NPN 의 자리에 PNP).
+                info = part_info(tax, anchor) or {}
+                mine = pv.values(anchor, info.get("domain", ""), info.get("function", ""))
+                theirs = {r.get("lib_id"): pv.values(r, info.get("domain", ""), info.get("function", "")) for r in found}
+                clash = [r for r in found if pv.conflicts(mine, theirs[r.get("lib_id")])]
+                found = sorted((r for r in found if r not in clash), key=lambda r: -pv.shared(mine, theirs[r.get("lib_id")]))   # 값이 맞는 것이 확인된 후보를 앞에
                 # 후보가 모자라도 카탈로그에서 채우지 않는다. 2차 판정 뒤 확인: 채운 부품은 기능 이름만 같고 값(극성·코어 계열)이 다른 것이 섞여
                 # 틀린 부품이 된다(예: PNP 트랜지스터의 자리에 NPN). 적게 내는 편이 낫다.
                 parts = (pc.rank(conds, found) if conds else found)[:deps.limit]
                 parts = annotate_parts(tax, parts)
-                note = f"(조건에 어긋나 뺀 후보 {len(dropped)}건)" if dropped else ""
+                note = (f"(조건에 어긋나 뺀 후보 {len(dropped)}건)" if dropped else "") + (f"(기준 부품의 값과 어긋나 뺀 후보 {len(clash)}건)" if clash else "")
                 out = {"parts": parts, "backend": backend if parts else None, "conditions": [c.label for c in conds],
                        "unverified": pc.unverifiable(plain) if deps.conditions else [],
                        "trace": [f"search[{backend}]: 기능군 고정 {scope['label']} 안에서 {len(parts)}건{note}"]}
                 if not parts:        # 답하지 않는 이유를 남긴다(집계에서 '일부러 답하지 않음'으로 세어지게)
                     out["abstain"] = (f"질문의 조건({', '.join(c.label for c in hard)})에 맞는 후보가 기능군 안에 없음" if dropped
-                                      else "기능군 안에 다른 후보가 없음")
+                                      else (f"기준 부품의 값({', '.join(sorted(mine))})이 같은 후보가 기능군 안에 없음" if clash
+                                            else "기능군 안에 다른 후보가 없음"))
                 return out
             parts = [r for r in rows if other(r)][:deps.limit]
             if deps.function_rank and deps.taxonomy is not None:

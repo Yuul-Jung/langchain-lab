@@ -416,6 +416,32 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertIn("확인할 수 없습니다", r["answer"])
         self.assertNotIn("확인할 수 없습니다", self.graph(conditions=True)("ZX100 대체품")["answer"])
 
+    def test_candidates_whose_own_values_differ_from_the_anchor_are_dropped(self):
+        import part_values as pv
+        P = AnchorLockTest.part
+        cat = [P("Zeta_Linear", "ZN100", "0.7A Ic, 20V Vce, NPN Transistor, TO-92"), P("Zeta_Linear", "ZP200", "0.7A Ic, 20V Vce, PNP Transistor, TO-92"),
+               P("Zeta_Linear", "ZN300", "1A Ic, 40V Vce, NPN Transistor, SOT-23"), P("Zeta_Linear", "ZQ400", "general purpose transistor")]
+        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True, substitute_gate=lambda q: True)
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZN100 대체품")
+        self.assertEqual([p["name"] for p in r["parts"]], ["ZN300", "ZQ400"])      # PNP 는 빠지고, 극성이 확인된 것이 앞, 안 적힌 것은 뒤에 남는다
+        d2 = pg.PartsDeps(find=lambda q, n: (cat[1:2], "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True, substitute_gate=lambda q: True)
+        r = pg.ask_parts(pg.build_parts_graph(d2), "ZN100 대체품")                 # 값이 맞는 후보가 없으면 이유를 남기고 답하지 않는다
+        self.assertFalse(r["answered"])
+        self.assertIn("극성", r["abstain"])
+        v = lambda desc, **kw: pv.values({"name": "X", "description": desc}, **kw)   # noqa: E731
+        self.assertTrue(pv.conflicts(v("Negative 1A 35V Linear Regulator, Fixed Output 12V"), v("Negative 1.5A 35V Linear Regulator, Fixed Output -5V")))
+        self.assertTrue(pv.conflicts(v("Positive 1A Linear Regulator, Fixed Output 12V"), v("Negative 1A Linear Regulator, Fixed Output 12V")))
+        self.assertFalse(pv.conflicts(v("1A Linear Regulator, Fixed Output 5V"), v("1.5A Adjustable Linear Regulator")))            # 가변형은 어긋남 아님
+        self.assertTrue(pv.conflicts(v("5V 3A Step-Down Voltage Regulator", function="switching_reg"), v("3.3V 3A Step-Down Voltage Regulator", function="switching_reg")))
+        self.assertFalse(pv.conflicts(v("60V 15A N-Channel MOSFET"), v("30V 10A N-Channel MOSFET")))                                # 정격은 기능값이 아니다
+        self.assertFalse(pv.conflicts(v("3.0V to 5.5V, RS-232 Transceiver", function="ldo"), v("4.5V to 5.5V, RS-232 Transceiver", function="ldo")))
+        self.assertTrue(pv.conflicts(v("16-channel PWM LED controller, I2C"), v("16-channel PWM LED controller, SPI")))
+        self.assertFalse(pv.conflicts(v("EEPROM, I2C"), v("EEPROM, smart start, 256kbit")))                                         # 낱말 속 글자를 통신 방식으로 읽지 않는다
+        self.assertTrue(pv.conflicts(v("transceiver module, 915 MHz, 500 kHz bandwidth", domain="rf"), v("transceiver module, 868 MHz, 500 kHz bandwidth", domain="rf")))
+        self.assertTrue(pv.conflicts(v("CO2 sensor, I2C", domain="sensor"), v("humidity and temperature sensor, I2C", domain="sensor")))
+        self.assertFalse(pv.conflicts(v("humidity and temperature sensor", domain="sensor"), v("humidity, temperature and pressure sensor", domain="sensor")))   # 더 재는 것은 괜찮다
+        self.assertTrue(pv.conflicts(v("humidity, temperature and pressure sensor", domain="sensor"), v("humidity and temperature sensor", domain="sensor")))
+
     def test_sop_and_soic_are_the_same_package(self):
         import part_conditions as pc
         cond = [c for c in pc.parse("SOP 패키지로") if c.family == "package"][0]
