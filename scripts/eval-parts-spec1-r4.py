@@ -152,18 +152,28 @@ def cmd_rows(a) -> int:
 
 
 def cmd_sample(a) -> int:
-    """두 번째 라벨러용 표본 160행: 한쪽 설정에서만 나온 행 80개 + 나머지 80개(주의 점검 제외, sha256("spec1-r4-second-labeler|행 번호") 순서).
-    한쪽에서만 나온 행이 모자라면 나머지에서 채운다. 라벨러에게는 어느 쪽인지 알리지 않는다."""
+    """두 번째 라벨러용 표본 160행(주의 점검 제외, 순서는 sha256("spec1-r4-second-labeler|행 번호")).
+    ① 한쪽 설정에서만 나온 행 80개 ② 나머지 80개는 주문 번호 꼴 질문의 행 30개, 처리기(MCU) 질문의 행 20개를 먼저 넣고 남는 자리를 그 밖의 행으로 채운다.
+    모자라면 다음 묶음에서 채운다. 라벨러에게는 어느 묶음인지 알리지 않는다."""
+    import kicad_parts as kp
+    cat = kp.default_catalog()
+    names = {p["name"].lower() for p in cat}
     key = {k["row"]: k for k in load(DIR / "label-key.jsonl")}
+    area = {q["pn"]: q["area"] for q in load(DIR / "questions-sealed.jsonl") if q["kind"] == "substitute"}
     rows = [r for r in load(DIR / "label-rows.jsonl") if not key[r["row"]]["check"]]
     rows.sort(key=lambda r: hashlib.sha256(f"spec1-r4-second-labeler|{r['row']}".encode()).hexdigest())
     one = [r for r in rows if len({u["setting"] for u in key[r["row"]]["uses"]}) == 1]
-    both = [r for r in rows if r not in one]
-    half = a.n // 2
-    pick = one[:half] + both[:a.n - len(one[:half])]
+    order_no = lambda r: key[r["row"]]["pn"].lower() not in names     # noqa: E731  카탈로그 이름과 정확히 같지 않은 번호(주문 번호 꼴·줄임 번호)
+    mcu = lambda r: area.get(key[r["row"]]["pn"]) == "MCU"            # noqa: E731
+    pick = one[:a.n // 2]
+    rest = [r for r in rows if r not in pick]
+    for group, quota in (([r for r in rest if order_no(r)], 30), ([r for r in rest if mcu(r)], 20)):
+        pick += [r for r in group if r not in pick][:quota]
+    pick += [r for r in rest if r not in pick][:a.n - len(pick)]
+    pick = pick[:a.n]
     pick.sort(key=lambda r: hashlib.sha256(f"spec1-r4-second-labeler-order|{r['row']}".encode()).hexdigest())
-    print(f"두 번째 라벨러 표본 {len(pick)}행(한쪽 설정에서만 나온 행 {len(one[:half])}개 포함, 전체 행 {len(rows)}개 · 한쪽에서만 {len(one)}개)"
-          f" sha256 {dump(DIR / 'label-rows-second.jsonl', pick)[:16]}")
+    print(f"두 번째 라벨러 표본 {len(pick)}행(전체 {len(rows)}행 · 한쪽 설정에서만 나온 행 {sum(r in one for r in pick)} · 주문 번호 꼴 {sum(order_no(r) for r in pick)}"
+          f" · 처리기 {sum(mcu(r) for r in pick)}) sha256 {dump(DIR / 'label-rows-second.jsonl', pick)[:16]}")
     return 0
 
 
@@ -239,6 +249,10 @@ def evaluate(labels: dict[int, dict], key: list[dict], mode: str) -> dict:
         b = sum(1 for i in ids if states[("on", i)] == "맞게 답함" and states[("off", i)] != "맞게 답함")
         c = sum(1 for i in ids if states[("off", i)] == "맞게 답함" and states[("on", i)] != "맞게 답함")
         cell["켬만 맞음"], cell["끔만 맞음"], cell["p"] = b, c, round(sign_p(b, c), 4)
+        both = [i for i in ids if states[("off", i)] != "못 답함" and states[("on", i)] != "못 답함"]
+        cell["둘 다 답한 질문"] = len(both)
+        cell["켬에서 새로 틀림"] = sum(1 for i in both if states[("off", i)] == "맞게 답함" and states[("on", i)] == "틀리게 답함")
+        cell["켬이 고침"] = sum(1 for i in both if states[("off", i)] == "틀리게 답함" and states[("on", i)] == "맞게 답함")
         out[scope] = cell
     ctl = [i for i, q in qs.items() if q["kind"] == "control"]
     hit = lambda r: bool(r["answered"] or r["notice"])   # noqa: E731
@@ -261,6 +275,7 @@ def verdict(s: dict) -> dict:
     rate = {n: (wrong[n] / answered[n]) if answered[n] else 0.0 for n in ("off", "on")}
     v = {"1 틀리게 답함 켬≤끔": wrong["on"] <= wrong["off"],
          "1b 틀린 행 비율 켬≤끔": ratio(al["on"]) <= ratio(al["off"]),
+         "1c 둘 다 답한 질문: 새로 틀림≤고침": al["켬에서 새로 틀림"] <= al["켬이 고침"],
          "2 대조 오처리 켬≤끔": ct["on"] <= ct["off"],
          "3 찾아짐 맞게 답함 켬>끔, p<0.05": fd["on"].get("맞게 답함", 0) > fd["off"].get("맞게 답함", 0) and fd["p"] < 0.05,
          f"4 찾아짐 효과 ≥ +{EFFECT_FLOOR}/100": eff >= EFFECT_FLOOR}
@@ -286,8 +301,8 @@ def cmd_score(a) -> int:
         report[mode] = {"봉인": s, "판정": verdict(s)}
     base = report["base"]["판정"]
     # 민감도에서 '뒤집힘': 기준 1b·3·4 가 기본과 달라지거나, 기준 1 이 개수와 비율 모두에서 나빠질 때(사전 등록 5절)
-    core = lambda v: [x for k, x in v["기준"].items() if k[:2] in ("1b", "3 ", "4 ")] + [v["기준 1(개수와 비율이 모두 나빠지지 않음)"]]   # noqa: E731
-    want = [x for k, x in base["기준"].items() if k[:2] in ("1b", "3 ", "4 ")] + [True]
+    core = lambda v: [x for k, x in v["기준"].items() if k[:2] in ("1b", "1c", "3 ", "4 ")] + [v["기준 1(개수와 비율이 모두 나빠지지 않음)"]]   # noqa: E731
+    want = [x for k, x in base["기준"].items() if k[:2] in ("1b", "1c", "3 ", "4 ")] + [True]
     flips = [m for m in MODES[1:] if core(report[m]["판정"]) != want]
     print(json.dumps(report["base"], ensure_ascii=False, indent=1))
     print("민감도:", {m: report[m]["판정"]["기준"] for m in MODES[1:]})

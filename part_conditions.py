@@ -161,8 +161,14 @@ def is_supply_voltage(question: str) -> bool:
     return bool(SUPPLY_WORDS.search(question)) and not re.search(r"출력|기준\s*전압|output|reference", question, re.I)
 
 
+PACKAGE_PREFIX = {"QFN": "[VWUTHLXD]{0,2}", "DFN": "[TUWVX]{0,2}", "TSSOP": "H?", "SON": "[WVUX]?", "BGA": "[A-Z]{0,3}", "DIP": "P?"}
+
+
 def _package_re(name: str) -> str:
-    return r"(?<![A-Za-z])" + ("P?DIP" if name == "DIP" else re.escape(name).replace(r"\-", "[-_ ]?"))
+    """후보의 글에서 그 패키지 이름을 찾는 정규식. 같은 계열의 앞글자(VQFN, HTSSOP)는 받고, 이름 속 붙임표 자리에는 붙임표·밑줄만 받는다
+    ('to 3.6V' 가 TO-3 으로 읽히지 않게 띄어쓰기는 받지 않는다)."""
+    body = re.escape(name).replace(r"\-", "[-_]?") + (r"(?!\d)" if name[-1].isdigit() else "")
+    return r"(?<![A-Za-z])" + PACKAGE_PREFIX.get(name, "") + body
 
 
 def contradicts(cond: Condition, part: dict) -> bool:
@@ -188,21 +194,26 @@ def contradicts(cond: Condition, part: dict) -> bool:
 PIN_FAMILIES = ("DIP", "SOIC", "SOP", "TSSOP", "MSOP", "QFN", "DFN", "BGA", "LQFP", "TQFP")
 
 
-def package_pins(text: str, label: str) -> set[int]:
-    """글에 그 패키지 이름과 함께 적힌 핀 수(QFN-28 → 28, SOT-23-6 → 6). 크기 표기(3.9x4.9mm)나 노출 패드(1EP)는 핀 수로 읽지 않는다."""
+NOT_PINS = r"(?![\d.]|\s*(?:개|v|a|ma|ea|pcs|x|mm|ep|k|m|u|hz|bit|ch|%)(?![a-z]))"      # 핀 수가 아닌 것: 수량·전압·크기·노출 패드
+
+
+def package_pins(text: str, label: str, strict: bool = False) -> set[int]:
+    """글에 그 패키지 이름과 함께 적힌 핀 수(QFN-28 → 28, SOT-23-6 → 6). 크기(3.9x4.9mm)·노출 패드(1EP)·수량(DIP 2개)·전압(SOT-23 3.3V)은
+    핀 수로 읽지 않는다. strict(질문 쪽)이면 이름과 숫자 사이에 붙임표만 받는다('DIP 2개' 를 2핀으로 읽지 않게)."""
     if label == "SOT-23":
-        return {int(x) for x in re.findall(r"(?<![A-Za-z])SOT[-_ ]?23[-_ ]?(\d)(?!\d)", text, re.I)}
+        return {int(x) for x in re.findall(r"(?<![A-Za-z])SOT[-_]?23-(\d)" + NOT_PINS, text, re.I)}
     if label not in PIN_FAMILIES:
         return set()
-    family = "P?DIP" if label == "DIP" else ("(?:SOP|SOIC)" if label in ("SOP", "SOIC") else re.escape(label))
-    return {int(x) for x in re.findall(r"(?<![A-Za-z])" + family + r"[-_* ]{0,2}(\d{1,3})(?![\d.]|x|mm|ep)", text, re.I)}
+    family = PACKAGE_PREFIX.get(label, "") + ("(?:SOP|SOIC)" if label in ("SOP", "SOIC") else re.escape(label))
+    sep = "-?" if strict else "[-_*]{0,2}"
+    return {int(x) for x in re.findall(r"(?<![A-Za-z])" + family + sep + r"(\d{1,3})" + NOT_PINS, text, re.I)}
 
 
 def pin_mismatch(cond: Condition, question: str, part: dict) -> bool:
     """질문이 패키지의 핀 수까지 적었고 후보의 글에도 같은 패키지의 핀 수가 적혀 있는데 서로 다른가. 한쪽이라도 적혀 있지 않으면 False."""
     if cond.family != "package":
         return False
-    want, have = package_pins(question, cond.label), package_pins(_lock_text(part), cond.label)
+    want, have = package_pins(question, cond.label, strict=True), package_pins(_lock_text(part), cond.label)
     return bool(want) and bool(have) and not (want & have)
 
 
@@ -213,8 +224,8 @@ UNVERIFIABLE = [
     (r"산업용|industrial|군용|military|우주용|의료용|확장\s*온도|온도\s*등급", "사용 등급·온도 등급"),
     (r"(?:다른|같은|동일)\s*(?:회사|제조사|메이커|벤더|브랜드)|세컨드\s*소스|second\s+source|(?:another|different|same)\s+(?:vendor|manufacturer|maker|brand)", "제조사"),
     (r"핀\s*(?:투\s*핀|호환|배열(?:이|도)?\s*(?:같|동일))|pin[- ]?(?:to[- ]?pin|compatible)|drop-?in|그대로\s*(?:끼|꽂|교체|바꿔)|바꿔\s*끼", "핀 호환"),
-    (r"가격|저렴|싼|값이|단가|cheap|low[- ]?cost|price", "가격"),
-    (r"재고|수급|구하기\s*쉬운|납기|in\s+stock|availab|리드\s*타임|단종\s*아닌|양산\s*중", "재고·수급"),
+    (r"가격|저렴|(?<![가-힣])싼|단가|cheap|low[- ]?cost|price", "가격"),
+    (r"재고|수급|구하기\s*쉬운|납기|in\s+stock|리드\s*타임|단종\s*(?:아닌|안\s*된)|양산\s*중", "재고·수급"),
 ]
 
 
@@ -227,27 +238,31 @@ def unverifiable(question: str) -> list[str]:
 COMPARE_ATTRS = [("전류", r"전류|current|\bamps?\b", r"(\d+(?:\.\d+)?)\s*(m|u|µ|μ)?A(?![A-Za-z])", {"m": 1e-3, "u": 1e-6, "µ": 1e-6, "μ": 1e-6}),
                  ("전압", r"전압|내압|voltage", r"(\d+(?:\.\d+)?)\s*(m|k)?V(?![A-Za-z])", {"m": 1e-3, "k": 1e3})]
 _MORE = r"더\s*(?:많|크|큰|높|세|센)|higher|more|larger|bigger|greater|(?:많이|크게|높게)|(?:큰|높은|센)\s"
-_LESS = r"더\s*(?:적|작|낮)|lower|less|smaller|(?:적게|작게|낮게)|(?:작은|낮은)\s"
+_LESS = r"더\s*(?:적|작|낮)|lower|less|smaller|(?:적게|작게|낮게)|(?:작은|낮은|적은)\s"
+# 비교의 '보다'는 낱말에 바로 붙는다(X보다). '찾아보다가'·'써 보다'·'해보다'의 보다는 아니다. than 은 other than·rather than·thanks 가 아니다
+_THAN = r"(?<![\s아어해봐])보다(?![가-힣])|(?<!other\s)(?<!rather\s)(?<![a-z])than(?![a-z])"
 
 
 def parse_compare(question: str) -> dict | None:
-    """질문의 비교 조건 {'attr': '전류'·'전압'·None(다루지 못하는 속성), 'more': True·False}. 비교 표현이 없으면 None."""
-    m = re.search(r"보다|than", question, re.I)
+    """질문의 비교 조건 {'attr': '전류'·'전압'·None(다루지 못하는 속성), 'more': True·False·None(방향을 못 읽음)}. 비교 표현이 없으면 None.
+    속성은 비교하는 말(더 많이·higher)에 가장 가까운 것을 고른다('입력 전압이 더 높고 전류는 같은' → 전압)."""
+    m = re.search(_THAN, question, re.I)
     if not m:
         return None
     seg = question[max(0, m.start() - 30):m.end() + 40]
     more, less = re.search(_MORE, seg, re.I), re.search(_LESS, seg, re.I)
-    if bool(more) == bool(less):
-        return None
-    attr = next((name for name, words, _rx, _mult in COMPARE_ATTRS if re.search(words, seg, re.I)), None)
-    return {"attr": attr, "more": bool(more)}
+    word = None if (more and less) else (more or less)
+    if not word:
+        return {"attr": None, "more": None}
+    near = [(abs(a.start() - word.start()), name) for name, words, _rx, _mult in COMPARE_ATTRS for a in re.finditer(words, seg, re.I)]
+    return {"attr": min(near)[1] if near else None, "more": bool(more)}
 
 
 def attr_value(part: dict, attr: str) -> float | None:
-    """부품 설명에 적힌 그 속성의 가장 큰 수치(기본 단위). 없으면 None."""
+    """부품 설명에 적힌 그 속성의 수치(기본 단위). 설명에 그 단위의 수가 하나뿐일 때만 돌려준다
+    (여럿이면 어느 것이 그 속성인지 가릴 수 없다: 입력 정격·대기 전류·출력 전류가 함께 적힌 글)."""
     for name, _words, rx, mult in COMPARE_ATTRS:
         if name == attr:
-            vals = [float(v) * mult.get(u, 1.0) for v, u in re.findall(rx, str(part.get("description") or ""))]
-            return max(vals) if vals else None
+            vals = {float(v) * mult.get(u, 1.0) for v, u in re.findall(rx, str(part.get("description") or ""))}
+            return vals.pop() if len(vals) == 1 else None
     return None
-

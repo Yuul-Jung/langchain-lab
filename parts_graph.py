@@ -544,7 +544,10 @@ def build_parts_graph(deps: PartsDeps):
                 info = part_info(tax, anchor) or {}
                 mine = pv.values(anchor, info.get("domain", ""), info.get("function", ""))
                 theirs = {r.get("lib_id"): pv.values(r, info.get("domain", ""), info.get("function", "")) for r in found}
-                clash = [r for r in found if pv.conflicts(mine, theirs[r.get("lib_id")])]
+                # 질문이 그 값을 바꿔 달라고 했으면('출력 전압이 더 높은') 그 속성은 기준 부품과 같아야 한다는 조건에서 뺀다
+                compare = pc.parse_compare(plain) if deps.conditions else None
+                skip = ("고정 전압", "전압 부호") if compare and compare["attr"] == "전압" else ()
+                clash = [r for r in found if pv.conflicts(mine, theirs[r.get("lib_id")], ignore=skip)]
                 found = sorted((r for r in found if r not in clash), key=lambda r: -pv.shared(mine, theirs[r.get("lib_id")]))   # 값이 맞는 것이 확인된 후보를 앞에
                 # 후보가 모자라도 카탈로그에서 채우지 않는다. 2차 판정 뒤 확인: 채운 부품은 기능 이름만 같고 값(극성·코어 계열)이 다른 것이 섞여
                 # 틀린 부품이 된다(예: PNP 트랜지스터의 자리에 NPN). 적게 내는 편이 낫다.
@@ -552,9 +555,9 @@ def build_parts_graph(deps: PartsDeps):
                 # 비교를 분명히 요구한 질문에 확인되지 않은 후보는 답이 아니다).
                 # 기준 부품의 수치가 없거나 다루지 못하는 속성이면 거르지 않고 '확인할 수 없는 조건'으로 밝힌다(3차 판정에서 양쪽 모두 틀린 질문)
                 unverified = pc.unverifiable(plain) if deps.conditions else []
-                compare, failed = (pc.parse_compare(plain) if deps.conditions else None), []
+                failed = []
                 if compare:
-                    base = pc.attr_value(anchor, compare["attr"]) if compare["attr"] else None
+                    base = pc.attr_value(anchor, compare["attr"]) if (compare["attr"] and compare["more"] is not None) else None
                     if base is None:
                         unverified.append(f"비교 조건({compare['attr'] or '수치'})")
                     else:

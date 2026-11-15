@@ -429,18 +429,37 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertFalse(r["answered"])
         self.assertIn("극성", r["abstain"])
         v = lambda desc, **kw: pv.values({"name": "X", "description": desc}, **kw)   # noqa: E731
-        self.assertTrue(pv.conflicts(v("Negative 1A 35V Linear Regulator, Fixed Output 12V"), v("Negative 1.5A 35V Linear Regulator, Fixed Output -5V")))
-        self.assertTrue(pv.conflicts(v("Positive 1A Linear Regulator, Fixed Output 12V"), v("Negative 1A Linear Regulator, Fixed Output 12V")))
-        self.assertFalse(pv.conflicts(v("1A Linear Regulator, Fixed Output 5V"), v("1.5A Adjustable Linear Regulator")))            # 가변형은 어긋남 아님
+        reg = dict(function="ldo")
+        self.assertTrue(pv.conflicts(v("Negative 1A 35V Linear Regulator, Fixed Output 12V", **reg), v("Negative 1.5A 35V Linear Regulator, Fixed Output -5V", **reg)))
+        self.assertTrue(pv.conflicts(v("Positive 1A Linear Regulator, Fixed Output 12V", **reg), v("Negative 1A Linear Regulator, Fixed Output 12V", **reg)))
+        self.assertFalse(pv.conflicts(v("1A Linear Regulator, Fixed Output 5V", **reg), v("1.5A Adjustable Linear Regulator", **reg)))   # 가변형은 어긋남 아님
         self.assertTrue(pv.conflicts(v("5V 3A Step-Down Voltage Regulator", function="switching_reg"), v("3.3V 3A Step-Down Voltage Regulator", function="switching_reg")))
         self.assertFalse(pv.conflicts(v("60V 15A N-Channel MOSFET"), v("30V 10A N-Channel MOSFET")))                                # 정격은 기능값이 아니다
-        self.assertFalse(pv.conflicts(v("3.0V to 5.5V, RS-232 Transceiver", function="ldo"), v("4.5V to 5.5V, RS-232 Transceiver", function="ldo")))
+        self.assertFalse(pv.conflicts(v("3.0V to 5.5V, RS-232 Transceiver", **reg), v("4.5V to 5.5V, RS-232 Transceiver", **reg)))
+        # 정격을 고정 출력으로 읽지 않는다(동료 검토): Fixed 앞의 정격, 설명 맨 앞의 입력 정격, 전압 기준이 아닌 부품의 reference
+        self.assertEqual(v("20V Fixed LDO Regulator, 300mA, 2.85V output", **reg).get("고정 전압"), {2.85})
+        self.assertNotIn("고정 전압", v("60V, 0.6A stepdown regulator", function="switching_reg"))
+        self.assertNotIn("고정 전압", v("12-bit ADC with internal 2.048V reference", function="adc"))
+        self.assertEqual(v("Precision Voltage Reference 2.5V", function="reference")["고정 전압"], {2.5})
+        self.assertNotIn("전압 부호", v("LCD display, blue negative mode", function="lcd_char"))
         self.assertTrue(pv.conflicts(v("16-channel PWM LED controller, I2C"), v("16-channel PWM LED controller, SPI")))
         self.assertFalse(pv.conflicts(v("EEPROM, I2C"), v("EEPROM, smart start, 256kbit")))                                         # 낱말 속 글자를 통신 방식으로 읽지 않는다
-        self.assertTrue(pv.conflicts(v("transceiver module, 915 MHz, 500 kHz bandwidth", domain="rf"), v("transceiver module, 868 MHz, 500 kHz bandwidth", domain="rf")))
-        self.assertTrue(pv.conflicts(v("CO2 sensor, I2C", domain="sensor"), v("humidity and temperature sensor, I2C", domain="sensor")))
-        self.assertFalse(pv.conflicts(v("humidity and temperature sensor", domain="sensor"), v("humidity, temperature and pressure sensor", domain="sensor")))   # 더 재는 것은 괜찮다
-        self.assertTrue(pv.conflicts(v("humidity, temperature and pressure sensor", domain="sensor"), v("humidity and temperature sensor", domain="sensor")))
+        rf = dict(domain="rf", function="rf_module")
+        self.assertTrue(pv.conflicts(v("transceiver module, 915 MHz, 500 kHz bandwidth", **rf), v("transceiver module, 868 MHz, 500 kHz bandwidth", **rf)))
+        amp = dict(domain="rf", function="rf_amp")
+        self.assertFalse(pv.conflicts(v("RF amplifier, 20-6000MHz", **amp), v("RF amplifier, DC-8000MHz", **amp)))                   # 범위는 겹치면 어긋남이 아니다
+        self.assertFalse(pv.conflicts(v("transceiver, 137 MHz to 1020 MHz", **amp), v("transceiver, 142-1050 MHz", **amp)))
+        self.assertTrue(pv.conflicts(v("RF amplifier, 400-500MHz", **amp), v("RF amplifier, 2400-2500MHz", **amp)))
+        sen = dict(domain="sensor")
+        self.assertTrue(pv.conflicts(v("CO2 sensor, I2C", **sen), v("humidity and temperature sensor, I2C", **sen)))
+        self.assertFalse(pv.conflicts(v("humidity and temperature sensor", **sen), v("humidity, temperature and pressure sensor", **sen)))
+        self.assertFalse(pv.conflicts(v("humidity, temperature and pressure sensor", **sen), v("humidity and temperature sensor", **sen)))   # 일부만 겹쳐도 빼지 않는다(순서만)
+        self.assertEqual(pv.shared(v("humidity, temperature and pressure sensor", **sen), v("humidity and temperature sensor", **sen)), 0)
+        self.assertEqual(v("Temperature sensor, maximum accuracy 0.5C, industrial range", **sen)["재는 것"], {"온도"})                # maximum 의 IMU, industrial 의 dust 를 읽지 않는다
+        self.assertEqual(v("Barometer, temperature compensated", **sen)["재는 것"], {"압력"})
+        self.assertNotIn("재는 것", v("Position sensor, UVW outputs, 55uV offset", **sen))
+        logic = dict(domain="logic")
+        self.assertTrue(pv.conflicts(v("quad 2-input XOR gate", **logic), v("quad 2-input XNOR gate", **logic)))
 
     def test_comparison_condition_uses_the_anchor_value(self):
         import part_conditions as pc
@@ -461,6 +480,37 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertEqual(pc.parse_compare("higher voltage than ZX100"), {"attr": "전압", "more": True})
         self.assertEqual(pc.parse_compare("ZX100보다 용량이 더 큰 걸로"), {"attr": None, "more": True})
         self.assertIsNone(pc.parse_compare("ZX100 대체품"))
+        self.assertEqual(pc.parse_compare("ZX100보다 입력 전압이 더 높고 전류는 같은 것")["attr"], "전압")      # 비교하는 말에 가까운 속성
+        for q in ("ZX100 대체품 찾아보다가 포기했어요", "ZX100 써 보다 말았는데 대체품", "Thanks, any ZX100 alternative?", "anything other than ZX100"):
+            self.assertIsNone(pc.parse_compare(q), q)                                                            # 비교의 '보다'·than 이 아니다
+        self.assertIsNone(pc.attr_value({"description": "regulator, 35V input, 5V output, 1A"}, "전압"))        # 수치가 여럿이면 어느 것인지 가릴 수 없다
+        self.assertEqual(pc.attr_value({"description": "driver, 2.8A"}, "전류"), 2.8)
+
+    def test_comparison_on_voltage_does_not_fight_the_fixed_output_rule(self):
+        P = AnchorLockTest.part
+
+        class Tax(AnchorLockTest.Tax):
+            def classify(self, lib, name, text=""):
+                return {"function": "ldo", "domain": "power", "kind": "ic", "mixed": False, "by": "대표 기능"}
+        cat = [P("Zeta_Linear", "ZR05", "1A Linear Regulator, Fixed Output 5V"), P("Zeta_Linear", "ZR09", "1A Linear Regulator, Fixed Output 9V"),
+               P("Zeta_Linear", "ZR03", "1A Linear Regulator, Fixed Output 3.3V")]
+        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=Tax(), anchor_lock=True, conditions=True, substitute_gate=lambda q: True)
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05보다 출력 전압이 높은 대체품")
+        self.assertEqual([p["name"] for p in r["parts"]], ["ZR09"])                  # 출력이 다르다고 먼저 다 빼지 않는다
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZR05 대체품")
+        self.assertFalse(r["answered"])                                              # 비교가 없으면 고정 출력이 같은 것만(없으면 답하지 않음)
+
+    def test_package_reading_details(self):
+        import part_conditions as pc
+        dip = [c for c in pc.parse("DIP 패키지로") if c.family == "package"][0]
+        self.assertEqual(pc.package_pins("ZX100 대체품 DIP 2개 추천해줘", "DIP", strict=True), set())           # 수량을 핀 수로 읽지 않는다
+        self.assertEqual(pc.package_pins("SOT-23 3.3V 로", "SOT-23", strict=True), set())
+        self.assertEqual(pc.package_pins("QFN-28 패키지", "QFN", strict=True), {28})
+        self.assertFalse(pc.contradicts(dip, {"description": "gadget, 2.7V to 3.6V supply"}))                   # 'to 3.6V' 는 TO-3 패키지가 아니다
+        qfn = [c for c in pc.parse("QFN 패키지로") if c.family == "package"][0]
+        self.assertFalse(pc.contradicts(qfn, {"description": "gadget, VQFN-32"}))                               # 앞글자가 붙은 같은 계열
+        self.assertEqual(pc.package_pins("gadget, VQFN-32", "QFN"), {32})
+        self.assertEqual(pc.unverifiable("저항 값이 같은 걸로, is not available now"), [])
 
     def test_sop_and_soic_are_the_same_package(self):
         import part_conditions as pc
