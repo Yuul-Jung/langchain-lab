@@ -126,3 +126,56 @@ def rank(conds: list[Condition], parts: list[dict]) -> list[dict]:
         scored.append((-s, i, {**p, "checks": checks}))
     scored.sort(key=lambda t: (t[0], t[1]))
     return [p for _, _, p in scored]
+
+
+# ---- 기준 부품 고정(PARTS_ANCHOR_LOCK)에서만 쓰는 '분명히 어긋남' 판정. 위의 check·rank(서비스의 조건 표시)는 건드리지 않는다.
+SMD_WORDS = (r"(?<![A-Za-z])(?:SOT-?\d+|SOIC|SOP|SSOP|TSSOP|MSOP|QFN|DFN|BGA|LGA|LQFP|TQFP|QFP|SOD-?\d+|DPAK|D2PAK|TO-?252|TO-?263|WLCSP|SC-?70|SMD|SMT)"
+             r"|표면\s*실장")
+THT_WORDS = r"(?<![A-Za-z])(?:P?DIP|SIP|TO-?92|TO-?220|TO-?247|TO-?126|TO-?3(?!\d)|TO-?99|DO-?35|DO-?41|THT)|through[- ]?hole|axial|radial|스루\s*홀"
+MOUNT = {"표면 실장": (SMD_WORDS, THT_WORDS), "스루홀": (THT_WORDS, SMD_WORDS)}
+
+
+def parse_mount(question: str) -> list[Condition]:
+    """실장 형태 조건(표면 실장·스루홀). 둘 다 있거나 없으면 빈 목록."""
+    smd = re.search(r"(?<![A-Za-z])(?:SMD|SMT)(?![A-Za-z])|표면\s*실장", question, re.I)
+    tht = re.search(r"스루\s*홀|쓰루\s*홀|through[- ]?hole|(?<![A-Za-z])THT(?![A-Za-z])|삽입\s*실장|삽입형|브레드\s*보드", question, re.I)
+    if bool(smd) == bool(tht):
+        return []
+    label = "표면 실장" if smd else "스루홀"
+    return [Condition("mount", label, MOUNT[label][0])]
+
+
+def _lock_text(part: dict) -> str:
+    return " ".join(str(part.get(k) or "") for k in ("name", "description", "keywords", "footprint", "footprint_filters"))
+
+
+SAME_PACKAGE = [{"SOP", "SOIC"}, {"DIP"}]         # 같은 것으로 보는 패키지 이름(SOP 와 SOIC 는 같은 계열로 부른다)
+SUPPLY_WORDS = re.compile(r"전원|동작|입력|구동|공급|에서\s*(?:쓸|쓰|사용|돌)|supply|operat|input|vcc|vdd|logic|로직", re.I)
+
+
+def is_supply_voltage(question: str) -> bool:
+    """질문의 전압이 전원·동작 전압이라고 밝혔는가(출력·기준 전압이면 후보를 거르는 데 쓰지 않는다)."""
+    return bool(SUPPLY_WORDS.search(question)) and not re.search(r"출력|기준\s*전압|output|reference", question, re.I)
+
+
+def _package_re(name: str) -> str:
+    return r"(?<![A-Za-z])" + ("P?DIP" if name == "DIP" else re.escape(name).replace(r"\-", "[-_ ]?"))
+
+
+def contradicts(cond: Condition, part: dict) -> bool:
+    """후보의 글이 조건과 어긋나는 값을 분명히 적고 있는가. 적혀 있지 않으면(알 수 없으면) False."""
+    text = _lock_text(part)
+    if cond.family == "package":
+        same = next((g for g in SAME_PACKAGE if cond.label in g), {cond.label})
+        if any(re.search(_package_re(p), text, re.I) for p in same):
+            return False
+        return any(re.search(_package_re(p), text, re.I) for p in PACKAGES if p not in same)
+    if cond.family == "mount":
+        mine, other = MOUNT[cond.label]
+        return not re.search(mine, text, re.I) and bool(re.search(other, text, re.I))
+    if cond.family == "voltage":
+        ranges, singles = _voltages(text)
+        if any(abs(x - cond.value) < 1e-6 for x in singles) or any(lo - 1e-6 <= cond.value <= hi + 1e-6 for lo, hi in ranges):
+            return False                    # 글에 그 값이 그대로 있거나 범위 안이면 어긋남이 아니다
+        return bool(ranges)                 # 범위가 적혀 있는데 그 밖일 때만 어긋남
+    return False

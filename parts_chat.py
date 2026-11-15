@@ -10,6 +10,7 @@ from pathlib import Path
 import kicad_parts
 import ontology_graph as og
 import parts_graph as pg
+import substitute_gate
 import parts_gate
 import parts_log
 import parts_taxonomy
@@ -58,7 +59,7 @@ def run(question: str, *, es=None, embed=None, ontology=None, catalog=None) -> d
     deps = pg.PartsDeps(
         find=lambda q, n: kicad_parts.find_parts(q, parts, n, semantic=True, embed=embed, es=es),
         ontology=onto, include_proposed=include, expand=True, catalog=parts, conditions=settings.PARTS_CONDITIONS, function_rank=settings.PARTS_FUNCTION_RANK,
-        taxonomy=(parts_taxonomy.Taxonomy.load() if (settings.PARTS_FUNCTION_RANK or settings.PARTS_ANCHOR_LOCK) else None), anchor_lock=settings.PARTS_ANCHOR_LOCK, unknown_notice=settings.PARTS_UNKNOWN_NOTICE, bridge=settings.PARTS_BRIDGE,   # 개념의 영어 키워드·분류 이름을 검색어에 덧붙임(독립 dev 세트 3에서 hit@5 0.83→0.96)
+        taxonomy=(parts_taxonomy.Taxonomy.load() if (settings.PARTS_FUNCTION_RANK or settings.PARTS_ANCHOR_LOCK) else None), anchor_lock=settings.PARTS_ANCHOR_LOCK, unknown_notice=settings.PARTS_UNKNOWN_NOTICE, substitute_gate=(lambda q: substitute_gate.decide(q, embed=embed)) if embed is not None else None, bridge=settings.PARTS_BRIDGE,   # 개념의 영어 키워드·분류 이름을 검색어에 덧붙임(독립 dev 세트 3에서 hit@5 0.83→0.96)
         semantic_concepts=(lambda q: og.semantic_concepts(onto, q, embed, vecs, include_proposed=include)) if vecs else None,
         veto=(lambda q: parts_gate.veto(q, embed=embed)) if embed is not None else None)   # 학습 관문(설정 PARTS_GATE_ML, 모델 없으면 원래 동작)
     return pg.ask_parts(pg.build_parts_graph(deps), question)

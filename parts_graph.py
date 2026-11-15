@@ -42,15 +42,39 @@ SHORT = 30
 
 # '이 부품 말고 비슷한 것'을 찾는 말 (질문에 카탈로그에 있는 부품 이름이 있을 때)
 SIMILAR = re.compile(r"같은\s*거|같은\s*것|[A-Za-z0-9]\s*같은|비슷|유사|대체|대신|말고|다른\s*(?:거|것|부품)|호환|또\s*(?:뭐|있)|비교\s*대상|동급|급의", re.I)
-# 기준 부품 고정(anchor_lock)이 켜졌을 때만 추가로 받는 '대체' 표현(영어 표현, '다른 걸로', '바꾸다', '교체')
-REPLACE_EXT = re.compile(r"replacement|alternative|substitute|equivalent|drop-?in|compatible|instead\s+of|similar\s+to|"
-                         r"다른\s*(?:걸|칩|모델|제품)|바꾸|바꿀|바꿔|교체", re.I)
-# 부품 번호처럼 보이지만 조건·규격인 낱말(전압·전류·주파수·패키지·인터페이스 이름). '카탈로그에 없는 부품 번호' 판단에서 뺀다
+# ---- 기준 부품 고정(anchor_lock)이 켜졌을 때만 추가로 보는 '대체' 표현
+# 이 낱말들은 '대체 요청일 수 있다'는 넓은 신호일 뿐이다. 2차 판정에서 낱말 하나(replacement·compatible)가 수리·사양 문장을 부품 추천으로
+# 잡았고, 문맥 규칙을 덧붙여도 새 대조 문장에서 다시 깨졌다(동료 검토: 대조 탐침 32개 중 30개 통과). 그래서 요청인지의 판단은
+# 학습 관문(substitute_gate.py, 부품 번호를 가린 질문의 임베딩)이 하고, 관문을 쓸 수 없으면 원래의 좁은 낱말(SIMILAR)만 받는다.
+REPLACE_EXT = re.compile(r"replacements?|alternatives?|substitutes?|equivalents?|drop-?in|compatible|instead\s+of|similar\s+(?:\w+\s+)?to|second\s+sources?|"
+                         r"cross[- ]?references?|다른\s*(?:걸|칩|모델|제품|회사|제조사|메이커)|바꾸|바꿀|바꿔|교체|세컨드\s*소스|크로스\s*레퍼런스|대용(?!량)|대치", re.I)
+# 대체 요청의 이유·조건으로 쓰인 구절: 관문 낱말(핀·가격·재고·스펙 …)이 들어 있어도 켬에서는 막지 않는다(요청인지는 학습 관문이 가린다)
+_REASON_PHRASES = re.compile(
+    r"핀\s*(?:투\s*핀|호환|배열(?:이|도)?\s*(?:같|동일))|pin[- ]?(?:to[- ]?pin|compatible)|(?:가격|값)(?:이|도|은)?\s*(?:싼|저렴|비싸|부담|올라|올랐|오르|너무)|"
+    r"재고(?:가|도|는)?\s*(?:없|부족|바닥)|(?:스펙|사양|규격)(?:이|도|은)?\s*(?:비슷|같|동일|유사)|고장\s*(?:나서|났는데|났어요?|이라)", re.I)
+# 부품 번호 낱말이 대체 표현에 붙어 있는가(모르는 번호 모양 낱말을 '대체를 묻는 부품 번호'로 볼지 정할 때): 번호 뒤 가까이에 대체류 낱말, 또는 번호 앞에 영어 구
+_SUB_AFTER = re.compile(r"대체|대신|대용(?!량)|대치|말고|호환|유사|비슷|같은|동급|교체|바꾸|바꿀|바꿔|세컨드\s*소스|크로스\s*레퍼런스|"
+                        r"replacements?|alternatives?|substitutes?|equivalents?|second\s+sources?|cross[- ]?references?", re.I)
+_SUB_BEFORE = re.compile(r"(?:instead\s+of|replacements?\s+(?:for|of)|alternatives?\s+(?:to|for)|substitutes?\s+for|similar\s+(?:\w+\s+)?to|"
+                         r"equivalents?\s+(?:to|of|for)|replace|(?:대체품|대체재|대용|대신|말고)(?:으로|로|에)?)\s*(?:the\s+|an?\s+)?$", re.I)
+# 숫자만으로 된 낱말 뒤에 이런 말이 붙으면 부품 번호가 아니다(2024년, 1000개 …)
+_COUNT_WORD = re.compile(r"\s*(?:년|개|원|번|호|차|회|배|명|만|천|백|억|종|쪽|장|대|도|분|초|시간|월|일|층|칸|핀|단|비트|세대|퍼센트|%|사이즈|크기|급)")
+
+# 부품 번호처럼 보이지만 조건·규격인 낱말. '카탈로그에 없는 부품 번호' 판단과 기준 부품 후보에서 뺀다(카탈로그에 정확히 같은 이름이 있으면 부품이 우선).
+# 낱말 나열 대신 모양 규칙: 수+단위, 수-낱말, 범위, 교류·직류 표기, 규격·판, 패키지(뒤 숫자 1~3자리), 칩 크기.
+_UNIT = (r"(?:v|a|w|hz|f|h|ohm|r|s|b|bits?|bps|sps|ch|g|c|k|m|u|mm|cm|nm|um|db|dbm|dbi|ppm|mah|ah|va|rpm|kg|kpa|pa|dps|lux|baud|min|sec|ms|us|ns|"
+         r"bytes?|kb|mb|gb|x|vdc|vac|vpp|vrms|pins?|ksps|msps|lsb|deg|awg|p|i|fps)")
 _NOT_PART_TOKEN = re.compile(
-    r"^(?:\d+(?:\.\d+)?(?:[munpkmg]?(?:v|a|w|hz|f|h|ohm|r|s|b|bit|bps|sps|ch|g|c|k|m|u|mm|db|dbm|ppm))|"
-    r"(?:sot|soic|sop|ssop|tssop|msop|qfn|dfn|bga|lga|lqfp|tqfp|qfp|dip|sip|to|sc|sod|plcc|wlcsp|smd|tht)-?\d+[a-z]?(?:-\d+[a-z]?)?|"
-    r"i2c|i2s|i3c|iic|rs-?\d{3}[a-z]?|usb-?\d(?:\.\d)?|usb-?c|1-wire|ipv[46]|[2345]g|wi-?fi\d?|802\.\d+[a-z]*|"
-    r"cortex-?[amr]\d+\+?|\d+(?:x|by)\d+|[a-z]\d|\d[a-z]|"
+    r"^(?:\d+(?:\.\d+)?[munpkmg]?" + _UNIT + r"|"                                                         # 3.3V 100mA 16MHz 2200mAh 12VDC 1080p 24AWG
+    r"\d+(?:\.\d+)?-?(?:bit|axis|segment|phase|channel|ch|pin|way|pole|digit|port|cell|wire|layer|key|line|step|stage|band|point)s?|"   # 12-bit 6-axis
+    r"\d+(?:\.\d+)?v?[-~]\d+(?:\.\d+)?[munpkmg]?" + _UNIT + r"|"                                         # 3.3-5V 2.7V-5.5V
+    r"(?:ac|dc)\d+(?:\.\d+)?v|"                                                                           # DC12V AC220V
+    r"(?:can|hdmi|pd|qc|usb|bt)-?\d\.\d[a-z]?|usb-?\d|ble-?\d(?:\.\d)?|ddr\d[a-z]?|ip\d{2}[a-z]?|pm\d\.\d|cat\d[a-z]?|aec-?q\d{3}|(?:csi|dsi)-?\d|"
+    r"v(?:er)?\d(?:\.\d)+|h\.26\d|wpa\d|utf-?\d+|nema-?\d+|cr\d{4}|ieee-?\d+(?:\.\d+)?[a-z]*|iso-?\d{4,}|mp\d|"                         # 규격·판·크기
+    r"(?:[htvwulxde]{0,2}(?:sot|soic|sop|ssop|tssop|msop|qfn|dfn|bga|lga|lqfp|tqfp|qfp|son|sip|dip|plcc|wlcsp|lfcsp|mlf)|"
+    r"tsot|pdip|cdip|qsop|vssop|wson|ufbga|do|so|to|sc|sod|smd|tht|d2?pak)-?\d{1,3}[a-z]{0,2}(?:-\d{1,2}[a-z]?)?|d2pak|"              # 패키지
+    r"i2c|i2s|i3c|iic|rs-?\d{3}[a-z]?|usb-?c|1-wire|ipv[46]|[2345]g|wi-?fi\d?|802\.\d+[a-z]*|"
+    r"cortex-?[amr]\d+\+?|\d+(?:\.\d+)?(?:x|by)\d+(?:\.\d+)?(?:mm)?|[a-z]\d|\d[a-z]|"
     r"0201|0402|0603|0805|1206|1210|1812|2010|2512)$", re.I)      # 칩 부품 크기 코드(부품 이름 앞머리와 우연히 같을 수 있음)
 # 사전에 개념이 없어도 부품을 찾는 말이 분명한 짧은 질문(예: '로드셀 증폭용 칩')은 질문 그대로 검색한다
 PART_NOUN = re.compile(r"(?<![가-힣])(?:칩|소자|부품)(?![가-힣])|(?<![a-z])ic(?![a-z])", re.I)
@@ -93,6 +117,7 @@ class PartsDeps:
     bridge: bool = False          # 한·영 다리 사전의 영어 짝을 검색어에 덧붙임(설정 PARTS_BRIDGE, 기본 꺼짐)
     conditions: bool = False      # 여러 조건 질문(인터페이스·전압·패키지 …)을 뽑아 순서·답에 반영(설정 PARTS_CONDITIONS, 기본 꺼짐)
     anchor_lock: bool = False     # 기준 부품 고정(설정 PARTS_ANCHOR_LOCK, 기본 꺼짐): 대체품은 기준 부품의 기능군 안에서만, 모르면 답하지 않음
+    substitute_gate: Optional[Callable[[str], Optional[bool]]] = None   # 번호를 가린 질문 → 대체품 추천 요청인가(True·False), 판단 못 하면 None
     unknown_notice: bool = False  # '카탈로그에 없음' 안내(설정 PARTS_UNKNOWN_NOTICE, 기본 꺼짐): 대체품을 묻는 부품 번호가 카탈로그에 없으면 안내문으로 답함
     veto: Optional[Callable[[str], bool]] = None   # 규칙이 부품 질문이라 본 뒤의 보조 거부(학습 모델, parts_gate.veto). True 면 부품 질문 아님
 
@@ -164,19 +189,129 @@ def annotate_parts(tax, parts: list[dict]) -> list[dict]:
 
 
 def replace_intent(question: str, extended: bool = False) -> bool:
-    """'비슷한·대체' 부품을 찾는 말이 있고 설명·문서·비부품 말이 없는가. extended 면 영어 표현·'바꾸다'·'교체'도 받는다."""
-    if DOC_WORDS.search(question) or EXPLAIN.search(question) or NONPART.search(question):
+    """'비슷한·대체' 부품을 찾는 말이 있고 설명·문서·비부품 말이 없는가.
+    extended(기준 부품 고정 켬)면 넓은 신호(REPLACE_EXT)도 받고, '도대체'는 빼고, 이유·조건 구절(핀 호환·가격이 싼 …)은 관문에서 봐준다.
+    넓게 받은 것이 정말 요청인지는 부르는 쪽이 학습 관문으로 다시 가린다."""
+    if not extended:
+        if DOC_WORDS.search(question) or EXPLAIN.search(question) or NONPART.search(question):
+            return False
+        return bool(SIMILAR.search(question))
+    gate = _REASON_PHRASES.sub(" ", question)
+    if DOC_WORDS.search(gate) or EXPLAIN.search(gate) or NONPART.search(gate):
         return False
-    return bool(SIMILAR.search(question) or (extended and REPLACE_EXT.search(question)))
+    text = question.replace("도대체", " ")
+    return bool(SIMILAR.search(text) or REPLACE_EXT.search(text))
+
+
+def condition_shaped(token: str, catalog=None) -> bool:
+    """전압·패키지·규격 같은 조건 모양의 낱말인가. 카탈로그에 정확히 같은 이름의 부품이 있으면(숫자+글자 하나 꼴은 숫자 부분이 이름이어도) 부품으로 본다."""
+    t = token.lower().strip("-_.+")
+    if not _NOT_PART_TOKEN.match(t):
+        return False
+    if catalog:
+        base = re.match(r"^(\d{3,})[a-z]$", t)
+        names = {t, base.group(1)} if base else {t}
+        if any(p["name"].lower() in names for p in catalog):
+            return False
+    return True
+
+
+def _in_catalog(t: str, catalog) -> bool:
+    """번호 낱말이 카탈로그 부품 이름과 같거나 그 앞머리인가(숫자만인 낱말을 이름 속 어디든 있으면 받는 핀 조회의 느슨한 규칙은 쓰지 않는다)."""
+    return any(p["name"].lower().startswith(t) for p in catalog)
+
+
+def _shorter_names(token: str, catalog) -> list[dict]:
+    """주문용 접미사가 붙어 카탈로그 이름보다 긴 번호(LM2596S-5.0, LM358N, BC547B): 구분 기호를 뺀 카탈로그 이름이 그 번호의 앞머리인 부품들(가장 긴 이름만).
+    이름 바로 다음 글자가 숫자면 다른 번호다(MAX2320 은 MAX232 가 아니다). 숫자가 든 5자 이상 이름만 본다."""
+    raw = token.lower().strip("-_.+")
+    nt = kp._norm(raw)
+
+    def next_char(n_len: int) -> str:          # 원문에서 영문·숫자를 n_len 개 지난 바로 다음 글자
+        seen = 0
+        for i, ch in enumerate(raw):
+            if ch.isalnum():
+                seen += 1
+                if seen == n_len:
+                    return raw[i + 1:i + 2]
+        return ""
+    hits = [(len(n), p) for p in catalog for n in [kp._norm(p["name"])]
+            if 5 <= len(n) < len(nt) and nt.startswith(n) and re.search(r"\d", n) and not next_char(len(n)).isdigit()]
+    longest = max((length for length, _ in hits), default=0)
+    return [p for length, p in hits if length == longest]
+
+
+def _short_number(t: str, catalog) -> list[dict]:
+    """숫자만 적은 줄임 번호(7805, 555): 글자 1~4개 뒤에 그 숫자가 오고 숫자가 더 이어지지 않는 이름(LM7805, NE555)."""
+    rx = re.compile(r"^[a-z]{1,4}" + re.escape(t) + r"(?!\d)")
+    return [p for p in catalog if rx.match(p["name"].lower())]
+
+
+def _attached(question: str, start: int, end: int) -> bool:
+    """그 낱말이 대체 표현의 대상인가: 낱말 뒤 가까이(문장 부호 전, 36자 안)에 대체류 낱말이 있거나, 낱말 바로 앞이 'instead of' 같은 구."""
+    after = question[end:end + 36]
+    m = _SUB_AFTER.search(after)
+    if m and not re.search(r"[.?!]", after[:m.start()]):
+        return True
+    return bool(_SUB_BEFORE.search(question[max(0, start - 28):start]))
+
+
+def part_tokens_in(question: str, catalog) -> list[tuple[str, bool]]:
+    """질문에 적힌 부품 번호 낱말과 카탈로그에 있는지 여부. 조건 모양·수량(2024년, 1000개)은 빼고, 같은 계열은 하나로 센다.
+    카탈로그에 없는 낱말은 글자와 숫자가 섞인 4자 이상이고 대체 표현에 붙어 있을 때만 번호로 친다(NEMA17·CR2032 같은 규격·크기 낱말을 거른다)."""
+    out: list[tuple[str, bool]] = []
+    for m in kp._PART_TOKEN.finditer(question):
+        token = m.group()
+        t = token.lower().strip("-_.+")
+        if len(t) < 3 or not re.search(r"\d", t) or condition_shaped(token, catalog):
+            continue
+        if t.isdigit():
+            rest = question[m.end():]
+            if _COUNT_WORD.match(rest) and not _SUB_AFTER.match(rest.lstrip()):
+                continue                  # 2024년·1000개 는 번호가 아니다. 다만 '7805 대체품'의 '대'는 세는 말이 아니다
+            if not _in_catalog(t, catalog) and not (len(t) <= 5 and _attached(question, m.start(), m.end()) and _short_number(t, catalog)):
+                continue                  # 숫자만인 낱말은 이름·앞머리이거나, 대체 표현에 붙은 줄임 번호(7805 → LM7805)일 때만
+            known = True
+        else:
+            base = re.match(r"^(\d{3,})[a-z]$", t)        # 4017B·7805A: 숫자 부분이 카탈로그의 정확한 이름이면 그 부품
+            known = (_in_catalog(t, catalog) or bool(base and any(p["name"].lower() == base.group(1) for p in catalog))
+                     or bool(_shorter_names(t, catalog)))
+            if not known and (len(t) < 4 or not _attached(question, m.start(), m.end())):
+                continue
+        if any(t.startswith(o.lower().strip("-_.+")) or o.lower().strip("-_.+").startswith(t) for o, _ in out):
+            continue                      # LM358 과 LM358N 은 같은 계열
+        out.append((token, known))
+    return out
+
+
+def mask_numbers(question: str, tokens: list[tuple[str, bool]]) -> str:
+    """부품 번호 낱말을 자리표시로 바꾼 글(학습 관문에 넣고, 조건을 뽑을 때 번호 속 글자를 전압으로 읽지 않게 하는 데 쓴다)."""
+    out = question
+    for name, (token, _known) in zip(("PARTA", "PARTB", "PARTC"), tokens):
+        out = out.replace(token, name)
+    return out
+
+
+def catalog_group(token: str, catalog) -> list[dict]:
+    """번호 낱말에 해당하는 카탈로그 부품들(정확히 같은 이름이 있으면 그것만, 없으면 그 낱말로 시작하는 이름). 이름이 짧은 순."""
+    t = token.lower().strip("-_.+")
+    exact = [p for p in catalog if p["name"].lower() == t]
+    group = exact or [p for p in catalog if p["name"].lower().startswith(t)]
+    base = re.match(r"^(\d{3,})[a-z]$", t)
+    if not group and base:
+        group = [p for p in catalog if p["name"].lower() == base.group(1)]
+    if not group:
+        group = _shorter_names(t, catalog)
+    if not group and t.isdigit():
+        group = _short_number(t, catalog)
+    return sorted(group, key=lambda p: (len(p["name"]), p["lib_id"]))
 
 
 def anchor_group(question: str, catalog, extended: bool = False) -> list[dict]:
-    """'비슷한 부품' 질문에서 질문 속 부품 번호와 맞는 카탈로그 부품들(이름이 짧은 순). 없으면 빈 목록."""
+    """'비슷한 부품' 질문에서 질문 속 부품 번호와 맞는 카탈로그 부품들(이름이 짧은 순). 없으면 빈 목록. (기준 부품 고정이 꺼졌을 때의 원래 규칙)"""
     if not catalog or not replace_intent(question, extended):
         return []
-    for token, group in kp._candidate_groups(question, catalog):
-        if extended and _NOT_PART_TOKEN.match(token.lower().strip("-_.+")):
-            continue      # 전압·패키지·인터페이스 이름이 우연히 부품 이름의 앞머리와 같아도 기준 부품으로 삼지 않는다
+    for _token, group in kp._candidate_groups(question, catalog):
         return sorted(group, key=lambda p: (len(p["name"]), p["lib_id"]))
     return []
 
@@ -188,15 +323,8 @@ def find_anchor(question: str, catalog, extended: bool = False) -> dict | None:
 
 
 def unknown_part_tokens(question: str, catalog) -> list[str]:
-    """질문에 적힌 부품 번호처럼 보이는 낱말 중 카탈로그에 없는 것(글자와 숫자가 섞인 4자 이상, 전압·패키지·인터페이스 이름 제외)."""
-    out = []
-    for token in kp._PART_TOKEN.findall(question):
-        t = token.lower().strip("-_.+")
-        if len(t) < 4 or not re.search(r"\d", t) or not re.search(r"[a-z]", t) or _NOT_PART_TOKEN.match(t):
-            continue
-        if not kp._candidates(t, catalog) and not any(p["name"].lower().startswith(t) for p in catalog):
-            out.append(token)      # 핀 정보가 없어 핀 조회 후보에는 안 잡히는 부품(카탈로그에는 있음)은 '없는 번호'가 아니다
-    return out
+    """대체 표현에 붙어 있는 부품 번호 모양 낱말 중 카탈로그에 없는 것(글자와 숫자가 섞인 4자 이상, 전압·패키지·규격 모양 제외)."""
+    return [token for token, known in part_tokens_in(question, catalog) if not known]
 
 
 def unknown_notice_text(tokens: list[str]) -> str:
@@ -219,15 +347,16 @@ def anchor_scope(tax, group: list[dict]) -> tuple[dict | None, str]:
     if any(i is None for i in infos):
         return None, "일반 라이브러리 부품이라 기능을 정할 수 없음"
     libs = sorted({_lib_of(p) for p in group})
+    home = _lib_of(group[0])          # 기준 부품(묶음의 첫 부품)의 라이브러리
     guessed = [i for i in infos if i["mixed"] and i["by"] == "대표 기능"]
     if guessed:
         if len(libs) > 1:
             return None, "혼합 라이브러리 여러 곳에 걸쳐 기능을 정할 수 없음"
-        return {"function": None, "library": libs[0], "label": f"{libs[0]} 라이브러리(혼합, 기능 미확정)", "by": "같은 라이브러리"}, ""
+        return {"function": None, "library": home, "label": f"{home} 라이브러리(혼합, 기능 미확정)", "by": "같은 라이브러리"}, ""
     fids = sorted({i["function"] for i in infos})
     if len(fids) > 1:
         return None, f"같은 번호의 부품이 여러 기능에 걸침 {fids}"
-    return {"function": fids[0], "library": libs[0], "label": tax.label(infos[0]), "by": infos[0]["by"]}, ""
+    return {"function": fids[0], "library": home, "label": tax.label(infos[0]), "by": infos[0]["by"]}, ""
 
 
 def similar_query(anchor: dict) -> str:
@@ -305,30 +434,59 @@ def build_parts_graph(deps: PartsDeps):
         return out
 
     def rule_classify(state: PartsState) -> PartsState:
-        lock = deps.anchor_lock
-        group = anchor_group(state["question"], deps.catalog, extended=lock)
-        anchor = group[0] if group else None
-        if anchor and lock:
-            scope, why = anchor_scope(deps.taxonomy, group)
-            if scope is None:
-                return {"concepts": [], "concept_ids": [], "abstain": why,
-                        "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']} — {why} → 답하지 않음"]}
-            return {"anchor": anchor, "anchor_scope": scope, "concepts": [anchor["lib_id"]], "concept_ids": [],
-                    "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}, 기능군 고정 {scope['label']}({scope['by']})"]}
-        if anchor:
-            return {"anchor": anchor, "concepts": [anchor["lib_id"]], "concept_ids": [],
-                    "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}"]}
-        # 안내문은 원래의 대체 표현(SIMILAR)이 있을 때만 낸다. 넓힌 표현(REPLACE_EXT)은 수리·사양 문장도 잡으므로 안내 없이 답하지 않기만 한다
-        notify = deps.unknown_notice and replace_intent(state["question"], extended=False)
-        if deps.catalog and (notify or (lock and replace_intent(state["question"], extended=True))):
-            unknown = unknown_part_tokens(state["question"], deps.catalog)
-            if unknown:      # 대체품을 묻는데 기준 부품 번호가 카탈로그에 없다: 조건 낱말로 다른 기능군을 추측하지 않는다
-                why = f"부품 번호 {unknown} 가 카탈로그에 없음"
-                out = {"concepts": [], "concept_ids": [], "abstain": why, "trace": [f"classify: 비슷한 부품 질문, {why} → 답하지 않음"]}
-                if notify:
-                    out["notice"] = unknown_notice_text(unknown)
-                    out["trace"] = [f"classify: 비슷한 부품 질문, {why} → 추천하지 않고 안내문으로 답함"]
-                return out
+        lock, q = deps.anchor_lock, state["question"]
+        if lock and deps.catalog:
+            # 기준 부품 고정: 넓은 신호 → 번호 낱말 고르기 → 학습 관문(요청인가) → 번호 수·카탈로그 여부에 따라 기능군 고정 / 답하지 않음
+            numbers = part_tokens_in(q, deps.catalog) if replace_intent(q, extended=True) else []
+            group = catalog_group(numbers[0][0], deps.catalog) if len(numbers) == 1 and numbers[0][1] else []
+            if not numbers and replace_intent(q, extended=True):
+                group = sorted(kp._phrase_group(q, deps.catalog), key=lambda p: (len(p["name"]), p["lib_id"]))   # 띄어쓰기가 든 이름 전체
+            asked = None
+            if numbers or group:
+                asked = deps.substitute_gate(mask_numbers(q, numbers)) if deps.substitute_gate is not None else None
+                if asked is None:
+                    asked = replace_intent(q, extended=False)       # 학습 관문을 쓸 수 없으면 원래의 좁은 낱말만 받는다
+            if (numbers or group) and not asked:
+                # 부품 번호와 대체류 낱말이 함께 있는데 대체품 추천 요청이 아니라고 판단: 그 부품에 대한 다른 질문(수리·사양·사용법)이므로
+                # 부품 추천 경로로 답하지 않는다. 아래 일반 개념 경로로 넘기면 기준 부품 자신이나 무관한 부품이 답으로 나갈 수 있다(동료 검토).
+                why = "대체품 추천 요청이 아닌 것으로 판단"
+                return {"concepts": [], "concept_ids": [], "abstain": why, "trace": [f"classify: 부품 번호와 대체류 낱말이 있으나 {why} → 답하지 않음"]}
+            if asked:
+                if len(numbers) >= 2:    # 번호가 둘 이상이면 어느 것이 기준인지, 추천 요청인지(호환 여부·차이를 묻는 질문) 정할 수 없다
+                    why = f"부품 번호가 둘 이상 {[t for t, _ in numbers]}"
+                    return {"concepts": [], "concept_ids": [], "abstain": why, "trace": [f"classify: 비슷한 부품 질문, {why} → 답하지 않음"]}
+                if group:
+                    anchor = group[0]
+                    scope, why = anchor_scope(deps.taxonomy, group)
+                    if scope is None:
+                        return {"concepts": [], "concept_ids": [], "abstain": why,
+                                "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']} — {why} → 답하지 않음"]}
+                    return {"anchor": anchor, "anchor_scope": scope, "concepts": [anchor["lib_id"]], "concept_ids": [],
+                            "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}, 기능군 고정 {scope['label']}({scope['by']})"]}
+                unknown = [t for t, known in numbers if not known]
+                if unknown:      # 대체품을 묻는데 기준 부품 번호가 카탈로그에 없다: 조건 낱말로 다른 기능군을 추측하지 않는다
+                    why = f"부품 번호 {unknown} 가 카탈로그에 없음"
+                    out = {"concepts": [], "concept_ids": [], "abstain": why, "trace": [f"classify: 비슷한 부품 질문, {why} → 답하지 않음"]}
+                    if deps.unknown_notice and replace_intent(q, extended=False):
+                        out["notice"] = unknown_notice_text(unknown)
+                        out["trace"] = [f"classify: 비슷한 부품 질문, {why} → 추천하지 않고 안내문으로 답함"]
+                    return out
+        else:
+            group = anchor_group(q, deps.catalog)
+            anchor = group[0] if group else None
+            if anchor:
+                return {"anchor": anchor, "concepts": [anchor["lib_id"]], "concept_ids": [],
+                        "trace": [f"classify: 비슷한 부품 질문, 기준 부품 {anchor['lib_id']}"]}
+            # '카탈로그에 없음' 안내(기준 부품 고정이 꺼져 있을 때): 원래의 대체 표현이 있고, 그 표현에 붙은 번호가 카탈로그에 없고,
+            # 학습 관문이 요청이 아니라고 하지 않을 때만 낸다
+            if deps.unknown_notice and deps.catalog and replace_intent(q, extended=False):
+                numbers = part_tokens_in(q.replace("도대체", " "), deps.catalog)
+                unknown = [t for t, known in numbers if not known]
+                asked = deps.substitute_gate(mask_numbers(q, numbers)) if (unknown and deps.substitute_gate is not None) else None
+                if unknown and asked is not False:
+                    why = f"부품 번호 {unknown} 가 카탈로그에 없음"
+                    return {"concepts": [], "concept_ids": [], "abstain": why, "notice": unknown_notice_text(unknown),
+                            "trace": [f"classify: 비슷한 부품 질문, {why} → 추천하지 않고 안내문으로 답함"]}
         ids = parts_concepts(state["question"], deps.ontology, deps.include_proposed, deps.semantic_concepts)
         concepts = [deps.ontology.nodes[c]["label"] for c in ids]
         overridden = False
@@ -370,17 +528,26 @@ def build_parts_graph(deps: PartsDeps):
                 sure = lambda r: (i := part_info(tax, r)) is not None and i["function"] == fid and not (i["mixed"] and i["by"] == "대표 기능")   # noqa: E731
                 inside = sure if fid else (lambda r: _lib_of(r) == lib)
                 found = [r for r in rows if other(r) and inside(r)]
-                fill = []
-                if fid and len(found) < deps.limit and deps.catalog:   # 검색 결과가 모자라면 같은 기능 부품으로 결정적으로 채운다(같은 라이브러리·핀 수가 가까운 것 먼저)
-                    have, pins = {r.get("lib_id") for r in found}, anchor.get("pin_count") or 0
-                    fill = sorted((p for p in tax.index(deps.catalog).get(fid, []) if p.get("lib_id") not in have and other(p) and sure(p)),
-                                  key=lambda p: (_lib_of(p) != lib, abs((p.get("pin_count") or 0) - pins), not p.get("datasheet"), p["name"]))
-                    fill = [{**p, "filled": True} for p in fill[:deps.limit - len(found)]]
-                conds = pc.parse(state["question"]) if deps.conditions else []
+                # 조건은 부품 번호를 가린 글에서 뽑는다(번호 속 글자를 전압으로 읽지 않게: ATtiny85V 의 85V)
+                plain = mask_numbers(state["question"], part_tokens_in(state["question"], deps.catalog)) if deps.catalog else state["question"]
+                conds = pc.parse(plain) if deps.conditions else []
+                # 패키지·실장 형태·전원 전압 조건과 분명히 어긋나는 후보는 뺀다(2차 판정: 'DIP 패키지로'에 다른 패키지만 5개 답한 질문이 틀린 답이었다).
+                # 전압은 질문이 전원·동작 전압이라고 밝혔을 때만 쓴다(출력·기준 전압일 수 있다)
+                hard = [c for c in conds if c.family == "package" or (c.family == "voltage" and pc.is_supply_voltage(plain))] if deps.conditions else []
+                hard += pc.parse_mount(plain) if deps.conditions else []
+                dropped = [r for r in found if any(pc.contradicts(c, r) for c in hard)]
+                found = [r for r in found if r not in dropped]
+                # 후보가 모자라도 카탈로그에서 채우지 않는다. 2차 판정 뒤 확인: 채운 부품은 기능 이름만 같고 값(극성·코어 계열)이 다른 것이 섞여
+                # 틀린 부품이 된다(예: PNP 트랜지스터의 자리에 NPN). 적게 내는 편이 낫다.
                 parts = (pc.rank(conds, found) if conds else found)[:deps.limit]
-                parts = annotate_parts(tax, parts + fill[:deps.limit - len(parts)])
-                return {"parts": parts, "backend": backend if parts else None, "conditions": [c.label for c in conds],
-                        "trace": [f"search[{backend}]: 기능군 고정 {scope['label']} 안에서 {len(parts)}건(카탈로그 보충 {sum(1 for p in parts if p.get('filled'))}건)"]}
+                parts = annotate_parts(tax, parts)
+                note = f"(조건에 어긋나 뺀 후보 {len(dropped)}건)" if dropped else ""
+                out = {"parts": parts, "backend": backend if parts else None, "conditions": [c.label for c in conds],
+                       "trace": [f"search[{backend}]: 기능군 고정 {scope['label']} 안에서 {len(parts)}건{note}"]}
+                if not parts:        # 답하지 않는 이유를 남긴다(집계에서 '일부러 답하지 않음'으로 세어지게)
+                    out["abstain"] = (f"질문의 조건({', '.join(c.label for c in hard)})에 맞는 후보가 기능군 안에 없음" if dropped
+                                      else "기능군 안에 다른 후보가 없음")
+                return out
             parts = [r for r in rows if other(r)][:deps.limit]
             if deps.function_rank and deps.taxonomy is not None:
                 parts = annotate_parts(deps.taxonomy, parts)

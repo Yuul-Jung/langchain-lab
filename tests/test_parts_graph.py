@@ -225,14 +225,15 @@ class AnchorLockTest(unittest.TestCase):
 
     def graph(self, lock, rows=None, **kw):
         rows = self.rows if rows is None else rows
+        kw.setdefault("substitute_gate", lambda q: True)      # 학습 관문 대역: 대체품 추천 요청이라고 답함
         d = pg.PartsDeps(find=lambda q, n: (rows, "es-semantic"), catalog=self.catalog, taxonomy=self.Tax(), anchor_lock=lock, **kw)
         return lambda q: pg.ask_parts(pg.build_parts_graph(d), q)
 
     def test_candidates_stay_inside_anchor_function(self):
         r = self.graph(True)("ZX100 대체품")
         self.assertTrue(r["answered"])
-        self.assertEqual([p["lib_id"] for p in r["parts"]], ["Zeta_Linear:QW200", "Zeta_Other:QW300"])   # Yota 는 빠지고, 모자란 자리는 같은 기능으로 채움
-        self.assertEqual([bool(p.get("filled")) for p in r["parts"]], [False, True])
+        self.assertEqual([p["lib_id"] for p in r["parts"]], ["Zeta_Linear:QW200"])     # Yota 는 빠지고, 모자란 자리를 카탈로그에서 채우지 않는다
+        self.assertFalse(any(p.get("filled") for p in r["parts"]))
         self.assertIn("기능 alpha", r["answer"])
         off = self.graph(False)("ZX100 대체품")
         self.assertEqual([p["lib_id"] for p in off["parts"]], ["Yota:UART900", "Zeta_Linear:QW200"])     # 꺼져 있으면 원래 동작 그대로
@@ -254,7 +255,9 @@ class AnchorLockTest(unittest.TestCase):
         self.assertFalse(r["answered"])
         self.assertIn("QQ9999", r["abstain"])
         self.assertFalse(self.graph(True)("QQ9999 설명해줘").get("abstain"))          # 대체를 묻지 않으면 이 규칙이 끼어들지 않는다
-        self.assertEqual(pg.unknown_part_tokens("3.3V SOT-23 I2C RS485 24V 100mA TSSOP-16 QQ9999", self.catalog), ["QQ9999"])
+        self.assertEqual(pg.unknown_part_tokens("3.3V SOT-23 I2C RS485 24V 100mA TSSOP-16 QQ9999 대체품", self.catalog), ["QQ9999"])
+        self.assertEqual(pg.unknown_part_tokens("NEMA17 모터에 쓰는 QQ9999 대체품", self.catalog), ["QQ9999"])     # 규격 낱말은 번호로 치지 않는다
+        self.assertEqual(pg.unknown_part_tokens("QQ9999 은 3.3V 로 동작하나요", self.catalog), [])                 # 대체 표현에 붙어 있지 않으면 세지 않는다
 
     def test_generic_and_ambiguous_anchor_abstains_and_mixed_uses_library(self):
         r = self.graph(True)("GN700 대체품")
@@ -277,6 +280,145 @@ class AnchorLockTest(unittest.TestCase):
         r = self.graph(True)("QQ9999 대체품 24V 추천")
         self.assertFalse(r["answered"])
         self.assertIn("QQ9999", r["abstain"])
+
+
+class AnchorLockRound3Test(unittest.TestCase):
+    """2차 판정 뒤 고친 것(기준 부품 고정이 켜졌을 때만). 값·이름은 지어낸 것."""
+
+    def setUp(self):
+        P = AnchorLockTest.part
+        self.catalog = [P("Zeta_Linear", "ZX100"), {**P("Zeta_Linear", "QW200"), "footprint": "Package_SO:SOIC-8_3.9x4.9mm"},
+                        {**P("Zeta_Other", "QW300", pins=8), "footprint": "Package_DIP:DIP-8_W7.62mm"}, P("Yota", "UART900", "uart bridge")]
+
+    def graph(self, lock=True, rows=None, **kw):
+        rows = self.catalog[1:] if rows is None else rows
+        kw.setdefault("substitute_gate", lambda q: True)      # 학습 관문 대역: 대체품 추천 요청이라고 답함
+        d = pg.PartsDeps(find=lambda q, n: (rows, "es-semantic"), catalog=self.catalog, taxonomy=AnchorLockTest.Tax(), anchor_lock=lock, **kw)
+        return lambda q: pg.ask_parts(pg.build_parts_graph(d), q)
+
+    def test_learned_gate_decides_whether_it_is_a_request(self):
+        seen = []
+        ask = self.graph(substitute_gate=lambda q: seen.append(q) or False)       # 관문이 '요청 아님'이라고 하면 기준 부품을 잡지 않는다
+        for q in ("ZX100 replacement 하다가 패드가 떨어졌어요", "is ZX100 compatible with 5V logic?", "ZX100 교체했는데 부품이 뜨거워요", "ZX100 대체품"):
+            r = ask(q)
+            self.assertFalse(r["answered"], q)
+            self.assertFalse(r.get("anchor"), q)
+        self.assertEqual(seen[0], "PARTA replacement 하다가 패드가 떨어졌어요")       # 관문에는 부품 번호를 가린 글이 간다
+
+    def test_broad_wording_is_accepted_when_the_gate_says_request(self):
+        ask = self.graph()
+        for q in ("ZX100 alternative 추천", "drop-in replacement for ZX100", "ZX100 substitute?", "what can I use instead of ZX100?",
+                  "ZX100 교체할 부품", "ZX100 품절이라 다른 걸로 바꾸려는데 뭐가 좋을까요?", "ZX100 세컨드 소스 있나요",
+                  "ZX100이랑 핀 호환되는 대체 칩", "가격이 싼 ZX100 대체품"):
+            self.assertTrue(ask(q)["answered"], q)
+
+    def test_without_the_gate_only_the_original_wording_is_accepted(self):
+        ask = self.graph(substitute_gate=None)                                     # 모델이 없으면 원래의 좁은 낱말만
+        self.assertTrue(ask("ZX100 대체품")["answered"])
+        for q in ("ZX100 alternative 추천", "ZX100 교체할 부품", "ZX100 세컨드 소스 있나요"):
+            self.assertFalse(ask(q)["answered"], q)
+        ask = self.graph(substitute_gate=lambda q: None)                           # 임베딩 실패 등으로 판단 못 함: 같은 좁은 규칙
+        self.assertTrue(ask("ZX100 대체품")["answered"])
+        self.assertFalse(ask("ZX100 alternative 추천")["answered"])
+
+    def test_non_numbers_are_not_counted_as_part_numbers(self):
+        cat = self.catalog + [AnchorLockTest.part("Yota", "REF2025"), AnchorLockTest.part("Yota", "4017")]
+        tok = lambda q: pg.part_tokens_in(q, cat)   # noqa: E731
+        self.assertEqual(tok("2025년에도 구할 수 있는 ZX100 대체품"), [("ZX100", True)])
+        self.assertEqual(tok("ZX100 대체품 1000개 구할 수 있는 걸로"), [("ZX100", True)])
+        self.assertEqual(tok("NEMA17 모터에 쓰는 ZX100 대체품 CR2032 로 동작"), [("ZX100", True)])
+        self.assertEqual(tok("4017B 대체품"), [("4017B", True)])                    # 숫자 + 글자 하나: 숫자 부분이 정확한 이름이면 부품
+        self.assertEqual(pg.catalog_group("4017B", cat)[0]["name"], "4017")
+        self.assertEqual(tok("ZX100 대체품 USB2 지원"), [("ZX100", True)])
+
+    def test_two_part_numbers_decline(self):
+        r = self.graph()("ZX100 대신 QW200 써도 돼?")
+        self.assertFalse(r["answered"])
+        self.assertIn("둘 이상", r["abstain"])
+        r = self.graph()("QQ9999 대체품으로 QW200 말고 다른 거")           # 모르는 번호 + 아는 번호: 아는 번호를 기준으로 삼지 않는다
+        self.assertFalse(r["answered"])
+        self.assertIn("둘 이상", r["abstain"])
+        self.assertTrue(self.graph(lock=False)("ZX100 대신 QW200 써도 돼?")["answered"])      # 꺼져 있으면 원래 동작
+        self.assertTrue(self.graph()("ZX100 대체품 3.3V SOT-23 I2C")["answered"])              # 조건 낱말은 번호로 세지 않는다
+
+    def test_candidates_that_contradict_package_or_mount_are_dropped(self):
+        r = self.graph(conditions=True)("ZX100 대신 쓸 수 있는 DIP 패키지 부품")
+        self.assertEqual([p["lib_id"] for p in r["parts"]], ["Zeta_Other:QW300"])               # SOIC 라고 적힌 QW200 은 빠진다
+        r = self.graph(conditions=True)("ZX100 대체품인데 SMD 타입으로 찾아줘")
+        self.assertEqual([p["lib_id"] for p in r["parts"]], ["Zeta_Linear:QW200"])              # DIP 이라고 적힌 QW300 은 빠진다
+        r = self.graph(conditions=True, rows=[self.catalog[1]])("ZX100 대체품 TO-220 패키지로")   # 맞는 후보가 없으면 답하지 않고 이유를 남긴다
+        self.assertFalse(r["answered"])
+        self.assertIn("조건", r["abstain"])
+
+    def test_longer_ordering_numbers_and_short_numeric_names(self):
+        P = AnchorLockTest.part
+        cat = [P("Zeta_Linear", "ZX100"), P("Zeta_Linear", "LM7805_TO220"), P("Zeta_Linear", "NE555"), P("Zeta_Linear", "LM2596S-5")]
+        tok = lambda q: pg.part_tokens_in(q, cat)   # noqa: E731
+        self.assertEqual(tok("ZX100N 대체품"), [("ZX100N", True)])                       # 접미사 글자가 붙은 주문 번호
+        self.assertEqual(pg.catalog_group("ZX100N", cat)[0]["name"], "ZX100")
+        self.assertEqual(pg.catalog_group("LM2596S-5.0", cat)[0]["name"], "LM2596S-5")
+        self.assertEqual(tok("ZX1000 대체품"), [("ZX1000", False)])                      # 이름 뒤에 숫자가 더 붙으면 다른 번호(없는 번호)
+        self.assertEqual(pg.catalog_group("ZX1000", cat), [])
+        self.assertEqual(tok("7805 대체품"), [("7805", True)])                           # 숫자만 적은 줄임 번호
+        self.assertEqual(pg.catalog_group("7805", cat)[0]["name"], "LM7805_TO220")
+        self.assertEqual(pg.catalog_group("555", cat)[0]["name"], "NE555")
+        self.assertEqual(tok("ZX100 대체품 7805 개"), [("ZX100", True)])
+
+    def test_gate_no_means_no_parts_answer_at_all(self):
+        # 관문이 '요청 아님'이라고 하면 일반 개념 경로로도 넘기지 않는다(기준 부품 자신이 답으로 나가지 않게)
+        d = pg.PartsDeps(find=lambda q, n: (self.catalog, "es-semantic"), ontology=onto("approved"), catalog=self.catalog, taxonomy=AnchorLockTest.Tax(),
+                         anchor_lock=True, substitute_gate=lambda q: False)
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZX100 대체 가능한 부품")
+        self.assertFalse(r["answered"])
+        self.assertIn("요청이 아닌", r["abstain"])
+        self.assertFalse(pg.ask_parts(pg.build_parts_graph(d), "가젯 알파 부품 추천").get("abstain"))      # 부품 번호가 없는 질문은 그대로 개념 경로
+
+    def test_voltage_only_filters_when_it_is_the_supply(self):
+        P = AnchorLockTest.part
+        cat = [P("Zeta_Linear", "ZX100"), P("Zeta_Linear", "QW400", "gadget, 7V-35V input, 12V fixed output"), P("Zeta_Linear", "QW500", "gadget, 2.7V-5.5V supply")]
+        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True, conditions=True,
+                         substitute_gate=lambda q: True)
+        ask = lambda q: [p["name"] for p in pg.ask_parts(pg.build_parts_graph(d), q)["parts"]]   # noqa: E731
+        self.assertEqual(sorted(ask("ZX100 대체품 12V 출력")), ["QW400", "QW500"])              # 출력 전압은 후보를 거르는 데 쓰지 않는다
+        self.assertEqual(ask("3.3V 전원에서 동작하는 ZX100 대체품"), ["QW500"])                 # 전원 전압이라고 밝혔고 범위 밖이면 뺀다
+        self.assertEqual(sorted(ask("12V 전원에서 쓸 ZX100 대체품")), ["QW400"])                # 글에 12V 가 그대로 있으면 어긋남이 아니다(QW500 은 범위 밖)
+
+    def test_number_inside_a_part_name_is_not_a_voltage_condition(self):
+        P = AnchorLockTest.part
+        cat = [P("Zeta_Linear", "ZT85V-10PU"), P("Zeta_Linear", "QW500", "gadget, 2.7V-5.5V supply")]
+        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True, conditions=True,
+                         substitute_gate=lambda q: True)
+        r = pg.ask_parts(pg.build_parts_graph(d), "전원용 ZT85V-10PU 대체품")
+        self.assertEqual([p["name"] for p in r["parts"]], ["QW500"])
+        self.assertEqual(r["conditions"], [])
+
+    def test_sop_and_soic_are_the_same_package(self):
+        import part_conditions as pc
+        cond = [c for c in pc.parse("SOP 패키지로") if c.family == "package"][0]
+        self.assertFalse(pc.contradicts(cond, {"description": "gadget, SOIC-8"}))
+        self.assertTrue(pc.contradicts(cond, {"description": "gadget, DIP-8"}))
+        self.assertFalse(pc.contradicts(cond, {"description": "gadget"}))
+
+    def test_no_other_candidate_leaves_a_reason(self):
+        catalog = [AnchorLockTest.part("Zeta_Linear", "ZX100")]
+        d = pg.PartsDeps(find=lambda q, n: (catalog, "es-semantic"), catalog=catalog, taxonomy=AnchorLockTest.Tax(), anchor_lock=True)
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZX100 대체품")
+        self.assertFalse(r["answered"])
+        self.assertIn("후보가 없음", r["abstain"])
+
+    def test_no_fill_when_search_returns_only_other_functions(self):
+        r = self.graph(rows=[self.catalog[3]])("ZX100 대체품")                                 # 검색이 다른 기능만 돌려주면 채우지 않고 답하지 않는다
+        self.assertFalse(r["answered"])
+        self.assertIn("후보가 없음", r["abstain"])
+
+    def test_condition_shape_and_exact_catalog_name(self):
+        for t in ("3.3V", "12-bit", "DC12V", "CAN2.0B", "TO-220AB", "HTSSOP-16", "2.7V-5.5V", "AEC-Q100", "0603", "3x3mm", "USB2", "1080p", "H.264"):
+            self.assertTrue(pg.condition_shaped(t), t)
+        for t in ("ZX100", "TSOP4838", "IP5306", "24LC256", "W25Q64", "SiP32431", "DO3316P", "BGA2817", "DC12"):
+            self.assertFalse(pg.condition_shaped(t), t)                                          # 패키지 이름 뒤 숫자가 4자리 이상이면 부품 번호
+        cat = self.catalog + [AnchorLockTest.part("Yota", "SOT23")]
+        self.assertTrue(pg.condition_shaped("SOT23"))
+        self.assertFalse(pg.condition_shaped("SOT23", cat))                                      # 카탈로그에 정확히 같은 이름이 있으면 부품
 
 
 class UnknownNoticeTest(unittest.TestCase):
@@ -321,6 +463,14 @@ class UnknownNoticeTest(unittest.TestCase):
         r = self.graph(unknown_notice=True)("NP300 대체품 추천")
         self.assertFalse(r.get("notice"))
         self.assertEqual(pg.unknown_part_tokens("NP300 대체품", self.catalog), [])
+
+    def test_substitute_gate_and_attachment_guard_the_notice(self):
+        self.assertFalse(self.graph(unknown_notice=True, substitute_gate=lambda q: False)("RTX4090 같은 그래픽카드는 전력 얼마나 먹어")["answered"])
+        self.assertTrue(self.graph(unknown_notice=True, substitute_gate=lambda q: True)("QQ9999 대체품 추천").get("notice"))
+        self.assertTrue(self.graph(unknown_notice=True, substitute_gate=lambda q: None)("QQ9999 대체품 추천").get("notice"))   # 판단 못 하면 원래대로 낸다
+        ask = self.graph(unknown_notice=True)
+        for q in ("UTF-8 말고 다른 인코딩 써도 돼", "1080p 대신 720p 로 낮추면 괜찮을까", "H.264 대신 H.265 인코더 칩 추천", "도대체 QQ9999 언제 풀리나요"):
+            self.assertFalse(ask(q).get("notice"), q)
 
     def test_learned_gate_can_veto_the_notice(self):
         r = self.graph(unknown_notice=True, veto=lambda q: True)("QQ9999 대체품 추천")
