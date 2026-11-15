@@ -92,6 +92,7 @@ class PartsState(TypedDict, total=False):
     anchor: dict
     anchor_scope: dict      # 기준 부품 고정: {'function': 기능 id 또는 None, 'library': 라이브러리, 'label': 표시 이름, 'by': 근거}
     abstain: str            # 추측하지 않고 답하지 않은 이유(기준 부품 고정이나 '카탈로그에 없음' 안내가 켜졌을 때만)
+    unverified: list[str]   # 카탈로그로는 확인할 수 없는 질문의 조건(차량용 등급·제조사·핀 호환 …). 답에 확인하지 못했다고 밝힌다(기준 부품 고정)
     notice: str             # 부품 목록 대신 그대로 보일 안내문('카탈로그에 없음' 안내가 켜졌고, 대체품을 묻는데 번호가 카탈로그에 없을 때)
     parts: list[dict]
     plain_base: bool        # 분류 체계 이름으로 찾은 질문이 원래도 보조 관문(짧은 부품 질문)으로 답이 나오던 것인지
@@ -535,7 +536,7 @@ def build_parts_graph(deps: PartsDeps):
                 # 전압은 질문이 전원·동작 전압이라고 밝혔을 때만 쓴다(출력·기준 전압일 수 있다)
                 hard = [c for c in conds if c.family == "package" or (c.family == "voltage" and pc.is_supply_voltage(plain))] if deps.conditions else []
                 hard += pc.parse_mount(plain) if deps.conditions else []
-                dropped = [r for r in found if any(pc.contradicts(c, r) for c in hard)]
+                dropped = [r for r in found if any(pc.contradicts(c, r) or pc.pin_mismatch(c, plain, r) for c in hard)]
                 found = [r for r in found if r not in dropped]
                 # 후보가 모자라도 카탈로그에서 채우지 않는다. 2차 판정 뒤 확인: 채운 부품은 기능 이름만 같고 값(극성·코어 계열)이 다른 것이 섞여
                 # 틀린 부품이 된다(예: PNP 트랜지스터의 자리에 NPN). 적게 내는 편이 낫다.
@@ -543,6 +544,7 @@ def build_parts_graph(deps: PartsDeps):
                 parts = annotate_parts(tax, parts)
                 note = f"(조건에 어긋나 뺀 후보 {len(dropped)}건)" if dropped else ""
                 out = {"parts": parts, "backend": backend if parts else None, "conditions": [c.label for c in conds],
+                       "unverified": pc.unverifiable(plain) if deps.conditions else [],
                        "trace": [f"search[{backend}]: 기능군 고정 {scope['label']} 안에서 {len(parts)}건{note}"]}
                 if not parts:        # 답하지 않는 이유를 남긴다(집계에서 '일부러 답하지 않음'으로 세어지게)
                     out["abstain"] = (f"질문의 조건({', '.join(c.label for c in hard)})에 맞는 후보가 기능군 안에 없음" if dropped
@@ -620,6 +622,9 @@ def build_parts_graph(deps: PartsDeps):
             scope = state.get("anchor_scope")
             note = f"`{anchor['lib_id']}`와 같은 기능군({scope['label']}) 안에서 설명이 비슷한 부품" if scope else f"`{anchor['lib_id']}`와 설명이 비슷한 부품"
             text = text.replace("찾은 후보입니다", f"찾은 후보입니다 — {note}(성능·핀 호환은 보장하지 않음)", 1)
+            if scope and state.get("unverified"):
+                text += ("\n\n질문의 조건 중 **" + ", ".join(state["unverified"]) + "**은(는) KiCad 라이브러리 값으로는 확인할 수 없습니다. "
+                         "후보는 기능과 확인할 수 있는 조건만으로 골랐으니, 이 조건은 데이터시트나 판매처에서 직접 확인하세요.")
         return {"answer": text, "answered": True, "trace": ["answer: 검색된 부품 값으로 답함 (모델 호출 없음)"]}
 
     g = StateGraph(PartsState)

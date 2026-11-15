@@ -150,6 +150,9 @@ def _lock_text(part: dict) -> str:
 
 
 SAME_PACKAGE = [{"SOP", "SOIC"}, {"DIP"}]         # 같은 것으로 보는 패키지 이름(SOP 와 SOIC 는 같은 계열로 부른다)
+# 후보의 글에서 '다른 패키지'로 알아볼 이름(질문에서 조건으로 뽑는 PACKAGES 보다 넓다. 서비스의 조건 표시는 PACKAGES 만 쓴다)
+KNOWN_PACKAGES = PACKAGES + ["TSOP", "SSOP", "VSSOP", "QSOP", "QFP", "LGA", "PLCC", "SON", "WLCSP", "SIP", "TO-247", "TO-252", "TO-263", "TO-3",
+                             "SOD-123", "SOD-323", "DO-41", "DO-35", "SC-70"]
 SUPPLY_WORDS = re.compile(r"전원|동작|입력|구동|공급|에서\s*(?:쓸|쓰|사용|돌)|supply|operat|input|vcc|vdd|logic|로직", re.I)
 
 
@@ -169,7 +172,7 @@ def contradicts(cond: Condition, part: dict) -> bool:
         same = next((g for g in SAME_PACKAGE if cond.label in g), {cond.label})
         if any(re.search(_package_re(p), text, re.I) for p in same):
             return False
-        return any(re.search(_package_re(p), text, re.I) for p in PACKAGES if p not in same)
+        return any(re.search(_package_re(p), text, re.I) for p in KNOWN_PACKAGES if p not in same)
     if cond.family == "mount":
         mine, other = MOUNT[cond.label]
         return not re.search(mine, text, re.I) and bool(re.search(other, text, re.I))
@@ -179,3 +182,43 @@ def contradicts(cond: Condition, part: dict) -> bool:
             return False                    # 글에 그 값이 그대로 있거나 범위 안이면 어긋남이 아니다
         return bool(ranges)                 # 범위가 적혀 있는데 그 밖일 때만 어긋남
     return False
+
+
+# ---- 패키지의 핀 수 (3차 판정: QFN-28 을 물었는데 QFN-36·48 을 답한 것이 '조건과 어긋남'의 대부분이었다)
+PIN_FAMILIES = ("DIP", "SOIC", "SOP", "TSSOP", "MSOP", "QFN", "DFN", "BGA", "LQFP", "TQFP")
+
+
+def package_pins(text: str, label: str) -> set[int]:
+    """글에 그 패키지 이름과 함께 적힌 핀 수(QFN-28 → 28, SOT-23-6 → 6). 크기 표기(3.9x4.9mm)나 노출 패드(1EP)는 핀 수로 읽지 않는다."""
+    if label == "SOT-23":
+        return {int(x) for x in re.findall(r"(?<![A-Za-z])SOT[-_ ]?23[-_ ]?(\d)(?!\d)", text, re.I)}
+    if label not in PIN_FAMILIES:
+        return set()
+    family = "P?DIP" if label == "DIP" else ("(?:SOP|SOIC)" if label in ("SOP", "SOIC") else re.escape(label))
+    return {int(x) for x in re.findall(r"(?<![A-Za-z])" + family + r"[-_* ]{0,2}(\d{1,3})(?![\d.]|x|mm|ep)", text, re.I)}
+
+
+def pin_mismatch(cond: Condition, question: str, part: dict) -> bool:
+    """질문이 패키지의 핀 수까지 적었고 후보의 글에도 같은 패키지의 핀 수가 적혀 있는데 서로 다른가. 한쪽이라도 적혀 있지 않으면 False."""
+    if cond.family != "package":
+        return False
+    want, have = package_pins(question, cond.label), package_pins(_lock_text(part), cond.label)
+    return bool(want) and bool(have) and not (want & have)
+
+
+# ---- 카탈로그(KiCad 라이브러리 값)로는 확인할 수 없는 조건: 후보를 거르는 데 쓰지 않고, 답에 확인하지 못했다고 밝힌다
+UNVERIFIABLE = [
+    (r"차량용|자동차용|전장용|오토모티브|automotive|AEC-?Q\d+", "차량용 등급"),
+    (r"RoHS|무연|lead[- ]?free|할로겐\s*프리|REACH", "환경 규제 대응(RoHS 등)"),
+    (r"산업용|industrial|군용|military|우주용|의료용|확장\s*온도|온도\s*등급", "사용 등급·온도 등급"),
+    (r"(?:다른|같은|동일)\s*(?:회사|제조사|메이커|벤더|브랜드)|세컨드\s*소스|second\s+source|(?:another|different|same)\s+(?:vendor|manufacturer|maker|brand)", "제조사"),
+    (r"핀\s*(?:투\s*핀|호환|배열(?:이|도)?\s*(?:같|동일))|pin[- ]?(?:to[- ]?pin|compatible)|drop-?in|그대로\s*(?:끼|꽂|교체|바꿔)|바꿔\s*끼", "핀 호환"),
+    (r"가격|저렴|싼|값이|단가|cheap|low[- ]?cost|price", "가격"),
+    (r"재고|수급|구하기\s*쉬운|납기|in\s+stock|availab|리드\s*타임|단종\s*아닌|양산\s*중", "재고·수급"),
+]
+
+
+def unverifiable(question: str) -> list[str]:
+    """질문에 든, 카탈로그로는 확인할 수 없는 조건의 이름 목록."""
+    return [label for pat, label in UNVERIFIABLE if re.search(pat, question, re.I)]
+

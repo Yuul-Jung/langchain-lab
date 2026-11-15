@@ -392,12 +392,39 @@ class AnchorLockRound3Test(unittest.TestCase):
         self.assertEqual([p["name"] for p in r["parts"]], ["QW500"])
         self.assertEqual(r["conditions"], [])
 
+    def test_package_pin_count_is_compared_when_both_sides_state_it(self):
+        import part_conditions as pc
+        P = AnchorLockTest.part
+        cat = [P("Zeta_Linear", "ZX100"), {**P("Zeta_Linear", "QW28"), "footprint": "Package_DFN_QFN:QFN-28-1EP_4x4mm"},
+               {**P("Zeta_Linear", "QW36"), "footprint": "Package_DFN_QFN:QFN-36-1EP_5x5mm"}, P("Zeta_Linear", "QW00", "gadget, QFN")]
+        d = pg.PartsDeps(find=lambda q, n: (cat[1:], "es-semantic"), catalog=cat, taxonomy=AnchorLockTest.Tax(), anchor_lock=True, conditions=True,
+                         substitute_gate=lambda q: True)
+        r = pg.ask_parts(pg.build_parts_graph(d), "ZX100 대체품 중에 QFN-28 패키지로 나오는 거")
+        self.assertEqual(sorted(p["name"] for p in r["parts"]), ["QW00", "QW28"])              # 36핀은 빠지고, 핀 수가 안 적힌 것은 남는다
+        self.assertEqual(pc.package_pins("SOIC*3.9x4.9mm*P1.27mm* QFN*1EP*4x4mm* DIP-8 TSSOP-16", "SOIC"), set())   # 크기·노출 패드는 핀 수가 아니다
+        self.assertEqual(pc.package_pins("gadget, SOT-23-5", "SOT-23"), {5})
+        self.assertEqual(pc.package_pins("PDIP-8, SOIC-8", "DIP"), {8})
+
+    def test_unverifiable_conditions_are_stated_in_the_answer(self):
+        import part_conditions as pc
+        self.assertEqual(pc.unverifiable("차량용 등급으로 다른 제조사 것, 핀 호환되는 걸로"), ["차량용 등급", "제조사", "핀 호환"])
+        self.assertEqual(pc.unverifiable("3.3V SOT-23 대체품"), [])
+        r = self.graph(conditions=True)("ZX100 대체품, AEC-Q100 인증 받은 걸로")
+        self.assertTrue(r["answered"])
+        self.assertEqual(r["unverified"], ["차량용 등급"])
+        self.assertIn("차량용 등급", r["answer"])
+        self.assertIn("확인할 수 없습니다", r["answer"])
+        self.assertNotIn("확인할 수 없습니다", self.graph(conditions=True)("ZX100 대체품")["answer"])
+
     def test_sop_and_soic_are_the_same_package(self):
         import part_conditions as pc
         cond = [c for c in pc.parse("SOP 패키지로") if c.family == "package"][0]
         self.assertFalse(pc.contradicts(cond, {"description": "gadget, SOIC-8"}))
         self.assertTrue(pc.contradicts(cond, {"description": "gadget, DIP-8"}))
         self.assertFalse(pc.contradicts(cond, {"description": "gadget"}))
+        dip = [c for c in pc.parse("DIP-28 패키지로") if c.family == "package"][0]
+        self.assertTrue(pc.contradicts(dip, {"name": "QX128_TSOP32", "description": "gadget"}))      # 조건 목록에는 없지만 다른 패키지로 알아본다
+        self.assertFalse(pc.contradicts(dip, {"description": "gadget, DIP-28/TSOP-28"}))
 
     def test_no_other_candidate_leaves_a_reason(self):
         catalog = [AnchorLockTest.part("Zeta_Linear", "ZX100")]
