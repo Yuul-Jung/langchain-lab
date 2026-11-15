@@ -87,6 +87,18 @@ class OperatingPoint(unittest.TestCase):
         self.assertTrue(cs.passes(f))
         self.assertEqual(codes(f), ["UNVERIFIED_BASIS"])
 
+    def test_delegated_abs_max_is_not_used(self):
+        # 절대 최대 전원의 위임 확인 값은 근거가 되지 않는다: 다른 값이 없으면 없음 → MISSING, 통과 불가
+        g = dict(GOOD, abs_max_supply_v=[{"value": 6.5, "source": "datasheet", "tier": "delegated"}])
+        res = cs.check_operating_point(rec(**g), 3.3, (0, 50))
+        self.assertTrue(any(f["code"] == "MISSING" and f["field"] == "abs_max_supply_v" for f in res))
+        self.assertFalse(cs.passes(res))
+        # 사람이 확인한 다른 값이 있으면 그 값으로 판정한다(위임 값은 무시)
+        g2 = dict(GOOD, abs_max_supply_v=[{"value": 6.5, "source": "datasheet", "tier": "delegated"},
+                                          {"value": 6.0, "source": "datasheet"}])
+        res2 = cs.check_operating_point(rec(**g2), 3.3, (0, 50))
+        self.assertFalse(any(f["code"] in ("MISSING", "CONFLICT") for f in res2))
+
     def test_delegated_confirmation_warns_but_judges(self):
         g = dict(GOOD, supply_max_v=[{"value": 5.5, "source": "datasheet", "tier": "delegated"}])
         f = cs.check_operating_point(rec(**g), 3.3)

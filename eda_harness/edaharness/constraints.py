@@ -10,6 +10,7 @@
   - 근거 값이 없으면 ERROR(MISSING) — 통과로 치지 않는다.
   - datasheet 가 아닌 값으로 내린 판정은 WARN(UNVERIFIED_BASIS)을 함께 남긴다.
   - 증거에 tier="delegated"(위임 확인, 사람이 직접 확인하지 않음)가 있으면 WARN(DELEGATED_CONFIRMATION)을 남긴다.
+  - 단, 절대 최대 전원(abs_max_supply_v)의 위임 확인 값은 근거로 쓰지 않는다(없음으로 본다 → MISSING).
 """
 from __future__ import annotations
 
@@ -42,6 +43,8 @@ def resolve(record: dict, field: str) -> dict:
     for c in (record.get("values") or {}).get(field) or []:
         if not isinstance(c, dict) or not _num(c.get("value")) or c.get("source") not in SOURCES:
             raise ConstraintError(f"{field}: 값은 숫자 value 와 source({tuple(SOURCES)})가 있어야 함")
+        if field == "abs_max_supply_v" and c.get("tier") == "delegated":
+            continue  # 절대 최대 전원은 사람 확인만 인정: 위임 확인 값은 근거로 쓰지 않는다(없음으로 본다 → 판정 불가)
         cands.append(c)
     if not cands:
         return {"status": "missing", "value": None, "source": None, "candidates": []}
